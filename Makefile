@@ -1,7 +1,7 @@
-# The gates of `make lint`, the one gate, which the maintainer runs before a push. Any finding
-# fails a gate, warnings included; make -k lint runs every gate past a failure. Each gate is a
-# target of its own, and those that check files take FILES, every file of their kind when it is
-# empty: make vale FILES=README.md.
+# The gates of `make lint`, the one gate, which CI's lint job runs, and the maintainer before a
+# push. Any finding fails a gate, warnings included; make -k lint runs every gate past a failure.
+# Each gate is a target of its own, and those that check files take FILES, every file of their kind
+# when it is empty: make vale FILES=README.md.
 FILES =
 # The ref after which tools/commits checks the commits' messages, up to HEAD.
 BASE = origin/main
@@ -9,9 +9,9 @@ BASE = origin/main
 # the history when empty.
 LOG_OPTS =
 
-.PHONY: lint shell sizecheck vale lychee rumdl gitleaks commits
+.PHONY: lint shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits
 
-lint: shell sizecheck vale lychee rumdl gitleaks commits
+lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits
 
 # The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
 shell:
@@ -35,6 +35,15 @@ lychee:
 rumdl:
 	@set -ef; files=$$(tools/files md $(FILES)); [ -z "$$files" ] || \
 		tools/run rumdl check --no-cache $$files
+
+# The workflows' shell scripts go through the pinned ShellCheck.
+actionlint:
+	shellcheck="$$(tools/run -path shellcheck)" && \
+		tools/run actionlint -shellcheck="$$shellcheck" -pyflakes=
+
+# The workflows, with the online audits where GH_TOKEN is set, as in CI.
+zizmor:
+	tools/run zizmor .
 
 # The commits of LOG_OPTS. --redact keeps a secret it finds out of the log, which is public.
 gitleaks:
