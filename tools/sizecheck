@@ -1,0 +1,56 @@
+#!/bin/sh
+# Keeps the files short: each is at most 300 lines, and the README at most 150. It checks the
+# files git lists, new ones included but not those it ignores, or those of the FILEs it caps:
+#
+#   tools/sizecheck [FILE...]
+#
+# It caps Markdown, YAML and shell scripts, found by extension or shebang. Data files, such as
+# TOML, JSON and licenses, are of no kind it caps. The Vale styles in .vale/styles/, errata-ai's
+# word lists, are exempt, as they are not written here. Each finding goes to stdout as PATH:
+# message, and any fails the check. Run it from the root.
+
+set -eu
+
+# max is the cap, in lines, and readme the README's.
+max=300
+readme=150
+
+# exempt says whether the file $1 is generated or vendored.
+exempt() {
+    case $1 in
+    .vale/styles/*) return 0 ;;
+    esac
+    return 1
+}
+
+main() {
+    [ -f tools/sizecheck ] || {
+        echo "tools/sizecheck: run it from the repository's root" >&2
+        exit 1
+    }
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    trap 'exit 1' HUP INT TERM
+    dir=$(dirname -- "$0")
+    for kind in md yaml sh; do
+        "$dir/files" "$kind" "$@" >>"$tmp/listed"
+    done
+    LC_ALL=C sort -u "$tmp/listed" >"$tmp/files"
+    status=0
+    while IFS= read -r file; do
+        ! exempt "$file" || continue
+        # awk counts a last line without its newline too.
+        lines=$(awk 'END { print NR }' "$file")
+        case $file in
+        README.md) cap=$readme ;;
+        *) cap=$max ;;
+        esac
+        if [ "$lines" -gt "$cap" ]; then
+            printf '%s: %d lines, over the cap of %d\n' "$file" "$lines" "$cap"
+            status=1
+        fi
+    done <"$tmp/files"
+    return "$status"
+}
+
+main "$@"

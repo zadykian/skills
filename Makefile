@@ -4,11 +4,15 @@
 # empty: make vale FILES=README.md.
 FILES =
 
-.PHONY: lint shell
+.PHONY: lint shell sizecheck
 
-lint: shell
+lint: shell sizecheck
 
 # The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
 shell:
 	@set -ef; files=$$(tools/files sh $(FILES)); [ -z "$$files" ] || { \
 		tools/run shellcheck $$files && tools/run shfmt -d -i 4 $$files; }
+
+# The size caps: 300 lines a file, and 150 the README.
+sizecheck:
+	tools/sizecheck $(FILES)
