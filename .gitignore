@@ -1,0 +1,6 @@
+/.idea
+/.claude/settings.local.json
+/.claude/plans/
+/.claude/worktrees/
+/.cache/
+/.github/claude/node_modules/
