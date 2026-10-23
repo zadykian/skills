@@ -1,12 +1,34 @@
 #!/bin/sh
-# Checks the lint plugin's hooks (docs/lint.md), and lib.sh's functions by sourcing it, a line a
-# case; any case that fails fails the run.
+# Checks the lint plugin's hooks (docs/lint.md), and lib.sh's functions by sourcing it, in
+# throwaway repositories, a line a case; any case that fails fails the run. It is hermetic: HOME
+# and the git config are the run's own, and an SSH key made for the run signs the commits.
 
 set -u
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/hookcheck.XXXXXX") || exit 1
 trap 'rm -rf "$tmp"' EXIT
 trap 'exit 1' HUP INT TERM
+for name in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$name"; done
+unset CLAUDE_PROJECT_DIR CLAUDE_PLUGIN_DATA MAKEFLAGS MFLAGS MAKELEVEL XDG_CONFIG_HOME
+export HOME="$tmp/home" GIT_CONFIG_GLOBAL="$tmp/gitconfig" GIT_CONFIG_NOSYSTEM=1
+mkdir "$HOME" && ssh-keygen -q -t ed25519 -N '' -C hookcheck -f "$tmp/key" </dev/null || exit 1
+printf 'hookcheck@example.com namespaces="git" %s\n' "$(cat "$tmp/key.pub")" >"$tmp/signers"
+printf '%s\n' '[user]' 'name = hookcheck' 'email = hookcheck@example.com' "signingKey = $tmp/key" \
+    '[gpg]' 'format = ssh' '[gpg "ssh"]' "allowedSignersFile = $tmp/signers" '[commit]' \
+    'gpgSign = true' '[init]' 'defaultBranch = main' >"$GIT_CONFIG_GLOBAL"
+# repo makes a repository at $2, the project by default, its makefile less the lines that start
+# with $1. A target logs its run, and fails on a file with BROKEN; all logs a probe of make's.
+repo() {
+    dir=${2:-$project}
+    git init -q "$dir" && grep -v "^${1:-none}" >"$dir/Makefile" <<'EOF' || return 1
+log = echo "$@ $(1)" >>"$$HOOKCHECK_LOG"
+all: ; +@$(call log,probe)
+lint-file: ; @$(call log,$(FILES) @ $(notdir $(CURDIR))) && ! grep -n BROKEN $(FILES)
+lint-tree: ; @$(call log,$(BASE)) && ! grep -n BROKEN *.txt
+EOF
+    echo fine >"$dir/a.txt" && echo ignored.txt >"$dir/.gitignore" && git -C "$dir" add -A &&
+        git -C "$dir" commit -q -m init && git -C "$dir" update-ref refs/remotes/origin/main HEAD
+}
 # put writes the line $2 to the project's file $1.
 put() { mkdir -p -- "$(dirname -- "$project/$1")" && printf '%s\n' "$2" >"$project/$1"; }
 # lib runs the command $@ in the project's tree with lib.sh sourced: $status, $tmp/out, $tmp/err.
@@ -47,5 +69,12 @@ begin 'plain: [A-Za-z0-9._/@+-] alone, no part starting with -' && lib plain /a/
 verdict
 begin 'notice: JSON, with quotes and backslashes escaped and control characters gone' &&
     lib notice "$(printf 'a "q" \\ b\tc')" && holds out '{"systemMessage": "a \"q\" \\ bc"}'
+verdict
+begin 'common: the git common directory, which a linked work tree shares' && repo &&
+    git -C "$project" worktree add -q "$project/w" && lib common w && exits 0 &&
+    { grep -qx ".*/r$n/\.git" "$tmp/out" || say "the common directory is $(cat "$tmp/out")"; }
+verdict
+begin 'mentions: a makefile that names a lint target, an untracked *.mk too' && repo lint- &&
+    lib mentions && exits 1 && put lint.mk 'lint-tree:' && lib mentions && exits 0
 verdict
 exit "$failed"
