@@ -19,6 +19,11 @@ marketplace ships it. Move what a repository's notes held into its CLAUDE.md, CO
 - `writing` and `trim`: they read no notes. A repository's caps, terms to keep out and prose
   checks go in its `.claude/rules/writing.md`.
 
+### lint
+
+- `split-file`: it reads no notes. A language's rules, the cap and the checks come from the
+  repository's CLAUDE.md and `.claude/rules/`, and from its tools' configs.
+
 ## 1.0.0
 
 ### flow

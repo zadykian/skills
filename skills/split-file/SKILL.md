@@ -14,11 +14,11 @@ nothing.
 
 ## The repository's rules
 
-First read the repository's notes for this skill, `.claude/skill-notes/split-file.md` at its root,
-where they exist. They hold what each of its languages adds: the package or module clause a file
-takes, the directives that go with a declaration, the formatters and the linters' limits. They
-name the cap, the checks and how to build and test narrowly. They win where they differ from what
-follows. Without notes, the cap is the one the size check reports, or 300 lines.
+Each language's rules come from the repository: its CLAUDE.md and `.claude/rules/`, the configs of
+its formatters and linters, and its build. They give the package or module clause a file takes,
+the directives that go with a declaration, the linters' limits, and how to build and test
+narrowly. They win where they differ from what follows. The cap is the one the size check
+reports, or 300 lines.
 
 ## Plan
 
@@ -34,9 +34,9 @@ follows. Without notes, the cap is the one the size check reports, or 300 lines.
 ## Move
 
 - Move the code unchanged, then improve it in place, so that the move's diff shows the move alone.
-- Each new file takes what its language needs to stand alone, as the notes say. That is its
-  package or module clause, its imports, and the directives or constraints that govern its
-  declarations. Drop the imports a file no longer uses.
+- Each new file takes what its language needs to stand alone: its package or module clause, its
+  imports, and the directives or constraints that govern its declarations. Drop the imports a file
+  no longer uses.
 - The moved code must pass every linter the repository runs, at the limits its config sets, such
   as a line's length, a function's length or its complexity. Break a function over a limit into
   helpers named for what they do. The behaviour stays the same.
@@ -45,7 +45,7 @@ follows. Without notes, the cap is the one the size check reports, or 300 lines.
 
 ## Check
 
-1. The formatters and the build, as the notes name them.
+1. The formatters and the build, as the repository runs them.
 2. The linters and the size check on the old and the new files.
-3. The tests of the package or module, narrowly, as the notes say; CI runs the rest.
+3. The tests of the package or module alone; CI runs the rest.
 4. Commit as `refactor(scope): split FILE by responsibility`, listing the new files in the body.

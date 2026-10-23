@@ -176,12 +176,8 @@ the code unchanged first, then makes each file pass every gate outright, and tri
 the `trim` skill does. Claude uses it when a size check reports a file over its cap, or as
 `/lint:split-file FILE`.
 
-The skill holds no language's rules: each comes from the repository's notes. So does the cap,
-where the size check does not report it; without either, the cap is 300 lines.
-
-### Its notes
-
-`.claude/skill-notes/split-file.md` may hold:
+The skill holds no language's rules: each comes from the repository. The cap is the one its size
+check reports, or 300 lines. The repository's CLAUDE.md or `.claude/rules/` may set:
 
 - the line cap, and the caps of comments, or the rules that set them;
 - each language's rules: the package or module clause a new file takes, and the directives,
