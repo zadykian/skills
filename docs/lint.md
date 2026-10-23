@@ -167,3 +167,28 @@ noted, and the notices shown. A session start drops the state of sessions untouc
 
 [`tools/hookcheck`](../tools/hookcheck) runs the hooks on sample JSON against throwaway
 repositories, and prints a line a case.
+
+## split-file
+
+Splits a source file over the repository's line cap into files by responsibility. Its package or
+module, its API and its behaviour stay as they are, so callers and tests change nothing. It moves
+the code unchanged first, then makes each file pass every gate outright, and trims the comments as
+the `trim` skill does. Claude uses it when a size check reports a file over its cap, or as
+`/lint:split-file FILE`.
+
+The skill holds no language's rules: each comes from the repository's notes. So does the cap,
+where the size check does not report it; without either, the cap is 300 lines.
+
+### Its notes
+
+`.claude/skill-notes/split-file.md` may hold:
+
+- the line cap, and the caps of comments, or the rules that set them;
+- each language's rules: the package or module clause a new file takes, and the directives,
+  build constraints or preambles that go with its declarations;
+- the formatters, and how a file sheds the imports it no longer uses;
+- the linters and their limits, such as a line's length, a function's length or its complexity;
+- how to build, and how to run the tests of one package or module alone;
+- the files that list others, such as a layout or a rule of where a test goes, which a split
+  changes too;
+- the commit's header, where the repository's form differs.
