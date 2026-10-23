@@ -23,4 +23,7 @@ The marketplace's versions, newest first, each with what changed in each bundle.
 
 ### lint
 
+- The hooks that cld, ikeward and ws each kept, as one: `make lint-file` on each file Claude
+  edits, and `make lint-tree` as it stops. They run where the maintainer's signed commits vouch
+  for the gates' code.
 - `split-file`: cld's skill, for any language. The language's rules go in the notes.

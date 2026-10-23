@@ -58,7 +58,50 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["lint", "hooks", "make", "refactoring"],
-      "skills": ["./skills/split-file"]
+      "skills": ["./skills/split-file"],
+      "hooks": {
+        "SessionStart": [
+          {
+            "matcher": "startup|resume|clear|fork",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/hooks/lint-tree.sh",
+                "args": [],
+                "timeout": 60,
+                "statusMessage": "Noting the work tree"
+              }
+            ]
+          }
+        ],
+        "PostToolUse": [
+          {
+            "matcher": "Edit|MultiEdit|Write|NotebookEdit",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/hooks/lint-file.sh",
+                "args": [],
+                "timeout": 300,
+                "statusMessage": "Linting the file"
+              }
+            ]
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/hooks/lint-tree.sh",
+                "args": [],
+                "timeout": 900,
+                "statusMessage": "Linting the work tree"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
