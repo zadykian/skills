@@ -63,6 +63,8 @@ edit() {
     event lint-file.sh PostToolUse "\"tool_name\": \"${2:-Edit}\", \"tool_input\": {\"$key\": \
 \"$1\"}, \"tool_response\": {\"filePath\": \"$1\", \"text\": \"\\\"file_path\\\": \\\"/no\\\"\"}"
 }
+# stop pipes in Stop's JSON, with stop_hook_active $1, false by default.
+stop() { event lint-tree.sh Stop "\"stop_hook_active\": ${1:-false}"; }
 # say adds the line $* to the reasons the case fails.
 say() { printf '%s\n' "$*" >>"$tmp/why"; }
 # exits checks the last run's status, $1.
@@ -183,5 +185,25 @@ begin 'lint-file: a file gone: silent' && repo && edit "$project/gone.txt" && qu
 verdict
 begin "lint-file: a file of another repository than the project's: silent" && repo &&
     repo '' "$tmp/o$n" && edit "$tmp/o$n/a.txt" && quiet && logs
+verdict
+begin 'Stop with stop_hook_active: exit 0, no gate' && repo && put b.txt 1 &&
+    edit "$project/b.txt" && stop true && quiet && logs "lint-file b.txt @ r$n"
+verdict
+begin 'Stop lints a recorded tree, then clears the record' && repo && put b.txt 1 &&
+    edit "$project/b.txt" && stop && quiet && stop && quiet &&
+    logs "lint-file b.txt @ r$n" 'lint-tree refs/remotes/origin/main'
+verdict
+begin 'Stop fails on a recorded tree: exit 2 with its output; then Claude may stop' && repo &&
+    put b.txt 1 && edit "$project/b.txt" && put c.txt BROKEN && stop && exits 2 &&
+    holds err 'lint: make lint-tree BASE=refs/remotes/origin/main fails in ' 'c.txt:1:BROKEN' \
+        'fix what this session broke' && stop true && quiet &&
+    logs "lint-file b.txt @ r$n" 'lint-tree refs/remotes/origin/main'
+verdict
+begin 'Stop on a recorded tree not vouched for: a notice, no gate' && repo && put b.txt 1 &&
+    edit "$project/b.txt" && git -C "$project" add b.txt && stop &&
+    noticed 'as the index differs from HEAD.' && logs "lint-file b.txt @ r$n"
+verdict
+begin 'Stop skips a tree with no lint-tree target' && repo lint-tree && put b.txt 1 &&
+    edit "$project/b.txt" && stop && quiet && logs "lint-file b.txt @ r$n"
 verdict
 exit "$failed"
