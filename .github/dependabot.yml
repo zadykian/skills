@@ -1,0 +1,17 @@
+# Weekly updates of the claude that CI validates with, and of the actions the workflows pin, each
+# release a week old at least. Dependabot cannot see the tools that tools/run pins: they are bumped
+# by hand.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /.github/claude
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
