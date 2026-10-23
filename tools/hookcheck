@@ -1,0 +1,51 @@
+#!/bin/sh
+# Checks the lint plugin's hooks (docs/lint.md), and lib.sh's functions by sourcing it, a line a
+# case; any case that fails fails the run.
+
+set -u
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/hookcheck.XXXXXX") || exit 1
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 1' HUP INT TERM
+# put writes the line $2 to the project's file $1.
+put() { mkdir -p -- "$(dirname -- "$project/$1")" && printf '%s\n' "$2" >"$project/$1"; }
+# lib runs the command $@ in the project's tree with lib.sh sourced: $status, $tmp/out, $tmp/err.
+lib() {
+    # shellcheck source=hooks/lib.sh
+    (cd -- "$project" && . "$root/hooks/lib.sh" && "$@") >"$tmp/out" 2>"$tmp/err"
+    status=$?
+}
+# say adds the line $* to the reasons the case fails.
+say() { printf '%s\n' "$*" >>"$tmp/why"; }
+# exits checks the last run's status, $1.
+exits() { [ "$status" -eq "$1" ] || say "status $status, not $1"; }
+# holds checks that the last run's stream $1, out or err, holds each text after it, or nothing.
+holds() {
+    stream=$1 got=$(cat "$tmp/$1") && shift
+    [ $# -gt 0 ] || [ -z "$got" ] || say "std$stream holds: $got"
+    for text; do grep -qF -- "$text" "$tmp/$stream" || say "std$stream lacks '$text': $got"; done
+}
+# begin starts the case that the line $1 names, in a project directory of its own.
+begin() {
+    n=$((n + 1)) name=$1 project=$tmp/r$n
+    mkdir "$project" && : >"$tmp/why"
+}
+# verdict prints the case's line: FAIL for the reasons its checks gave, or for a step that failed.
+verdict() {
+    code=$? && [ "$code" -eq 0 ] || [ -s "$tmp/why" ] || say "a step failed with status $code"
+    [ -s "$tmp/why" ] || { printf 'ok    %s\n' "$name" && return; }
+    failed=1 && printf 'FAIL  %s: %s\n' "$name" "$(paste -s -d ' ' "$tmp/why")"
+}
+
+n=0 failed=0
+begin 'field, flag: keys of the JSON alone, not text quoted in a string' &&
+    put in '{"k": "a\"b", "t": false, "u": true, "s": "\"k\": \"no\", \"t\": true"}' &&
+    lib eval "input=\$(cat in) && field k && ! flag t && flag u" && exits 0 && holds out 'a\"b'
+verdict
+begin 'plain: [A-Za-z0-9._/@+-] alone, no part starting with -' && lib plain /a/B-9._@+/c &&
+    exits 0 && for path in '' 'a b' -a a/-b 'a*b' 'a"b'; do lib plain "$path" && exits 1; done
+verdict
+begin 'notice: JSON, with quotes and backslashes escaped and control characters gone' &&
+    lib notice "$(printf 'a "q" \\ b\tc')" && holds out '{"systemMessage": "a \"q\" \\ bc"}'
+verdict
+exit "$failed"

@@ -11,9 +11,9 @@ LOG_OPTS =
 # The claude that validates the marketplace and the skills. CI's is the one .github/claude pins.
 CLAUDE = claude
 
-.PHONY: lint shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits plugins
+.PHONY: lint shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits hooks plugins
 
-lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits plugins
+lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits hooks plugins
 
 # The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
 shell:
@@ -55,6 +55,10 @@ gitleaks:
 # The headers and bodies of the commits from BASE to HEAD.
 commits:
 	tools/commits $(BASE)
+
+# The lint plugin's hooks, against throwaway repositories.
+hooks:
+	tools/hookcheck
 
 # claude's own checks, its warnings counted as errors: of the marketplace, and of the skills. A
 # check of the marketplace opens no skill of a bundle sourced from ./, so a copy of skills/ takes
