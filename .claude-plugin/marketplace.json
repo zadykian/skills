@@ -1,0 +1,64 @@
+{
+  "name": "zadykian",
+  "description": "Skills and hooks for work in a GitHub repository: plan a change, commit it in small steps, land it by fast-forward, keep prose and files short, and lint as Claude edits.",
+  "owner": {
+    "name": "Aleksandr Zadykian",
+    "url": "https://github.com/zadykian"
+  },
+  "metadata": {
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "flow",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "description": "From issue to main: plan a change as an issue, commit it in small Conventional Commits and stacked pull requests, and land the stack by fast-forward.",
+      "author": {
+        "name": "Aleksandr Zadykian",
+        "url": "https://github.com/zadykian"
+      },
+      "homepage": "https://github.com/zadykian/skills/blob/main/docs/flow.md",
+      "repository": "https://github.com/zadykian/skills",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["github", "issues", "conventional-commits", "stacked-prs", "fast-forward"],
+      "skills": ["./skills/atomic-commits", "./skills/issue", "./skills/land"]
+    },
+    {
+      "name": "docs",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "description": "A writing policy for comments and docs that loads as Claude edits, and a skill that trims files to it, keeping every fact.",
+      "author": {
+        "name": "Aleksandr Zadykian",
+        "url": "https://github.com/zadykian"
+      },
+      "homepage": "https://github.com/zadykian/skills/blob/main/docs/docs.md",
+      "repository": "https://github.com/zadykian/skills",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["writing", "documentation", "comments", "vale"],
+      "skills": ["./skills/trim", "./skills/writing"]
+    },
+    {
+      "name": "lint",
+      "source": "./",
+      "strict": false,
+      "version": "1.0.0",
+      "description": "Hooks that run the repository's own lint gates on each file Claude edits and on the branch when it stops, and a skill that splits a file over the line cap.",
+      "author": {
+        "name": "Aleksandr Zadykian",
+        "url": "https://github.com/zadykian"
+      },
+      "homepage": "https://github.com/zadykian/skills/blob/main/docs/lint.md",
+      "repository": "https://github.com/zadykian/skills",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["lint", "hooks", "make", "refactoring"],
+      "skills": ["./skills/split-file"]
+    }
+  ]
+}
