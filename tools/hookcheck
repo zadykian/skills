@@ -6,6 +6,10 @@
 set -u
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/hookcheck.XXXXXX") || exit 1
+# The hooks pass over a path that is not plain, so the run's directory is plain.
+case $tmp in
+*[!A-Za-z0-9._/@+-]* | */-*) rmdir "$tmp" && tmp=$(mktemp -d /tmp/hookcheck.XXXXXX) || exit 1 ;;
+esac
 trap 'rm -rf "$tmp"' EXIT
 trap 'exit 1' HUP INT TERM
 for name in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$name"; done
@@ -39,6 +43,26 @@ lib() {
     (cd -- "$project" && . "$root/hooks/lib.sh" && "$@") >"$tmp/out" 2>"$tmp/err"
     status=$?
 }
+# hook pipes the JSON $2 into the hook $1 from the project's tree, as Claude Code runs it, with
+# $data as CLAUDE_PLUGIN_DATA where set: $status, $tmp/out, $tmp/err.
+hook() {
+    printf '%s\n' "$2" | (
+        cd -- "$project" && export CLAUDE_PROJECT_DIR="$project" || exit 1
+        [ -z "$data" ] || export CLAUDE_PLUGIN_DATA="$data"
+        exec "$root/hooks/$1"
+    ) >"$tmp/out" 2>"$tmp/err"
+    status=$?
+}
+# event pipes the JSON of the session's event $2, with the fields $3, into the hook $1.
+event() { hook "$1" "{\"session_id\": \"$session\", \"hook_event_name\": \"$2\", $3}"; }
+# edit pipes in PostToolUse's JSON for an Edit of the file $1, or the tool $2's. Its response
+# holds a quoted file_path that names another file, which the hook passes over.
+edit() {
+    key=file_path
+    [ "${2:-Edit}" != NotebookEdit ] || key=notebook_path
+    event lint-file.sh PostToolUse "\"tool_name\": \"${2:-Edit}\", \"tool_input\": {\"$key\": \
+\"$1\"}, \"tool_response\": {\"filePath\": \"$1\", \"text\": \"\\\"file_path\\\": \\\"/no\\\"\"}"
+}
 # say adds the line $* to the reasons the case fails.
 say() { printf '%s\n' "$*" >>"$tmp/why"; }
 # exits checks the last run's status, $1.
@@ -51,9 +75,18 @@ holds() {
 }
 # doubt checks that vouch fails in the project's tree, with the cause $1.
 doubt() { lib vouch && exits 1 && holds out "$1"; }
+# quiet checks that the last run exited with status 0 and wrote nothing.
+quiet() { exits 0 && holds out && holds err; }
+# noticed checks that the last run exited with status 0, showing the user that no gate ran as $1.
+noticed() { exits 0 && holds err && holds out '{"systemMessage": "lint: no gate ran in ' "$1"; }
+# logs checks that the log holds the lines $@ alone, as the targets ran.
+logs() {
+    want=$(printf '%s\n' "$@") got=$(cat "$HOOKCHECK_LOG")
+    [ "$got" = "$want" ] || say "the log holds [$got], not [$want]"
+}
 # begin starts the case that the line $1 names, in a project directory of its own.
 begin() {
-    n=$((n + 1)) name=$1 project=$tmp/r$n HOOKCHECK_LOG=$tmp/log$n
+    n=$((n + 1)) name=$1 project=$tmp/r$n HOOKCHECK_LOG=$tmp/log$n data=$tmp/data$n session=s$n
     mkdir "$project" && : >"$HOOKCHECK_LOG" && : >"$tmp/why"
 }
 # verdict prints the case's line: FAIL for the reasons its checks gave, or for a step that failed.
@@ -113,5 +146,17 @@ begin "excerpt: 60 lines of 300 columns, after the failed targets' lines where i
     awk 'BEGIN { print "make: *** x"; while (i++ < 68) print; printf "%0400d\n", 0 }' >"$tmp/l" &&
     lib excerpt "$tmp/l" && holds out 'make: *** x' '[10 lines left out]' &&
     { awk 'length > 300 { exit 1 } END { exit NR != 62 }' "$tmp/out" || say 'not 62 short lines'; }
+verdict
+begin 'lint-file: passes, silent, and records the tree' && repo && edit "$project/a.txt" &&
+    quiet && logs "lint-file a.txt @ r$n" &&
+    { [ -s "$data/sessions/$session/trees" ] || say 'no record of the tree'; }
+verdict
+begin 'lint-file: fails, with exit 2 and its output on stderr' && repo && put a.txt BROKEN &&
+    edit "$project/a.txt" && exits 2 && holds out && logs "lint-file a.txt @ r$n" &&
+    holds err 'lint: make lint-file FILES=a.txt fails in ' '1:BROKEN'
+verdict
+begin 'lint-file: a tree not vouched for: a notice, once, and no gate' && repo && put a.txt 2 &&
+    git -C "$project" add a.txt && edit "$project/a.txt" &&
+    noticed 'as the index differs from HEAD.' && edit "$project/a.txt" && quiet && logs
 verdict
 exit "$failed"
