@@ -11,10 +11,10 @@ builds and passes the tests. A change over 300 lines becomes a stack of pull req
 which leaves `main` green. Claude uses it as it commits in a git repository, or as
 `/flow:atomic-commits`.
 
-The repository's CLAUDE.md, CONTRIBUTING.md, commit checks and notes,
-`.claude/skill-notes/atomic-commits.md`, win where they set the header's form or the types and
-scopes. So they do for the body and the pull request's description. The rest holds in every
-repository: one logical change per commit, the size limits, the plan and the stack.
+The repository's CLAUDE.md, CONTRIBUTING.md and commit checks win where they set the header's
+form or the types and scopes. So they do for the body and the pull request's description. The
+rest holds in every repository: one logical change per commit, the size limits, the plan and the
+stack.
 
 ## issue
 
@@ -23,12 +23,11 @@ approves the plan: a summary, `## Today` with `file:line` references at `main`'s
 `## Proposal`. Claude uses it when asked to file an issue or plan one, or as
 `/flow:issue [topic]`. It needs `gh`, logged in.
 
-Its notes, `.claude/skill-notes/issue.md`, may hold:
+The repository's CLAUDE.md and CONTRIBUTING.md win where they say of issues:
 
 - the title's form, where the repository's differs from a Conventional Commits header;
 - sections of the repository's own, and a word range other than 150 to 350;
-- the checks a title and a body pass before they go out, such as Vale or a list of terms;
-- what the plan names among the checks: the gates and CI's jobs.
+- the checks a title and a body pass before they go out, such as Vale or a list of terms.
 
 ## land
 
@@ -40,7 +39,7 @@ Lands a stack of approved pull requests on `main`, the bottom first, by fast-for
 ```
 
 It needs `gh`, logged in, and a `/ff` workflow, as [zadykian/ff](https://github.com/zadykian/ff)
-sets up. Its notes, `.claude/skill-notes/land.md`, may hold:
+sets up. The repository's CLAUDE.md and CONTRIBUTING.md win where they say how changes land:
 
 - the checks to wait for, and a known flake that gets one rerun;
 - a gate before `/ff`, such as a check of the pull request's text;

@@ -3,6 +3,17 @@
 The marketplace's versions, newest first, each with what changed in each bundle.
 [The README](README.md#versions) says what each part of a version means.
 
+## 2.0.0
+
+No skill reads a repository's notes, `.claude/skill-notes/NAME.md`, any longer: each runs as the
+marketplace ships it. Move what a repository's notes held into its CLAUDE.md, CONTRIBUTING.md or
+`.claude/rules/`, which win where they differ from a skill, and delete `.claude/skill-notes/`.
+
+### flow
+
+- `atomic-commits`, `issue` and `land`: they read no notes. Where a repository sets the header's
+  form, an issue's title, the checks to wait for or who tags a release, its CLAUDE.md says so.
+
 ## 1.0.0
 
 ### flow
