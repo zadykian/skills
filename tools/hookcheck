@@ -63,8 +63,9 @@ edit() {
     event lint-file.sh PostToolUse "\"tool_name\": \"${2:-Edit}\", \"tool_input\": {\"$key\": \
 \"$1\"}, \"tool_response\": {\"filePath\": \"$1\", \"text\": \"\\\"file_path\\\": \\\"/no\\\"\"}"
 }
-# stop pipes in Stop's JSON, with stop_hook_active $1, false by default.
+# stop pipes in Stop's JSON, with stop_hook_active $1, false by default; started, SessionStart's.
 stop() { event lint-tree.sh Stop "\"stop_hook_active\": ${1:-false}"; }
+started() { event lint-tree.sh SessionStart '"source": "startup"'; }
 # say adds the line $* to the reasons the case fails.
 say() { printf '%s\n' "$*" >>"$tmp/why"; }
 # exits checks the last run's status, $1.
@@ -205,5 +206,20 @@ begin 'Stop on a recorded tree not vouched for: a notice, no gate' && repo && pu
 verdict
 begin 'Stop skips a tree with no lint-tree target' && repo lint-tree && put b.txt 1 &&
     edit "$project/b.txt" && stop && quiet && logs "lint-file b.txt @ r$n"
+verdict
+begin 'Stop, without CLAUDE_PLUGIN_DATA: the state in the git common directory' && data= &&
+    repo && put b.txt 1 && edit "$project/b.txt" &&
+    { [ -s "$project/.git/claude-lint/sessions/$session/trees" ] || say 'no record in .git'; } &&
+    stop && quiet && logs "lint-file b.txt @ r$n" 'lint-tree refs/remotes/origin/main'
+verdict
+begin 'Stop skips a recorded tree equal to origin/main' && repo && edit "$project/a.txt" &&
+    stop && quiet && logs "lint-file a.txt @ r$n"
+verdict
+begin "Stop lints the project's tree, changed through Bash since SessionStart, once" && repo &&
+    started && quiet && put b.txt 1 && stop && quiet && stop && quiet &&
+    logs 'lint-tree refs/remotes/origin/main'
+verdict
+begin "Stop skips the project's tree unchanged since SessionStart" && repo && put b.txt 1 &&
+    commit -c commit.gpgSign=true && started && stop && quiet && logs
 verdict
 exit "$failed"
