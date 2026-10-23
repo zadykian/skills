@@ -29,6 +29,8 @@ EOF
     echo fine >"$dir/a.txt" && echo ignored.txt >"$dir/.gitignore" && git -C "$dir" add -A &&
         git -C "$dir" commit -q -m init && git -C "$dir" update-ref refs/remotes/origin/main HEAD
 }
+# commit commits every change of the project, signed, with the git options $@.
+commit() { git -C "$project" add -A && git -C "$project" "$@" commit -q -m change; }
 # put writes the line $2 to the project's file $1.
 put() { mkdir -p -- "$(dirname -- "$project/$1")" && printf '%s\n' "$2" >"$project/$1"; }
 # lib runs the command $@ in the project's tree with lib.sh sourced: $status, $tmp/out, $tmp/err.
@@ -47,6 +49,8 @@ holds() {
     [ $# -gt 0 ] || [ -z "$got" ] || say "std$stream holds: $got"
     for text; do grep -qF -- "$text" "$tmp/$stream" || say "std$stream lacks '$text': $got"; done
 }
+# doubt checks that vouch fails in the project's tree, with the cause $1.
+doubt() { lib vouch && exits 1 && holds out "$1"; }
 # begin starts the case that the line $1 names, in a project directory of its own.
 begin() {
     n=$((n + 1)) name=$1 project=$tmp/r$n
@@ -77,4 +81,20 @@ verdict
 begin 'mentions: a makefile that names a lint target, an untracked *.mk too' && repo lint- &&
     lib mentions && exits 1 && put lint.mk 'lint-tree:' && lib mentions && exits 0
 verdict
+begin 'vouch: signed commits, and a change outside the gate code' && repo && put b.txt 1 &&
+    commit -c commit.gpgSign=true && put a.txt 2 && lib vouch && exits 0 && holds out
+verdict
+while IFS='|' read -r line steps cause; do
+    { begin "vouch: $line" && repo && eval "$steps" && doubt "$cause"; } </dev/null
+    verdict
+done <<'EOF'
+an unsigned commit|put b 1 && commit -c commit.gpgSign=false|lacks a good signature by its author
+a commit by another than its key's|put b 1 && commit -c user.email=o@example.com|good signature
+a staged change|put a.txt 2 && git -C "$project" add a.txt|the index differs from HEAD
+an edited Makefile|put Makefile x|the gate file Makefile differs from HEAD
+an untracked file in tools|put tools/new 1|the gate file tools/new is untracked
+a lint-gates path edited|put .claude/lint-gates 'c #' && put c 1 && commit && put c 2|file c differs
+a lint-gates exclude|put .claude/lint-gates :!Makefile && commit && put Makefile x|Makefile differs
+no origin/main|git -C "$project" update-ref -d refs/remotes/origin/main|origin/main is missing
+EOF
 exit "$failed"
