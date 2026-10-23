@@ -12,10 +12,19 @@ LOG_OPTS =
 # The claude that validates the marketplace and the skills. CI's is the one .github/claude pins.
 CLAUDE = claude
 
-.PHONY: lint shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits versions hooks \
-	plugins
+.PHONY: lint lint-file lint-tree shell sizecheck vale lychee rumdl actionlint zizmor gitleaks \
+	commits versions hooks plugins
 
 lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits versions hooks plugins
+
+# What the lint plugin's hooks run here: the gates of the file Claude edited, and every gate at
+# the end of its turn.
+lint-file:
+	@$(MAKE) --no-print-directory shell sizecheck vale lychee rumdl FILES='$(FILES)' \
+		$(if $(filter .github/workflows/%,$(FILES)),actionlint zizmor) \
+		$(if $(filter skills/% hooks/% .claude-plugin/%,$(FILES)),versions plugins) \
+		$(if $(filter hooks/% tools/hookcheck,$(FILES)),hooks)
+lint-tree: lint
 
 # The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
 shell:
@@ -74,4 +83,3 @@ plugins:
 		[ -d skills ] || exit 0; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
 		mkdir "$$tmp/skills" && cp -R skills README.md LICENSE "$$tmp/skills"; \
 		$(CLAUDE) plugin validate "$$tmp/skills" --strict
-
