@@ -12,9 +12,8 @@ gh skill install zadykian/skills trim --agent claude-code --scope project
 
 `trim` reads `writing` for the policy, so a repository that installs `trim` installs `writing` too.
 
-Each skill first reads the repository's notes for it, `.claude/skill-notes/NAME.md` at its root,
-where they exist. The notes add to the skill's steps and win where they differ. So do the
-repository's CLAUDE.md and `.claude/rules/`.
+Each skill runs as the marketplace ships it. The repository's CLAUDE.md and `.claude/rules/` add
+to its steps and win where they differ.
 
 ## writing
 
@@ -31,11 +30,7 @@ the skill's `paths` lists them. `/docs:writing` loads it by hand.
 
 A repository's own policy goes in `.claude/rules/writing.md`, with `paths` of its own, so that it
 loads with the files it covers. It holds only what the repository adds, and says that the shared
-policy comes from the `writing` skill.
-
-### Its notes
-
-`.claude/skill-notes/writing.md` may hold:
+policy comes from the `writing` skill. It may hold:
 
 - caps of the repository's own, such as a README's, a comment block's or a module comment's;
 - where each kind of fact lives: the decision records, the guide, the help;
@@ -49,9 +44,7 @@ belongs. It deletes narration and what restates the code or the help, and rewrit
 Vale flags. It changes comments, never code. Claude uses it on files that fail Vale or the comment
 caps, or as `/docs:trim FILE...`.
 
-### Its notes
-
-`.claude/skill-notes/trim.md` may hold:
+The repository's CLAUDE.md or `.claude/rules/` may set:
 
 - the caps of a comment block and a file, or the rules that set them;
 - the form of a doc comment in each of the repository's languages;

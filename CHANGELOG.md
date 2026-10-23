@@ -14,6 +14,11 @@ marketplace ships it. Move what a repository's notes held into its CLAUDE.md, CO
 - `atomic-commits`, `issue` and `land`: they read no notes. Where a repository sets the header's
   form, an issue's title, the checks to wait for or who tags a release, its CLAUDE.md says so.
 
+### docs
+
+- `writing` and `trim`: they read no notes. A repository's caps, terms to keep out and prose
+  checks go in its `.claude/rules/writing.md`.
+
 ## 1.0.0
 
 ### flow

@@ -37,10 +37,9 @@ it belongs.
 
 ## The repository's rules
 
-First read the repository's notes for this skill, `.claude/skill-notes/writing.md` at its root,
-where they exist. They add to the policy below and win where they differ, as do CLAUDE.md and
-`.claude/rules/`. They may set caps of their own and terms to keep out. They name the gates to run
-on the files changed.
+The repository's CLAUDE.md and `.claude/rules/` add to the policy below and win where they
+differ. They may set caps of their own and terms to keep out, and name the gates to run on the
+files changed.
 
 ## Comments
 

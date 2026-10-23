@@ -16,9 +16,8 @@ it belongs.
 
 The `writing` skill holds the policy: what a comment and a doc say, the caps and Vale's rules.
 Read it first. The repository's own rules add to it and win where they differ: CLAUDE.md,
-`.claude/rules/` and its Vale styles, `.vale.ini`. Then read its notes for this skill,
-`.claude/skill-notes/trim.md` at its root, where they exist. They name the caps of a comment, the
-form of a doc comment and the checks, and win where they differ from what follows.
+`.claude/rules/` and its Vale styles, `.vale.ini`. They may name the caps of a comment, the form
+of a doc comment and the checks.
 
 ## Comments
 
@@ -27,7 +26,7 @@ form of a doc comment and the checks, and win where they differ from what follow
 - A reason that a decision records becomes a link: "see decision N".
 - Hold each block to the caps the repository sets. Move the details of a long file or module
   comment to the declarations they explain.
-- Keep a doc comment in the form its language sets, as the notes say.
+- Keep a doc comment in the form its language sets.
 - Change the comments only, never the code. Keep each linter directive with its reason.
 
 ## Docs
@@ -52,7 +51,8 @@ help. Where it lives nowhere else, keep it, or move it to where it belongs.
 
 ## Check
 
-- Run the checks the notes name, on the files changed. Wrap prose at the policy's width.
+- Run the checks the repository's rules name, on the files changed. Wrap prose at the policy's
+  width.
 - Commit as `docs(scope): ...` for docs, or `refactor(scope): ...` for comments, unless the
   repository's commits say otherwise.
 - Report the files changed, each fact moved and where to, and whatever still fails, with its
