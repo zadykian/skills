@@ -83,7 +83,8 @@ when its version changes, so each change to a skill, a hook or the catalog raise
   repository relies on, gone. So is a note or a make target that a repository must now write.
 
 The largest change in a release sets the part it raises. A version that lands on `main` is
-released as the tag `vX.Y.Z` and a GitHub Release.
+released as the tag `vX.Y.Z` and a GitHub Release. [CLAUDE.md](CLAUDE.md) says how a change is
+made and checked.
 
 ## License
 
