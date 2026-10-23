@@ -4,9 +4,9 @@
 # empty: make vale FILES=README.md.
 FILES =
 
-.PHONY: lint shell sizecheck
+.PHONY: lint shell sizecheck vale
 
-lint: shell sizecheck
+lint: shell sizecheck vale
 
 # The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
 shell:
@@ -16,3 +16,7 @@ shell:
 # The size caps: 300 lines a file, and 150 the README.
 sizecheck:
 	tools/sizecheck $(FILES)
+
+# Vale (.vale.ini) on the Markdown files git lists, new ones included.
+vale:
+	@set -ef; files=$$(tools/files md $(FILES)); [ -z "$$files" ] || tools/run vale $$files
