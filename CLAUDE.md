@@ -13,7 +13,7 @@ a version's parts mean.
   `gh skill install` copies as `/NAME`. Its directory holds `SKILL.md` alone, as gh copies the
   whole directory into a repository.
 - `hooks/`: the lint bundle's hooks, which Claude Code runs from its copy of the marketplace.
-- `docs/BUNDLE.md`: what each skill of a bundle does, and what a repository's notes for it hold.
+- `docs/BUNDLE.md`: what each skill of a bundle does, and what a repository's rules may set for it.
 - `CHANGELOG.md`: a `## X.Y.Z` section per version, the newest first.
 - `tools/`: the gates' scripts. `tools/run` downloads the lint tools at the versions and SHA-256
   sums it pins, into `.cache/tools`.
@@ -33,13 +33,13 @@ on the marketplace and on the skills, its warnings counted as errors.
 
 ## A change to a skill or a hook
 
-- A skill is generic. It names no repository's paths, jobs, terms, people or languages: those go
-  in the repository's notes, `.claude/skill-notes/NAME.md`, which the skill reads first. A skill
+- A skill is generic, and reads no notes of a repository's. It names no repository's paths, jobs,
+  terms, people or languages: those go in the repository's CLAUDE.md or `.claude/rules/`. A skill
   names another by its bare name, as both install paths name them differently.
 - Each change to `skills/`, `hooks/` or the catalog raises the version, as
   [Versions](README.md#versions) says: in the catalog's `metadata.version` and in each bundle.
   It adds its part to the version's section in CHANGELOG.md. `make versions` fails otherwise. A
-  change that breaks a repository's notes or targets says what to change there, in the changelog.
+  change that breaks a repository's rules or targets says what to change there, in the changelog.
 - A new skill: its directory, its bundle's `skills` list, its row in the README's table, and its
   section in its bundle's page.
 - The repository is public. No secret, employer's name, internal host or address goes into it.

@@ -63,13 +63,12 @@ gh skill install zadykian/skills land --agent claude-code --scope project
 gh installs the latest release, or the one a `land@v1.0.0` names, and pins it with `--pin`. It
 copies no hooks: the lint bundle's come with the plugin alone.
 
-## The repository's notes
+## The repository's rules
 
-A skill holds what every repository shares. What one repository adds goes in its notes for the
-skill, `.claude/skill-notes/NAME.md` at its root, which the skill reads first. They hold such
-things as the checks to wait for, an issue's title, or the gates a text passes. The notes add to
-the skill's steps and win where they differ. So do the repository's CLAUDE.md and CONTRIBUTING.md.
-Each bundle's page says what its skills' notes may hold.
+A skill holds what every repository shares, and runs as the marketplace ships it. What one
+repository adds goes in its CLAUDE.md, CONTRIBUTING.md or `.claude/rules/`, which win where they
+differ from a skill. They hold such things as the checks to wait for, an issue's title, or the
+gates a text passes. Each bundle's page says what they may set for its skills.
 
 ## Versions
 
@@ -78,9 +77,9 @@ The marketplace has one version, `X.Y.Z`, which each bundle gives too, and
 when its version changes, so each change to a skill, a hook or the catalog raises it:
 
 - the patch, for a fix or a clearer wording;
-- the minor, for a new step, argument, skill or optional note;
+- the minor, for a new step, argument or skill;
 - the major, for a break, such as a renamed skill, an argument changed or dropped, or a step a
-  repository relies on, gone. So is a note or a make target that a repository must now write.
+  repository relies on, gone. So is a make target that a repository must now write.
 
 The largest change in a release sets the part it raises. A version that lands on `main` is
 released as the tag `vX.Y.Z` and a GitHub Release. [CLAUDE.md](CLAUDE.md) says how a change is
