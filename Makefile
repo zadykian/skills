@@ -8,10 +8,12 @@ BASE = origin/main
 # The commits gitleaks scans, as git log's options, which its --log-opts takes: every commit of
 # the history when empty.
 LOG_OPTS =
+# The claude that validates the marketplace and the skills. CI's is the one .github/claude pins.
+CLAUDE = claude
 
-.PHONY: lint shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits
+.PHONY: lint shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits plugins
 
-lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits
+lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits plugins
 
 # The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
 shell:
@@ -53,3 +55,13 @@ gitleaks:
 # The headers and bodies of the commits from BASE to HEAD.
 commits:
 	tools/commits $(BASE)
+
+# claude's own checks, its warnings counted as errors: of the marketplace, and of the skills. A
+# check of the marketplace opens no skill of a bundle sourced from ./, so a copy of skills/ takes
+# a check of its own, as a plugin without a manifest.
+plugins:
+	@set -e; [ ! -f .claude-plugin/marketplace.json ] || $(CLAUDE) plugin validate . --strict; \
+		[ -d skills ] || exit 0; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
+		mkdir "$$tmp/skills" && cp -R skills README.md LICENSE "$$tmp/skills"; \
+		$(CLAUDE) plugin validate "$$tmp/skills" --strict
+

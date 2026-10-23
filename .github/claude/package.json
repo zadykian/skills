@@ -1,0 +1,8 @@
+{
+  "name": "skills-ci-claude",
+  "private": true,
+  "description": "The claude that CI's lint job validates the marketplace and the plugins with.",
+  "dependencies": {
+    "@anthropic-ai/claude-code": "2.1.308"
+  }
+}

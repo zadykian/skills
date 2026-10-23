@@ -10,7 +10,8 @@ on:
 permissions: {}
 
 jobs:
-  # make lint, the one gate, with the tools tools/run pins. Any finding fails it, warnings
+  # make lint, the one gate, with the tools tools/run pins and the claude .github/claude pins, whose
+  # plugin validate checks the marketplace and the skills. Any finding fails it, warnings
   # included.
   lint:
     runs-on: ubuntu-latest
@@ -26,6 +27,14 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      # The claude of .github/claude's lockfile, each package checked against its integrity hash.
+      # No package's script runs but claude's own postinstall, which copies the platform's binary
+      # from its package over the stub that bin/claude.exe is until then.
+      - name: Install claude
+        run: |
+          npm ci --prefix .github/claude --ignore-scripts --no-fund --no-audit
+          node .github/claude/node_modules/@anthropic-ai/claude-code/install.cjs
+          .github/claude/node_modules/.bin/claude --version
       # The base is origin/main, but on a push origin/main is the head itself. There the base is
       # the commit main was at before the push, so that the checks read what the push adds. A push
       # that makes the branch has none, all zeros, and keeps origin/main.
@@ -35,7 +44,7 @@ jobs:
           case $BEFORE in
           *[!0]*) base=$BEFORE ;;
           esac
-          make lint BASE="$base"
+          make lint BASE="$base" CLAUDE=.github/claude/node_modules/.bin/claude
         env:
           # The commit main was at before a push, and empty on a pull request.
           BEFORE: ${{ github.event_name == 'push' && github.event.before || '' }}
