@@ -1,0 +1,81 @@
+#!/bin/sh
+# Checks the marketplace's bundles and its version, in the work tree and against BASE, origin/main
+# by default:
+#
+#   tools/versioncheck [BASE]
+#
+# The marketplace has one version, X.Y.Z, its metadata.version, and each bundle in it gives the
+# same, as Claude Code updates a plugin only when its version changes. CHANGELOG.md's first
+# heading is `## X.Y.Z` for it. Each bundle takes its skills from the repository's root, source
+# ./ with strict false.
+#
+# Where BASE's marketplace has a version and skills/, hooks/ or the marketplace changed since,
+# the version is above BASE's. Each finding goes to stdout, and any fails the check. Without a
+# marketplace, there is nothing to check. It needs jq. Run it from the repository's root.
+
+set -eu
+
+marketplace=.claude-plugin/marketplace.json
+semver='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
+
+# die prints a message of the script's and exits with status 1.
+die() {
+    printf 'tools/versioncheck: %s\n' "$*" >&2
+    exit 1
+}
+
+# finding prints a finding and marks the check failed.
+finding() {
+    printf '%s\n' "$*"
+    status=1
+}
+
+# higher succeeds where the version $2 is above the version $1.
+higher() {
+    [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n 1)" = "$2" ]
+}
+
+# changed succeeds where what the bundles ship differs from BASE in the work tree: a file changed,
+# staged or not, or a new file git does not ignore.
+changed() {
+    set -- skills hooks .claude-plugin
+    ! git diff --quiet "$base" -- "$@" ||
+        [ -n "$(git ls-files --others --exclude-standard -- "$@")" ]
+}
+
+# entries checks each bundle against the version $1.
+entries() {
+    jq -r --arg v "$1" '.plugins[] | "\(.name)\t\(.source == "./" and .strict == false)\t" +
+        "\(.version == $v)"' "$marketplace" >"$tmp/entries"
+    while IFS="$(printf '\t')" read -r name rooted versioned; do
+        [ "$rooted" = true ] || finding "$name: its source is not ./ with strict false"
+        [ "$versioned" = true ] || finding "$name: its version is not the marketplace's, $1"
+    done <"$tmp/entries"
+}
+
+main() {
+    base=${1:-origin/main}
+    git rev-parse --verify --quiet "$base^{commit}" >/dev/null ||
+        die "no commit $base: fetch it first"
+    command -v jq >/dev/null || die "no jq"
+    [ -f "$marketplace" ] || return 0
+    jq -e '.plugins | type == "array" and length > 0' "$marketplace" >/dev/null 2>&1 ||
+        die "$marketplace lists no bundle"
+    status=0
+    version=$(jq -r '.metadata.version // ""' "$marketplace")
+    printf '%s\n' "$version" | grep -Eqx "$semver" ||
+        finding "the marketplace's version, '$version', is not of the form X.Y.Z"
+    [ "$(grep -m 1 '^## ' CHANGELOG.md 2>/dev/null)" = "## $version" ] ||
+        finding "CHANGELOG.md's first heading is not ## $version"
+    entries "$version"
+    if old=$(git show "$base:$marketplace" 2>/dev/null | jq -er '.metadata.version' 2>/dev/null) &&
+        changed && ! higher "$old" "$version"; then
+        finding "the bundles changed since $base, but the version $version is not above $old"
+    fi
+    return "$status"
+}
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 1' HUP INT TERM
+main "$@"
