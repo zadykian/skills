@@ -11,8 +11,11 @@ base=refs/remotes/origin/main
 GIT_OPTIONAL_LOCKS=0
 export GIT_OPTIONAL_LOCKS
 
-# input is the hook's JSON, as each hook sets it.
+# input is the hook's JSON, repo the git common directory of the project, CLAUDE_PROJECT_DIR, and
+# state the directory of the session's state, as each hook sets them.
 input=
+repo=
+state=
 
 # field prints the string field $1 of the hook's JSON in $input, escapes as they are. sed reads
 # it, as jq may be missing. A quote in a JSON string is escaped, so only a key matches.
@@ -116,9 +119,58 @@ pristine() {
     fi
 }
 
+# has succeeds where make, in the work tree in the current directory, has an explicit rule for
+# the target $1. It reads the database that make -p prints with the makefile itself as the goal,
+# which -q then leaves as it is, so that no recipe runs but one that remakes an included
+# makefile. make -n would run the lines that hold $(MAKE). A target that only a target-specific
+# variable names is not one.
+has() {
+    for makefile in GNUmakefile makefile Makefile; do
+        [ ! -f "$makefile" ] || break
+    done
+    [ -f "$makefile" ] || return 1
+    LC_ALL=C make -pRrq -- "$makefile" </dev/null 2>/dev/null | awk -v target="$1:" '
+        /^# Files/ { files = 1; next }
+        /^# files hash-table stats/ { files = 0 }
+        files && skip { skip = 0; next }
+        files && /^# Not a target:/ { skip = 1; next }
+        files && index($0, target) == 1 && index($0, "=") == 0 { found = 1 }
+        END { exit !found }'
+}
+
+# statedir prints the directory of the session $1's state: in CLAUDE_PLUGIN_DATA, else in $repo,
+# the project's git common directory. It fails where $1 is not of a session id's characters. A
+# hook makes the directory only once it has state to keep.
+statedir() {
+    case $1 in
+    '' | *[!A-Za-z0-9_-]*) return 1 ;;
+    esac
+    printf '%s/sessions/%s\n' "${CLAUDE_PLUGIN_DATA:-$repo/claude-lint}" "$1"
+}
+
+# fresh succeeds where the session has shown no notice $1 yet, and notes it as shown. Without the
+# session's state, in $state, each notice is fresh.
+fresh() {
+    [ -n "$state" ] || return 0
+    ! grep -qxF -- "$1" "$state/notices" 2>/dev/null || return 1
+    { printf '%s\n' "$1" >>"$state/notices"; } 2>/dev/null || :
+}
+
 # notice shows the user the text $1 in the hook's JSON output, and lets Claude go on. It drops
 # control characters and escapes quotes and backslashes.
 notice() {
     printf '{"systemMessage": "%s"}\n' \
         "$(printf '%s' "$1" | tr -d '\000-\037' | sed 's/[\\"]/\\&/g')"
+}
+
+# excerpt prints the end of make's output in the file $1: 60 lines, each cut to 300 columns.
+# Where lines are left out, the lines that name a failed target come first, as make -k goes on
+# past each.
+excerpt() {
+    total=$(awk 'END { print NR }' "$1")
+    if [ "$total" -gt 60 ]; then
+        grep -E '^[^ ]*make(\[[0-9]+\])?: \*\*\* ' "$1" | head -n 20 | cut -c 1-300
+        printf '[%d lines left out]\n' "$((total - 60))"
+    fi
+    tail -n 60 "$1" | cut -c 1-300
 }

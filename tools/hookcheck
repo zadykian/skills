@@ -10,7 +10,7 @@ trap 'rm -rf "$tmp"' EXIT
 trap 'exit 1' HUP INT TERM
 for name in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do unset "$name"; done
 unset CLAUDE_PROJECT_DIR CLAUDE_PLUGIN_DATA MAKEFLAGS MFLAGS MAKELEVEL XDG_CONFIG_HOME
-export HOME="$tmp/home" GIT_CONFIG_GLOBAL="$tmp/gitconfig" GIT_CONFIG_NOSYSTEM=1
+export HOME="$tmp/home" GIT_CONFIG_GLOBAL="$tmp/gitconfig" GIT_CONFIG_NOSYSTEM=1 HOOKCHECK_LOG
 mkdir "$HOME" && ssh-keygen -q -t ed25519 -N '' -C hookcheck -f "$tmp/key" </dev/null || exit 1
 printf 'hookcheck@example.com namespaces="git" %s\n' "$(cat "$tmp/key.pub")" >"$tmp/signers"
 printf '%s\n' '[user]' 'name = hookcheck' 'email = hookcheck@example.com' "signingKey = $tmp/key" \
@@ -53,8 +53,8 @@ holds() {
 doubt() { lib vouch && exits 1 && holds out "$1"; }
 # begin starts the case that the line $1 names, in a project directory of its own.
 begin() {
-    n=$((n + 1)) name=$1 project=$tmp/r$n
-    mkdir "$project" && : >"$tmp/why"
+    n=$((n + 1)) name=$1 project=$tmp/r$n HOOKCHECK_LOG=$tmp/log$n
+    mkdir "$project" && : >"$HOOKCHECK_LOG" && : >"$tmp/why"
 }
 # verdict prints the case's line: FAIL for the reasons its checks gave, or for a step that failed.
 verdict() {
@@ -97,4 +97,21 @@ a lint-gates path edited|put .claude/lint-gates 'c #' && put c 1 && commit && pu
 a lint-gates exclude|put .claude/lint-gates :!Makefile && commit && put Makefile x|Makefile differs
 no origin/main|git -C "$project" update-ref -d refs/remotes/origin/main|origin/main is missing
 EOF
+begin 'has: an explicit rule alone, and the probe runs no recipe' && repo lint-file &&
+    echo 'lint-file: X = 1' >>"$project/Makefile" && lib has lint-tree && exits 0 &&
+    lib has lint-file && exits 1 && { [ ! -s "$HOOKCHECK_LOG" ] || say 'a recipe ran'; }
+verdict
+begin 'statedir: in CLAUDE_PLUGIN_DATA, else in the git common directory, made by none' &&
+    lib eval "CLAUDE_PLUGIN_DATA=$tmp/d && statedir a-1_B" && holds out "$tmp/d/sessions/a-1_B" &&
+    lib eval 'repo=/r && statedir a' && holds out /r/claude-lint/sessions/a &&
+    lib statedir a/b && exits 1 && { [ ! -e "$tmp/d" ] || say 'statedir made its directory'; }
+verdict
+begin 'fresh: a notice once a session, and each one without the state' && mkdir "$tmp/s" &&
+    lib eval "state=$tmp/s && fresh m && ! fresh m && fresh n && state= && fresh m" && exits 0
+verdict
+begin "excerpt: 60 lines of 300 columns, after the failed targets' lines where it cuts" &&
+    awk 'BEGIN { print "make: *** x"; while (i++ < 68) print; printf "%0400d\n", 0 }' >"$tmp/l" &&
+    lib excerpt "$tmp/l" && holds out 'make: *** x' '[10 lines left out]' &&
+    { awk 'length > 300 { exit 1 } END { exit NR != 62 }' "$tmp/out" || say 'not 62 short lines'; }
+verdict
 exit "$failed"
