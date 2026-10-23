@@ -1,7 +1,7 @@
 # Changelog
 
 The marketplace's versions, newest first, each with what changed in each bundle.
-[The README](README.md) says what each part of a version means.
+[The README](README.md#versions) says what each part of a version means.
 
 ## 1.0.0
 

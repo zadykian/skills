@@ -2,7 +2,7 @@
 
 The `docs` bundle keeps a repository's code comments and docs short. [`writing`][writing] holds the
 policy, and [`trim`][trim] brings files to it. Install the plugin `docs` as the
-[README](../README.md) shows, and its skills run as `/docs:writing` and `/docs:trim`. Or
+[README](../README.md#install) shows, and its skills run as `/docs:writing` and `/docs:trim`. Or
 copy a skill into a repository, where it runs as `/writing` or `/trim`:
 
 ```sh

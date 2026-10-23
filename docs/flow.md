@@ -2,7 +2,7 @@
 
 The way a change goes from an idea to `main`: plan it as an issue, commit it in small steps, and
 land the stack of pull requests by fast-forward. The bundle is `flow@zadykian`, as
-[the README](../README.md) shows.
+[the README](../README.md#install) shows.
 
 ## atomic-commits
 
