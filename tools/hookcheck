@@ -159,4 +159,29 @@ begin 'lint-file: a tree not vouched for: a notice, once, and no gate' && repo &
     git -C "$project" add a.txt && edit "$project/a.txt" &&
     noticed 'as the index differs from HEAD.' && edit "$project/a.txt" && quiet && logs
 verdict
+begin 'lint-file: no lint-file target: silent' && repo lint-file && put a.txt BROKEN &&
+    edit "$project/a.txt" && quiet && logs
+verdict
+begin 'lint-file: no lint target named, a change staged: silent' && repo lint- && put a.txt 2 &&
+    git -C "$project" add a.txt && edit "$project/a.txt" && quiet && logs
+verdict
+begin 'lint-file: a file of a linked work tree, by its path from that tree' && repo &&
+    git -C "$project" worktree add -q "$tmp/w$n" && mkdir "$tmp/w$n/sub" &&
+    echo fine >"$tmp/w$n/sub/b.txt" && edit "$tmp/w$n/sub/b.txt" && quiet &&
+    logs "lint-file sub/b.txt @ w$n"
+verdict
+begin "lint-file: NotebookEdit's notebook_path" && repo && edit "$project/a.txt" NotebookEdit &&
+    quiet && logs "lint-file a.txt @ r$n"
+verdict
+begin 'lint-file: an ignored file: silent' && repo && put ignored.txt BROKEN &&
+    edit "$project/ignored.txt" && quiet && logs
+verdict
+begin 'lint-file: a path that is not plain: silent' && repo && put 'a b.txt' BROKEN &&
+    edit "$project/a b.txt" && quiet && logs
+verdict
+begin 'lint-file: a file gone: silent' && repo && edit "$project/gone.txt" && quiet && logs
+verdict
+begin "lint-file: a file of another repository than the project's: silent" && repo &&
+    repo '' "$tmp/o$n" && edit "$tmp/o$n/a.txt" && quiet && logs
+verdict
 exit "$failed"
