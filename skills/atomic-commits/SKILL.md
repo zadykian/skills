@@ -254,4 +254,10 @@ If any size is over its limit or any header doesn't conform, fix it before repor
 Finish with each PR's branch, title, counted size, and commits (hash and subject), plus any rule you
 couldn't follow and why.
 
+**Repository rules.** Where the repository's CLAUDE.md, CONTRIBUTING.md, commit checks or notes
+for this skill, `.claude/skill-notes/atomic-commits.md` at its root, differ from sections 3 and 6,
+follow the repository. They may set the header's form, the allowed types and
+scopes, the body's form, and the PR title and description. Everything else here holds in every
+repository: one logical change per commit, the size limits, the plan, and the stack.
+
 These rules apply unless the user explicitly asks for a single commit or a single PR.
