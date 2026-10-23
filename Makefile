@@ -4,9 +4,9 @@
 # empty: make vale FILES=README.md.
 FILES =
 
-.PHONY: lint shell sizecheck vale
+.PHONY: lint shell sizecheck vale lychee rumdl
 
-lint: shell sizecheck vale
+lint: shell sizecheck vale lychee rumdl
 
 # The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
 shell:
@@ -20,3 +20,13 @@ sizecheck:
 # Vale (.vale.ini) on the Markdown files git lists, new ones included.
 vale:
 	@set -ef; files=$$(tools/files md $(FILES)); [ -z "$$files" ] || tools/run vale $$files
+
+# Links to files and their headings in the Markdown files.
+lychee:
+	@set -ef; files=$$(tools/files md $(FILES)); [ -z "$$files" ] || \
+		tools/run lychee --offline --include-fragments --no-progress $$files
+
+# rumdl (.rumdl.toml) on the Markdown files, with no cache, which it would keep in the tree.
+rumdl:
+	@set -ef; files=$$(tools/files md $(FILES)); [ -z "$$files" ] || \
+		tools/run rumdl check --no-cache $$files
