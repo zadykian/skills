@@ -11,6 +11,8 @@ The marketplace's versions, newest first, each with what changed in each bundle.
   `## Stack` in a stack, in 200 words at most. It replaces What, Why and Testing.
 - `atomic-commits`: names the actions that warn in CI on a pull request's commits, size, title
   and description.
+- `land`: the `/ff` workflow's action is now zadykian/actions's `ff`, moved there from
+  `zadykian/ff`.
 
 ### docs
 

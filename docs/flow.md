@@ -46,7 +46,7 @@ Lands a stack of approved pull requests on `main`, the bottom first, by fast-for
 /flow:land 41 42 [vX.Y.Z]
 ```
 
-It needs `gh`, logged in, and a `/ff` workflow, as [zadykian/ff](https://github.com/zadykian/ff)
+It needs `gh`, logged in, and a `/ff` workflow, as zadykian/actions's [`ff` action][ff-action]
 sets up. The repository's CLAUDE.md and CONTRIBUTING.md win where they say how changes land:
 
 - the checks to wait for, and a known flake that gets one rerun;
@@ -56,3 +56,4 @@ sets up. The repository's CLAUDE.md and CONTRIBUTING.md win where they say how c
 [cc]: https://www.conventionalcommits.org/en/v1.0.0/
 [ac-action]: https://github.com/zadykian/actions/tree/main/atomic-commits
 [pd-action]: https://github.com/zadykian/actions/tree/main/pr-description
+[ff-action]: https://github.com/zadykian/actions/tree/main/ff
