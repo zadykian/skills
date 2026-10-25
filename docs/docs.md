@@ -22,6 +22,7 @@ The writing policy for code comments and docs:
 - a comment gives a block's purpose, or a reason the code cannot show, and never narrates it;
 - each fact lives in one place, and a doc does not restate a command's help;
 - sentences of 30 words or fewer, files of 300 lines or fewer, and prose wrapped at 100 columns;
+- no vague name or filler from the list in [`banned-terms`](lint.md#banned-terms);
 - Vale's `Microsoft.SentenceLength`, `write-good.TooWordy` and `proselint.Needless`, each alert
   fixed by rewriting, never by an exception or a baseline.
 
@@ -34,7 +35,8 @@ policy comes from the `writing` skill. It may hold:
 
 - caps of the repository's own, such as a README's, a comment block's or a module comment's;
 - where each kind of fact lives: the decision records, the guide, the help;
-- the terms or names to keep out, by a list kept outside the repository;
+- the terms or names to keep out beyond those `banned-terms` lists, by a list kept outside the
+  repository;
 - the gates that check prose, and the files each reads.
 
 ## trim

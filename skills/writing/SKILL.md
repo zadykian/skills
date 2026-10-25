@@ -69,6 +69,7 @@ files changed.
 - No wordy phrase (`write-good.TooWordy`), such as `it is`, `however`, `multiple`, `in order to`,
   `additional`, `minimum` or `type of`.
 - No needless variant (`proselint.Needless`), such as `administrate` for `administer`.
+- No vague name or filler, as the `banned-terms` skill lists them.
 
 Vale reads the Markdown, and the comments where the repository passes them to it, each rule an
 error. A comment it does not read keeps to its rules all the same. Fix an alert by rewriting the

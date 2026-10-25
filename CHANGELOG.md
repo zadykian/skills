@@ -12,6 +12,10 @@ The marketplace's versions, newest first, each with what changed in each bundle.
 - `atomic-commits`: names the actions that warn in CI on a pull request's commits, size, title
   and description.
 
+### docs
+
+- `writing`: it points to `banned-terms` for vague names and fillers.
+
 ### lint
 
 - `banned-terms`, a new skill: it keeps vague names and fillers out of new code and prose, as
