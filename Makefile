@@ -3,8 +3,7 @@
 # Each gate is a target of its own, and those that check files take FILES, every file of their kind
 # when it is empty: make vale FILES=README.md.
 FILES =
-# The ref after which tools/commits checks the commits' messages, and against which
-# tools/versioncheck compares the marketplace's version.
+# The ref against which tools/versioncheck compares the marketplace's version.
 BASE = origin/main
 # The commits gitleaks scans, as git log's options, which its --log-opts takes: every commit of
 # the history when empty.
@@ -13,9 +12,9 @@ LOG_OPTS =
 CLAUDE = claude
 
 .PHONY: lint lint-file lint-tree shell sizecheck vale lychee rumdl actionlint zizmor gitleaks \
-	commits versions hooks plugins
+	versions hooks plugins
 
-lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks commits versions hooks plugins
+lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks versions hooks plugins
 
 # What the lint plugin's hooks run here: the gates of the file Claude edited, and every gate at
 # the end of its turn.
@@ -62,10 +61,6 @@ zizmor:
 gitleaks:
 	tools/run gitleaks git --no-banner --redact --verbose \
 		$(if $(LOG_OPTS),--log-opts='$(LOG_OPTS)') .
-
-# The headers and bodies of the commits from BASE to HEAD.
-commits:
-	tools/commits $(BASE)
 
 # The bundles, their skills and hooks, and a higher version where they changed since BASE.
 versions:

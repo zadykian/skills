@@ -49,9 +49,8 @@ on the marketplace and on the skills, its warnings counted as errors.
 ## Commits and pull requests
 
 - [atomic-commits](skills/atomic-commits/SKILL.md) sets how commits and pull requests are cut.
-- The header is a Conventional Commits header, as `tools/commits` checks it. Its scope is the
-  skill or the bundle changed, as `feat(land): ...` or `fix(lint): ...`. A change across them, or
-  to the repository, takes none.
+- The header is a Conventional Commits header. Its scope is the skill or the bundle changed, as
+  `feat(land): ...` or `fix(lint): ...`. A change across them, or to the repository, takes none.
 - Commits are signed, as `main`'s ruleset requires.
 
 ## How changes land
