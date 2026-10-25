@@ -35,7 +35,8 @@ CONTRIBUTING.md: move them there.
 ### lint
 
 - `split-file`: the cap is 300 lines, the `writing` skill's. A repository names what its languages
-  need, its linters' limits and its build, which change none of the skill's steps.
+  need, its linters' limits and its build, which change none of the skill's steps. Code that
+  the tests of several files share goes in a file named for what it holds.
 - `banned-terms`: the list holds in every repository, which adds or allows no term. The
   `zadykian/actions/banned-terms` action drops its inputs `terms` and `allow` in its v2.0.0.
 

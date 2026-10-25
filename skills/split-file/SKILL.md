@@ -29,7 +29,7 @@ the `writing` skill sets it.
 3. A type stays with its methods. The package or module comment stays in one file; move a long
    one's details to the files they explain, or to a decision record.
 4. For a test file, group by the behaviour the tests cover, and keep helpers beside their tests.
-   Shared helpers go in one file of their own.
+   Code that the tests of several files share goes in one file, named for what it holds.
 
 ## Move
 
