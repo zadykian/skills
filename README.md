@@ -15,6 +15,7 @@ plugin marketplace, `zadykian`, of three bundles that share one version.
 | docs   | writing        | by Claude as it edits a file         | The policy for comments and docs      |
 | docs   | trim           | `/docs:trim FILE...`                 | Trims comments and docs to the policy |
 | lint   | split-file     | `/lint:split-file FILE`              | Splits a file over the line cap       |
+| lint   | banned-terms   | by Claude as it writes code or prose | Keeps vague names and fillers out     |
 | lint   | its hooks      | after each edit, and as Claude stops | Run the repository's own lint gates   |
 
 Claude Code names a bundle's skill after the bundle, as `/flow:land`. Claude also uses a skill

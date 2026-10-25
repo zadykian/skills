@@ -48,7 +48,7 @@
       "source": "./",
       "strict": false,
       "version": "2.1.0",
-      "description": "Hooks that run the repository's own lint gates on each file Claude edits and on the branch when it stops, and a skill that splits a file over the line cap.",
+      "description": "Hooks that run the repository's own lint gates on each file Claude edits and on the branch when it stops, a skill that splits a file over the line cap, and one that keeps vague names and fillers out of new code and prose.",
       "author": {
         "name": "Aleksandr Zadykian",
         "url": "https://github.com/zadykian"
@@ -58,7 +58,7 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["lint", "hooks", "make", "refactoring"],
-      "skills": ["./skills/split-file"],
+      "skills": ["./skills/banned-terms", "./skills/split-file"],
       "hooks": {
         "SessionStart": [
           {

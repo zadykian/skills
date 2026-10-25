@@ -12,6 +12,11 @@ The marketplace's versions, newest first, each with what changed in each bundle.
 - `atomic-commits`: names the actions that warn in CI on a pull request's commits, size, title
   and description.
 
+### lint
+
+- `banned-terms`, a new skill: it keeps vague names and fillers out of new code and prose, as
+  `zadykian/actions/banned-terms` checks a pull request for them.
+
 ## 2.0.0
 
 No skill reads a repository's notes, `.claude/skill-notes/NAME.md`, any longer: each runs as the
