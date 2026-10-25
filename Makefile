@@ -30,7 +30,7 @@ shell:
 	@set -ef; files=$$(tools/files sh $(FILES)); [ -z "$$files" ] || { \
 		tools/run shellcheck $$files && tools/run shfmt -d -i 4 $$files; }
 
-# The size caps: 300 lines a file, and 150 the README.
+# The size cap: 300 lines a file.
 sizecheck:
 	tools/sizecheck $(FILES)
 
