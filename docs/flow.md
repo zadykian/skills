@@ -15,6 +15,10 @@ A pull request's description opens with `## Problem`, one to three sentences, th
 bullets by behavior. `## Stack` follows in a stack, and a `BREAKING CHANGE:` footer ends it where
 the title has `!`. It runs to 200 words at most.
 
+In CI, [zadykian/actions/atomic-commits][ac-action] warns on a pull request whose commits, size or
+title break the skill's rules, and [zadykian/actions/pr-description][pd-action] on its
+description. Both only warn: neither blocks the merge.
+
 The repository's CLAUDE.md, CONTRIBUTING.md and commit checks win where they set the header's
 form or the types and scopes. So they do for the body and the pull request's description. The
 rest holds in every repository: one logical change per commit, the size limits, the plan and the
@@ -50,3 +54,5 @@ sets up. The repository's CLAUDE.md and CONTRIBUTING.md win where they say how c
 - the release: its workflow, the tag's form, and whether the skill pushes the tag.
 
 [cc]: https://www.conventionalcommits.org/en/v1.0.0/
+[ac-action]: https://github.com/zadykian/actions/tree/main/atomic-commits
+[pd-action]: https://github.com/zadykian/actions/tree/main/pr-description

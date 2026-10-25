@@ -9,6 +9,8 @@ The marketplace's versions, newest first, each with what changed in each bundle.
 
 - `atomic-commits`: a pull request's description is `## Problem` and `## Changes`, with
   `## Stack` in a stack, in 200 words at most. It replaces What, Why and Testing.
+- `atomic-commits`: names the actions that warn in CI on a pull request's commits, size, title
+  and description.
 
 ## 2.0.0
 

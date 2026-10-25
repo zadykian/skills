@@ -265,6 +265,14 @@ per commit and the full suite on each PR's tip.
 If `--exec` stops on a commit, fix that commit (`git commit --amend`), then `git rebase --continue`.
 If any size is over its limit or any header doesn't conform, fix it before reporting.
 
+In CI, two actions check a PR against these rules. Both only warn, and never block the merge:
+
+- [`zadykian/actions/atomic-commits`][ac-action]: its commits, its size and its title.
+- [`zadykian/actions/pr-description`][pd-action]: its description, as section 6 sets it.
+
+[ac-action]: https://github.com/zadykian/actions/tree/main/atomic-commits
+[pd-action]: https://github.com/zadykian/actions/tree/main/pr-description
+
 ## 8. Report
 
 Finish with each PR's branch, title, counted size, and commits (hash and subject), plus any rule you
