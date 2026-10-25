@@ -3,6 +3,25 @@
 The marketplace's versions, newest first, each with what changed in each bundle.
 [The README](README.md#versions) says what each part of a version means.
 
+## 3.0.0
+
+Each rule of a skill now holds in every repository. A repository's CLAUDE.md and `.claude/rules/`
+name its own facts alone, such as its gates and the checks to wait for, which add to a skill's
+steps. Move a repository's overrides out of its CLAUDE.md, `.claude/rules/` and CONTRIBUTING.md:
+
+- a narrowed list of types or scopes, or a header, body or pull request's form of its own;
+- an issue's title, sections or word range of its own;
+- a cap of its own, a term it adds or allows, or a Vale exception.
+
+The skills read a repository's facts from its CLAUDE.md and `.claude/rules/`, not from
+CONTRIBUTING.md: move them there.
+
+### flow
+
+- `atomic-commits`: the header's form, the types and scopes, the body, and the pull request's title
+  and description hold in every repository. Its CLAUDE.md names facts alone, such as its build and
+  test commands.
+
 ## 2.1.0
 
 ### flow

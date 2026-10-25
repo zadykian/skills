@@ -6,14 +6,14 @@
     "url": "https://github.com/zadykian"
   },
   "metadata": {
-    "version": "2.1.0"
+    "version": "3.0.0"
   },
   "plugins": [
     {
       "name": "flow",
       "source": "./",
       "strict": false,
-      "version": "2.1.0",
+      "version": "3.0.0",
       "description": "From issue to main: plan a change as an issue, commit it in small Conventional Commits and stacked pull requests, and land the stack by fast-forward.",
       "author": {
         "name": "Aleksandr Zadykian",
@@ -30,7 +30,7 @@
       "name": "docs",
       "source": "./",
       "strict": false,
-      "version": "2.1.0",
+      "version": "3.0.0",
       "description": "A writing policy for comments and docs that loads as Claude edits, and a skill that trims files to it, keeping every fact.",
       "author": {
         "name": "Aleksandr Zadykian",
@@ -47,7 +47,7 @@
       "name": "lint",
       "source": "./",
       "strict": false,
-      "version": "2.1.0",
+      "version": "3.0.0",
       "description": "Hooks that run the repository's own lint gates on each file Claude edits and on the branch when it stops, a skill that splits a file over the line cap, and one that keeps vague names and fillers out of new code and prose.",
       "author": {
         "name": "Aleksandr Zadykian",

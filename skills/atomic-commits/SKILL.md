@@ -81,8 +81,7 @@ Spec: <https://www.conventionalcommits.org/en/v1.0.0/>
 
 - `type`, lowercase. Use `feat` for a new feature (SemVer MINOR) and `fix` for a bug fix (SemVer
   PATCH) whenever they apply. Otherwise: `refactor`, `perf`, `test`, `docs`, `style`, `build`, `ci`,
-  `chore`, `revert`. If the repo restricts types or scopes (commitlint config, CONTRIBUTING), use
-  its list.
+  `chore`, `revert`.
 - `(scope)`, optional: a lowercase noun naming the part of the codebase, e.g. `feat(payments):`.
 - `!`, optional, directly before the colon: marks a breaking change. Allowed on any type.
 - A colon and one space, then the description: an imperative summary of the change, starting
@@ -258,7 +257,7 @@ git log --format=%s main..HEAD | awk 'length > 72'
 git rebase --exec '<build && test>' main
 ```
 
-Extend `types` if the repo allows more. Build-and-test examples: `go build ./... && go test ./...`,
+Build-and-test examples: `go build ./... && go test ./...`,
 `dotnet build && dotnet test --no-build`. If the full suite is slow, run build plus affected tests
 per commit and the full suite on each PR's tip.
 
@@ -278,9 +277,7 @@ In CI, two actions check a PR against these rules. Both only warn, and never blo
 Finish with each PR's branch, title, counted size, and commits (hash and subject), plus any rule you
 couldn't follow and why.
 
-**Repository rules.** Where the repository's CLAUDE.md, CONTRIBUTING.md or commit checks differ
-from sections 3 and 6, follow the repository. They may set the header's form, the allowed types and
-scopes, the body's form, and the PR title and description. Everything else here holds in every
-repository: one logical change per commit, the size limits, the plan, and the stack.
+**Repository rules.** Every rule here holds in every repository. Its CLAUDE.md names only facts,
+such as the build and test commands that section 7 runs and the paths of its generated code.
 
 These rules apply unless the user explicitly asks for a single commit or a single PR.

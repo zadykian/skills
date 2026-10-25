@@ -19,10 +19,10 @@ In CI, [zadykian/actions/atomic-commits][ac-action] warns on a pull request whos
 title break the skill's rules, and [zadykian/actions/pr-description][pd-action] on its
 description. Both only warn: neither blocks the merge.
 
-The repository's CLAUDE.md, CONTRIBUTING.md and commit checks win where they set the header's
-form or the types and scopes. So they do for the body and the pull request's description. The
-rest holds in every repository: one logical change per commit, the size limits, the plan and the
-stack.
+Every rule of the skill holds in every repository: the header, its types and scopes, and the
+body. So do the pull request's title and description, the size limits, the plan and the stack. The
+repository's CLAUDE.md names only facts, such as its build and test commands and the paths of its
+generated code.
 
 ## issue
 
