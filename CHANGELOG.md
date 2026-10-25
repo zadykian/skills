@@ -3,6 +3,13 @@
 The marketplace's versions, newest first, each with what changed in each bundle.
 [The README](README.md#versions) says what each part of a version means.
 
+## 2.1.0
+
+### flow
+
+- `atomic-commits`: a pull request's description is `## Problem` and `## Changes`, with
+  `## Stack` in a stack, in 200 words at most. It replaces What, Why and Testing.
+
 ## 2.0.0
 
 No skill reads a repository's notes, `.claude/skill-notes/NAME.md`, any longer: each runs as the

@@ -11,6 +11,10 @@ builds and passes the tests. A change over 300 lines becomes a stack of pull req
 which leaves `main` green. Claude uses it as it commits in a git repository, or as
 `/flow:atomic-commits`.
 
+A pull request's description opens with `## Problem`, one to three sentences, then `## Changes`,
+bullets by behavior. `## Stack` follows in a stack, and a `BREAKING CHANGE:` footer ends it where
+the title has `!`. It runs to 200 words at most.
+
 The repository's CLAUDE.md, CONTRIBUTING.md and commit checks win where they set the header's
 form or the types and scopes. So they do for the body and the pull request's description. The
 rest holds in every repository: one logical change per commit, the size limits, the plan and the
