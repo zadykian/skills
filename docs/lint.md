@@ -53,7 +53,7 @@ take seconds. A file of a kind no gate checks passes.
 
 `lint-tree` takes `BASE`, the ref the branch starts from: `refs/remotes/origin/main`, the remote's
 own ref, which no tag or branch named `origin/main` shadows. It runs the gates whose findings
-depend on the tree alone, such as the commits' messages and the secrets in those since `BASE`.
+depend on the tree alone, such as the secrets in the commits since `BASE`.
 Leave out gates that read the network or the date, such as an audit of advisories.
 
 Both run in the tree's root, with stdin from `/dev/null`, and with `-k`, so each gate runs past
