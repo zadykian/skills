@@ -21,6 +21,10 @@ CONTRIBUTING.md: move them there.
 - `atomic-commits`: the header's form, the types and scopes, the body, and the pull request's title
   and description hold in every repository. Its CLAUDE.md names facts alone, such as its build and
   test commands.
+- `issue`: the title's form, the sections and the word range hold in every repository. Its
+  CLAUDE.md names the checks a text passes before it goes out.
+- `land`: a repository's CLAUDE.md names the checks to wait for, its known flakes, the gates before
+  `/ff` and who tags a release. They change none of the skill's steps.
 
 ## 2.1.0
 

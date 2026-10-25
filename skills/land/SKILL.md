@@ -17,9 +17,9 @@ and never push to main.
 
 ## The repository's rules
 
-What the repository's CLAUDE.md and CONTRIBUTING.md say of how changes land adds to the steps
-below, and wins where it differs. They may name the checks to wait for, the gates before `/ff`, and
-who tags a release.
+The repository's CLAUDE.md and `.claude/rules/` name its facts: the checks to wait for, its known
+flakes, the gates to run before `/ff`, and who tags a release. They add to the steps below and
+change none of them.
 
 ## Each pull request, in order
 
@@ -40,7 +40,7 @@ Run each command from a clone of the repository, whose remote names it to `gh`.
 3. **Checks.** `gh pr checks N --watch`, until none is pending. Every check must have passed. Each
    job that the head's workflows run on a pull request must be among them: read them with
    `git show HEAD_SHA:.github/workflows/FILE`. Stop on a check that failed or is missing, and
-   report it. Rerun a failed job only where the repository's rules allow it, as for a known flake.
+   report it. Rerun a failed job only where the repository names it a known flake.
 4. **Conversations.** Every review conversation resolved; the ruleset refuses the push otherwise.
 5. **Land.** `gh pr diff N --name-only` lists the files it changes.
    - A pull request that changes `.github/workflows`: the workflow's token may not push it. Give
@@ -71,7 +71,7 @@ a release workflow.
 1. `git fetch origin --tags`, and check the version against the last tag,
    `git describe --tags --abbrev=0 origin/main`. A commit since then whose header has a `!` bumps
    the major, or the minor before 1.0. Otherwise a `feat` bumps the minor, and the rest the patch.
-2. The maintainer pushes the tag, unless the repository's rules say you do. Give them the
+2. The maintainer pushes the tag, unless the repository's CLAUDE.md says you do. Give them the
    commands, with main's head:
 
    ```sh

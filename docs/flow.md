@@ -31,11 +31,9 @@ approves the plan: a summary, `## Today` with `file:line` references at `main`'s
 `## Proposal`. Claude uses it when asked to file an issue or plan one, or as
 `/flow:issue [topic]`. It needs `gh`, logged in.
 
-The repository's CLAUDE.md and CONTRIBUTING.md win where they say of issues:
-
-- the title's form, where the repository's differs from a Conventional Commits header;
-- sections of the repository's own, and a word range other than 150 to 350;
-- the checks a title and a body pass before they go out, such as Vale or a list of terms.
+The title's form, the sections and the word range hold in every repository. The repository's
+CLAUDE.md names the checks that a title and a body pass before they go out, such as Vale or a
+confidentiality check.
 
 ## land
 
@@ -47,11 +45,12 @@ Lands a stack of approved pull requests on `main`, the bottom first, by fast-for
 ```
 
 It needs `gh`, logged in, and a `/ff` workflow, as zadykian/actions's [`ff` action][ff-action]
-sets up. The repository's CLAUDE.md and CONTRIBUTING.md win where they say how changes land:
+sets up. The repository's CLAUDE.md names the facts of how its changes land, which add to the
+skill's steps and change none of them:
 
 - the checks to wait for, and a known flake that gets one rerun;
 - a gate before `/ff`, such as a check of the pull request's text;
-- the release: its workflow, the tag's form, and whether the skill pushes the tag.
+- the release: its workflow, and whether the skill pushes the tag.
 
 [cc]: https://www.conventionalcommits.org/en/v1.0.0/
 [ac-action]: https://github.com/zadykian/actions/tree/main/atomic-commits

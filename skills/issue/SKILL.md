@@ -13,9 +13,9 @@ Plan, approval, then the issue. Never branch or write code unless the maintainer
 
 ## The repository's rules
 
-What the repository's CLAUDE.md and CONTRIBUTING.md say of issues and commits adds to the steps
-below, and wins where it differs. They may give the title's form, the checks a text passes before
-it goes out, and sections or lengths of their own.
+The steps below hold in every repository. A repository's CLAUDE.md and `.claude/rules/` add
+facts to them, such as the checks a text passes before it goes out. They set no title's form,
+sections or lengths of their own.
 
 ## 1. Plan
 
@@ -42,7 +42,7 @@ pull request in flight by its number, as an issue that builds on its head does.
 
 ## 3. Write it
 
-- **Title:** a Conventional Commits header, as the repository's commits have them.
+- **Title:** a Conventional Commits header, as `atomic-commits` sets a commit's.
 - **Summary:** two to four sentences: what is missing or wrong today, and what the issue adds. It
   ends "Line references are to main SHA." Name the versions of any other source cited.
 - **`## Today`:** bullets with `file:line` references, the crucial facts only. Group them under a
@@ -71,8 +71,8 @@ SUMMARY. Line references are to main SHA.
 ## 4. File it
 
 Write the body to `BODY.md` in the session's scratchpad, or another directory outside the
-repository, and name it by one absolute path in each command. Run the checks the repository's
-rules name for a text on the title and the body. In a public repository nothing secret goes in:
+repository, and name it by one absolute path in each command. Run the checks the repository
+names for a text on the title and the body. In a public repository nothing secret goes in:
 no key, token or password, and no internal host, address or domain.
 
 ```sh
