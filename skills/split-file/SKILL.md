@@ -1,24 +1,24 @@
 ---
 name: split-file
 description: >-
-  Split a source file over the repository's line cap into files by responsibility, in its package
-  or module and with its API unchanged. Use when a size check reports a file over its cap.
+  Split a source file over the line cap into files by responsibility, in its package or module
+  and with its API unchanged. Use when a size check reports a file over its cap.
 argument-hint: FILE
 ---
 
 # Split a file
 
-Split `$ARGUMENTS` into files within the repository's line cap. The package or module, its
+Split `$ARGUMENTS` into files within the line cap. The package or module, its
 exported names, their signatures and their behaviour stay as they are: callers and tests change
 nothing.
 
 ## The repository's rules
 
-Each language's rules come from the repository: its CLAUDE.md and `.claude/rules/`, the configs of
-its formatters and linters, and its build. They give the package or module clause a file takes,
-the directives that go with a declaration, the linters' limits, and how to build and test
-narrowly. They win where they differ from what follows. The cap is the one the size check
-reports, or 300 lines.
+What each language needs comes from the repository, as facts: its CLAUDE.md and `.claude/rules/`,
+the configs of its formatters and linters, and its build. They give the package or module clause a
+file takes, the directives that go with a declaration, the linters' limits, and how to build and
+test narrowly. They add to the steps that follow and change none of them. The cap is 300 lines, as
+the `writing` skill sets it.
 
 ## Plan
 

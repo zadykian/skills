@@ -38,8 +38,8 @@ messages and pull requests.
 
 ## The repository's rules
 
-The repository's CLAUDE.md and `.claude/rules/` add to the list below and win where they differ.
-They may add terms of their own, each with a hint, and allow terms that the repository needs.
+The list below holds in every repository. A repository adds no term of its own, and allows none
+of the list.
 
 ## The terms
 

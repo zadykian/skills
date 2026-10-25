@@ -32,6 +32,13 @@ CONTRIBUTING.md: move them there.
   `.claude/rules/` name the gates to run, the files Vale reads and its confidentiality lists.
 - `trim`: it holds a comment to the policy's caps alone, and commits as the skill says.
 
+### lint
+
+- `split-file`: the cap is 300 lines, the `writing` skill's. A repository names what its languages
+  need, its linters' limits and its build, which change none of the skill's steps.
+- `banned-terms`: the list holds in every repository, which adds or allows no term. The
+  `zadykian/actions/banned-terms` action drops its inputs `terms` and `allow` in its v2.0.0.
+
 ## 2.1.0
 
 ### flow

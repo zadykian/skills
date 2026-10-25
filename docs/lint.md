@@ -170,24 +170,23 @@ repositories, and prints a line a case.
 
 ## split-file
 
-Splits a source file over the repository's line cap into files by responsibility. Its package or
+Splits a source file over the line cap into files by responsibility. Its package or
 module, its API and its behaviour stay as they are, so callers and tests change nothing. It moves
 the code unchanged first, then makes each file pass every gate outright, and trims the comments as
 the `trim` skill does. Claude uses it when a size check reports a file over its cap, or as
 `/lint:split-file FILE`.
 
-The skill holds no language's rules: each comes from the repository. The cap is the one its size
-check reports, or 300 lines. The repository's CLAUDE.md or `.claude/rules/` may set:
+The skill holds no language's facts: each comes from the repository. The cap is 300 lines, the
+`writing` skill's. The repository's CLAUDE.md or `.claude/rules/` names facts alone:
 
-- the line cap, and the caps of comments, or the rules that set them;
-- each language's rules: the package or module clause a new file takes, and the directives,
+- what each language needs: the package or module clause a new file takes, and the directives,
   build constraints or preambles that go with its declarations;
 - the formatters, and how a file sheds the imports it no longer uses;
-- the linters and their limits, such as a line's length, a function's length or its complexity;
+- the linters and the limits their configs set, such as a line's length, a function's length or
+  its complexity;
 - how to build, and how to run the tests of one package or module alone;
 - the files that list others, such as a layout or a rule of where a test goes, which a split
-  changes too;
-- the commit's header, where the repository's form differs.
+  changes too.
 
 ## banned-terms
 
@@ -197,13 +196,10 @@ messages and pull requests. A term matches a whole word, so `str_utils.py` match
 does not. The skill holds for new text alone, and renames nothing unasked.
 
 Claude uses it as it works on the files that `writing` covers too, as its `paths` lists them, or
-as `/lint:banned-terms`. The repository's CLAUDE.md or `.claude/rules/` may set:
-
-- terms of its own, each with a hint;
-- terms of the list that it allows, as a word its domain needs.
+as `/lint:banned-terms`. The list holds in every repository, which adds no term of its own and
+allows none of the list.
 
 In CI, [zadykian/actions/banned-terms][bt-action] warns on these terms in what a pull request
-adds, and never blocks the merge. Its inputs `terms` and `allow` take the repository's changes to
-the list.
+adds, and never blocks the merge.
 
 [bt-action]: https://github.com/zadykian/actions/tree/main/banned-terms
