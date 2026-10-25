@@ -1,0 +1,23 @@
+name: rules
+
+# Checks each pull request against the rules of the atomic-commits and banned-terms skills, by
+# zadykian/actions's three checks at their defaults: its commits, size and title, its description,
+# and the terms it adds. Each warns and never blocks, so no ruleset requires the job.
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: zadykian/actions/atomic-commits@d6c413fda643fd21fa38480c7c0a9202e6cb1483 # v1.0.0
+      - uses: zadykian/actions/pr-description@d6c413fda643fd21fa38480c7c0a9202e6cb1483 # v1.0.0
+      - uses: zadykian/actions/banned-terms@d6c413fda643fd21fa38480c7c0a9202e6cb1483 # v1.0.0
