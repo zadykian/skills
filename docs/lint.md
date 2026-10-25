@@ -188,3 +188,22 @@ check reports, or 300 lines. The repository's CLAUDE.md or `.claude/rules/` may 
 - the files that list others, such as a layout or a rule of where a test goes, which a split
   changes too;
 - the commit's header, where the repository's form differs.
+
+## banned-terms
+
+Keeps vague names and fillers, such as `helper`, `utils`, `misc` and `simply`, out of new code and
+prose. It covers the names of files, types, functions and variables, and comments, docs, commit
+messages and pull requests. A term matches a whole word, so `str_utils.py` matches but `utilize`
+does not. The skill holds for new text alone, and renames nothing unasked.
+
+Claude uses it as it works on the files that `writing` covers too, as its `paths` lists them, or
+as `/lint:banned-terms`. The repository's CLAUDE.md or `.claude/rules/` may set:
+
+- terms of its own, each with a hint;
+- terms of the list that it allows, as a word its domain needs.
+
+In CI, [zadykian/actions/banned-terms][bt-action] warns on these terms in what a pull request
+adds, and never blocks the merge. Its inputs `terms` and `allow` take the repository's changes to
+the list.
+
+[bt-action]: https://github.com/zadykian/actions/tree/main/banned-terms
