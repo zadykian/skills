@@ -39,24 +39,22 @@ on the marketplace and on the skills, its warnings counted as errors.
 - Each change to `skills/`, `hooks/` or the catalog raises the version, as
   [Versions](README.md#versions) says: in the catalog's `metadata.version` and in each bundle.
   It adds its part to the version's section in CHANGELOG.md. `make versions` fails otherwise. A
-  change that breaks a repository's rules or targets says what to change there, in the changelog.
+  change that breaks a repository's CLAUDE.md or targets says what to change there, in the
+  changelog.
 - A new skill: its directory, its bundle's `skills` list, its row in the README's table, and its
   section in its bundle's page.
 - The repository is public. No secret, employer's name, internal host or address goes into it.
-- Prose keeps to the `writing` skill: 30 words a sentence and 100 columns a line, as Vale and
-  rumdl check, and a file to 300 lines, as `tools/sizecheck` checks.
+- Prose keeps to the [writing](skills/writing/SKILL.md#the-caps-and-vale) skill's caps, as Vale,
+  rumdl and `tools/sizecheck` check them.
 
 ## Commits and pull requests
 
-- [atomic-commits](skills/atomic-commits/SKILL.md) sets how commits and pull requests are cut.
-- The header is a Conventional Commits header. Its scope is the skill or the bundle changed, as
-  `feat(land): ...` or `fix(lint): ...`. A change across them, or to the repository, takes none.
+- [atomic-commits](skills/atomic-commits/SKILL.md) sets how commits and pull requests are cut and
+  written. `.github/workflows/rules.yml` warns on a pull request that breaks its rules.
 - Commits are signed, as `main`'s ruleset requires.
 
 ## How changes land
 
-- Pull requests land on `main` by fast-forward only: never run `gh pr merge`, and never push to
-  `main`. A comment `/ff` lands one (`.github/workflows/fast-forward.yml`), as `/flow:land` does.
-- The maintainer pushes a pull request that changes `.github/workflows` by hand,
-  `git push origin SHA:main`, as the workflow's token may not push such a change.
+- [land](skills/land/SKILL.md) sets how pull requests land. Its `/ff` workflow is
+  `.github/workflows/fast-forward.yml`.
 - `.github/workflows/release.yml` releases each new version once it lands on `main`.
