@@ -66,10 +66,10 @@ copies no hooks: the lint bundle's come with the plugin alone.
 
 ## The repository's rules
 
-A skill holds what every repository shares, and runs as the marketplace ships it. What one
-repository adds goes in its CLAUDE.md, CONTRIBUTING.md or `.claude/rules/`, which win where they
-differ from a skill. They hold such things as the checks to wait for, an issue's title, or the
-gates a text passes. Each bundle's page says what they may set for its skills.
+A skill's rules hold in every repository, and it runs as the marketplace ships it. A repository's
+CLAUDE.md and `.claude/rules/` name its own facts, which add to a skill's steps. Such are the
+checks to wait for, the gates a text passes, or the paths of its generated code. No rule of a
+skill changes for a repository. Each bundle's page says what facts a repository names.
 
 ## Versions
 

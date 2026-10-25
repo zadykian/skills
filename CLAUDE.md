@@ -13,7 +13,7 @@ a version's parts mean.
   `gh skill install` copies as `/NAME`. Its directory holds `SKILL.md` alone, as gh copies the
   whole directory into a repository.
 - `hooks/`: the lint bundle's hooks, which Claude Code runs from its copy of the marketplace.
-- `docs/BUNDLE.md`: what each skill of a bundle does, and what a repository's rules may set for it.
+- `docs/BUNDLE.md`: what each skill of a bundle does, and what facts a repository names for it.
 - `CHANGELOG.md`: a `## X.Y.Z` section per version, the newest first.
 - `tools/`: the gates' scripts. `tools/run` downloads the lint tools at the versions and SHA-256
   sums it pins, into `.cache/tools`.
