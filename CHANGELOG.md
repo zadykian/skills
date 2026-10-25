@@ -26,6 +26,12 @@ CONTRIBUTING.md: move them there.
 - `land`: a repository's CLAUDE.md names the checks to wait for, its known flakes, the gates before
   `/ff` and who tags a release. They change none of the skill's steps.
 
+### docs
+
+- `writing`: a repository sets no cap, term or exception of its own. Its CLAUDE.md and
+  `.claude/rules/` name the gates to run, the files Vale reads and its confidentiality lists.
+- `trim`: it holds a comment to the policy's caps alone, and commits as the skill says.
+
 ## 2.1.0
 
 ### flow

@@ -2,7 +2,7 @@
 name: trim
 description: >-
   Trim a repository's code comments or Markdown docs to the writing policy and its Vale rules,
-  keeping every fact. Use on files that fail Vale or the comment caps, or that restate the code or
+  keeping every fact. Use on files that fail Vale or the policy's caps, or that restate the code or
   the help.
 argument-hint: FILE...
 ---
@@ -15,17 +15,16 @@ it belongs.
 ## The repository's rules
 
 The `writing` skill holds the policy: what a comment and a doc say, the caps and Vale's rules.
-Read it first. The repository's own rules add to it and win where they differ: CLAUDE.md,
-`.claude/rules/` and its Vale styles, `.vale.ini`. They may name the caps of a comment, the form
-of a doc comment and the checks.
+Read it first. It holds in every repository. The repository's CLAUDE.md and `.claude/rules/` name
+facts alone, such as the checks to run and the files that Vale reads, as `.vale.ini` sets them.
 
 ## Comments
 
 - Keep a block's purpose in one or two sentences, or a reason the code cannot show. Delete
   sentences that narrate what the code does.
 - A reason that a decision records becomes a link: "see decision N".
-- Hold each block to the caps the repository sets. Move the details of a long file or module
-  comment to the declarations they explain.
+- Hold each block to the policy's caps. Move the details of a long file or module comment to the
+  declarations they explain.
 - Keep a doc comment in the form its language sets.
 - Change the comments only, never the code. Keep each linter directive with its reason.
 
@@ -51,9 +50,7 @@ help. Where it lives nowhere else, keep it, or move it to where it belongs.
 
 ## Check
 
-- Run the checks the repository's rules name, on the files changed. Wrap prose at the policy's
-  width.
-- Commit as `docs(scope): ...` for docs, or `refactor(scope): ...` for comments, unless the
-  repository's commits say otherwise.
+- Run the checks the repository names, on the files changed. Wrap prose at the policy's width.
+- Commit as `docs(scope): ...` for docs, or `refactor(scope): ...` for comments.
 - Report the files changed, each fact moved and where to, and whatever still fails, with its
   reason.

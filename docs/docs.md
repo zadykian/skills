@@ -12,8 +12,8 @@ gh skill install zadykian/skills trim --agent claude-code --scope project
 
 `trim` reads `writing` for the policy, so a repository that installs `trim` installs `writing` too.
 
-Each skill runs as the marketplace ships it. The repository's CLAUDE.md and `.claude/rules/` add
-to its steps and win where they differ.
+Each skill runs as the marketplace ships it, and its rules hold in every repository. The
+repository's CLAUDE.md and `.claude/rules/` add facts to its steps, and change none of them.
 
 ## writing
 
@@ -29,27 +29,24 @@ The writing policy for code comments and docs:
 Claude loads it unasked as it works on Markdown or on a common kind of source or config file, as
 the skill's `paths` lists them. `/docs:writing` loads it by hand.
 
-A repository's own policy goes in `.claude/rules/writing.md`, with `paths` of its own, so that it
-loads with the files it covers. It holds only what the repository adds, and says that the shared
-policy comes from the `writing` skill. It may hold:
+A repository's facts for the policy go in `.claude/rules/writing.md`, with `paths` of its own, so
+that it loads with the files it covers. It says that the policy comes from the `writing` skill,
+and sets no cap, term or exception of its own. It may hold:
 
-- caps of the repository's own, such as a README's, a comment block's or a module comment's;
 - where each kind of fact lives: the decision records, the guide, the help;
-- the terms or names to keep out beyond those `banned-terms` lists, by a list kept outside the
-  repository;
+- the names that its confidentiality checks keep out, by a list kept outside the repository;
 - the gates that check prose, and the files each reads.
 
 ## trim
 
 Trims code comments or Markdown docs to the policy, keeping every fact in the one place it
 belongs. It deletes narration and what restates the code or the help, and rewrites each sentence
-Vale flags. It changes comments, never code. Claude uses it on files that fail Vale or the comment
-caps, or as `/docs:trim FILE...`.
+Vale flags. It changes comments, never code. Claude uses it on files that fail Vale or the
+policy's caps, or as `/docs:trim FILE...`.
 
-The repository's CLAUDE.md or `.claude/rules/` may set:
+The policy holds in every repository. The repository's CLAUDE.md or `.claude/rules/` names facts
+alone:
 
-- the caps of a comment block and a file, or the rules that set them;
-- the form of a doc comment in each of the repository's languages;
 - the texts that something besides Markdown reads, such as a heading a script links to, or
   commands a test runs;
 - the checks to run on the files changed, and which of them take a list of files.

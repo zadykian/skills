@@ -37,9 +37,12 @@ it belongs.
 
 ## The repository's rules
 
-The repository's CLAUDE.md and `.claude/rules/` add to the policy below and win where they
-differ. They may set caps of their own and terms to keep out, and name the gates to run on the
-files changed.
+The policy below holds in every repository, with no cap, term or exception of a repository's
+own. The repository's CLAUDE.md and `.claude/rules/` name facts alone:
+
+- the gates to run on the files changed;
+- which files Vale reads, such as the comments that the repository passes to it;
+- the lists of names that its confidentiality checks keep out.
 
 ## Comments
 
