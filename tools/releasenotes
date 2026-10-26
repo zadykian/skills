@@ -1,0 +1,11 @@
+#!/bin/sh
+# Prints a release's notes in Markdown: the commits since the last release, as tools/lastrelease
+# finds it, or every commit before the first release. Each commit is a line, `- HEADER (SHA)`,
+# oldest first.
+#
+# It needs git. Run it from the repository's root.
+
+set -eu
+
+last=$("$(dirname -- "$0")/lastrelease")
+git log --reverse --format='- %s (%h)' "${last:+refs/tags/$last..}HEAD"
