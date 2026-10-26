@@ -39,7 +39,7 @@ the folder is trusted, fetches the marketplace, and loads the bundles enabled th
 {
   "extraKnownMarketplaces": {
     "zadykian": {
-      "source": { "source": "github", "repo": "zadykian/skills" },
+      "source": { "source": "github", "repo": "zadykian/skills", "ref": "vX.Y.Z" },
       "autoUpdate": true
     }
   },
@@ -52,7 +52,8 @@ the folder is trusted, fetches the marketplace, and loads the bundles enabled th
 ```
 
 Claude Code updates a third party's marketplace only where `autoUpdate` is on, or when asked:
-`/plugin marketplace update zadykian`. A `"ref": "v1.0.0"` beside `"repo"` holds it at a release.
+`/plugin marketplace update zadykian`. The `"ref"` holds it at a release, as `main` may hold
+changes not yet released: name that release's tag in place of `vX.Y.Z`.
 
 One skill alone, with [gh](https://cli.github.com/) 2.90 or later, copied into the repository's
 `.claude/skills`, where it runs as `/land`:
@@ -90,6 +91,9 @@ the release workflow tags `main`'s head `vX.Y.Z` and publishes a GitHub Release.
 the commits since the last release, as breaking changes, features, fixes and other changes. Under
 a breaking change goes its `BREAKING CHANGE:` footer, which says what a repository must change.
 [CLAUDE.md](CLAUDE.md) says how a change is made and checked.
+
+A repository pins its actions to the same release as the marketplace's [`ref`](#install). Each
+action's `uses:` names the SHA of the release's tag, with the tag in a comment.
 
 ## License
 
