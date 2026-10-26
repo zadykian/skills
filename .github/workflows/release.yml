@@ -1,7 +1,7 @@
 name: release
 
 # Publishes each version of the marketplace on main as a GitHub Release with its tag, vX.Y.Z, at
-# the last commit that shipped it, where no tag of that name is yet. gh skill installs the latest
+# a commit that ships it, where no tag of that name is yet. gh skill installs the latest
 # release unless told another. The fast-forward workflow's pushes start no workflow, so its runs
 # that complete start this one. A push to main by hand starts it too.
 
@@ -35,6 +35,9 @@ jobs:
           persist-credentials: false
       # A version ships at the last commit that changed the bundles while the marketplace gave
       # that version, as the next change raises it. Its notes are CHANGELOG.md's section there.
+      # The token may not tag a commit whose workflows differ from main's, so the newest version
+      # is tagged at main's head, whose bundles are the same. An older version's commit may still
+      # be refused, and the maintainer then runs this step's `gh release create` by hand.
       - name: Release the new versions
         run: |
           catalog=.claude-plugin/marketplace.json
@@ -44,11 +47,13 @@ jobs:
             [ -z "$version" ] || printf '%s %s\n' "$version" "$sha"
           done | awk '!($1 in at) { order[++n] = $1 } { at[$1] = $2 }
             END { for (i = 1; i <= n; i++) print order[i], at[order[i]] }' >"$RUNNER_TEMP/versions"
+          last=$(git log -1 --format=%H -- skills hooks .claude-plugin)
           while read -r version sha; do
             tag=v$version
             if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
               continue
             fi
+            [ "$sha" != "$last" ] || sha=$(git rev-parse HEAD)
             git show "$sha:CHANGELOG.md" | awk -v heading="## $version" \
               '$0 == heading { on = 1; next } on && /^## / { exit } on' >"$RUNNER_TEMP/notes.md"
             gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$sha" --title "$tag" \
