@@ -1,0 +1,47 @@
+#!/bin/sh
+# Pins a repository's actions to one release of the toolkit:
+#
+#   tools/pin vX.Y.Z DIR
+#
+# The tag vX.Y.Z of this script's repository names the commit, SHA. In DIR's workflows, each step
+# of an action of the toolkit becomes `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`.
+#
+# Each edit keeps its file's layout. It needs git.
+
+set -eu
+
+# die prints a message of the script's and exits with status 1.
+die() {
+    printf 'tools/pin: %s\n' "$*" >&2
+    exit 1
+}
+
+# workflows pins each step that uses an action of the toolkit, as NAME@REF unquoted, with a comment
+# or none after it.
+workflows() {
+    for file in .github/workflows/*.yml .github/workflows/*.yaml; do
+        [ -f "$file" ] || continue
+        awk -v sha="$sha" -v version="$version" '
+            BEGIN { uses = "^[ \t]*(-[ \t]+)?uses:[ \t]+zadykian/toolkit/actions/" }
+            $0 ~ (uses "[A-Za-z0-9._-]+@[^ \t]+([ \t]*|[ \t]+#.*)$") {
+                $0 = substr($0, 1, index($0, "@") - 1) "@" sha " # " version
+            }
+            { print }' "$file" >"$tmp/out"
+        cmp -s "$tmp/out" "$file" || cat "$tmp/out" >"$file"
+    done
+}
+
+main() {
+    [ $# = 2 ] || die "usage: tools/pin vX.Y.Z DIR"
+    version=$1
+    root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+    sha=$(git -C "$root" rev-parse -q --verify "refs/tags/$version^{commit}") ||
+        die "no tag $version in $root"
+    CDPATH='' cd -- "$2" 2>/dev/null || die "no directory $2"
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    trap 'exit 1' HUP INT TERM
+    workflows
+}
+
+main "$@"
