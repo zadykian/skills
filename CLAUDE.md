@@ -97,6 +97,10 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
 
 - [atomic-commits](skills/atomic-commits/SKILL.md) sets how commits and pull requests are cut and
   written. `.github/workflows/rules.yml` warns on a pull request that breaks its rules.
+- A commit's scope is the name of the skill or the action it changes, as `feat(land):` or
+  `fix(ff):`. Where a skill and an action share a name, as `atomic-commits` and `banned-terms` do,
+  the scope covers both. The hooks take `lint`, their bundle's name, and `actions/lib/` takes
+  `lib`. A change across them takes none.
 - Commits are signed, as `main`'s ruleset requires.
 
 ## How changes land
