@@ -1,8 +1,9 @@
 name: rules
 
-# Checks each pull request against the rules of the atomic-commits and banned-terms skills, by
-# zadykian/actions's three checks at their defaults: its commits, size and title, its description,
-# and the terms it adds. Each warns and never blocks, so no ruleset requires the job.
+# Checks each pull request against the rules of the atomic-commits and banned-terms skills, by the
+# three checks of actions/ as the pull request has them. So a pull request that changes a rule, in
+# its skill and its check, is checked by the check it makes. Each warns and never blocks, so no
+# ruleset requires the job. banned-terms passes over the files that quote the terms on purpose.
 
 on:
   pull_request:
@@ -17,7 +18,22 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    # zizmor asks for $/ over ./, but actionlint 1.7.12 refuses $/ as a uses ref. So the checkout
+    # gives the job the checks' code, and each ./ step ignores the audit.
     steps:
-      - uses: zadykian/actions/atomic-commits@9c02fe599a7f620e98cd3d89ba9a0858e2f8b147 # v2.0.0
-      - uses: zadykian/actions/pr-description@9c02fe599a7f620e98cd3d89ba9a0858e2f8b147 # v2.0.0
-      - uses: zadykian/actions/banned-terms@9c02fe599a7f620e98cd3d89ba9a0858e2f8b147 # v2.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The pull request's own head, as in the ci workflow, since it lands as it is.
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: ./actions/atomic-commits # zizmor: ignore[self-repository]
+      - uses: ./actions/pr-description # zizmor: ignore[self-repository]
+      - uses: ./actions/banned-terms # zizmor: ignore[self-repository]
+        with:
+          exclude: |
+            .vale/styles/write-good/TooWordy.yml
+            actions/banned-terms/README.md
+            actions/banned-terms/terms.txt
+            docs/lint.md
+            skills/banned-terms/SKILL.md
+            tests/banned-terms.sh
