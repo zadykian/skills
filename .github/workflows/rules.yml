@@ -33,7 +33,6 @@ jobs:
           exclude: |
             .vale/styles/write-good/TooWordy.yml
             actions/banned-terms/README.md
-            actions/banned-terms/terms.txt
             docs/lint.md
             skills/banned-terms/SKILL.md
             skills/banned-terms/terms.json
