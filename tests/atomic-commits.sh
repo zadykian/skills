@@ -3,6 +3,9 @@
 # Backticks quote the report's Markdown here, never a command.
 # shellcheck disable=SC2016
 
+# The check links to the skill on main, as check runs it from this checkout.
+skill=https://github.com/zadykian/toolkit/blob/main/skills/atomic-commits/SKILL.md
+
 # commits answers the commits of pull request #1, one of each message $@, in pages of 100. The
 # Nth's SHA is N seven times over, as 1111111. It has one parent, and changes no file, as the pull
 # request changes none.
@@ -38,6 +41,7 @@ for subject in '1111111 Add y' '2222222 feat(X): add y' '3333333 feat:  add y' '
 done
 warns 'Commit `1111111 Add y`: the header is not `type(scope)!: description`.'
 warnings 4
+summarizes "The rule: $skill#3-commit-messages-conventional-commits-100"
 summarizes 'its type one of `feat fix refactor perf test docs style build ci chore revert`'
 summarizes 'GIT_EDITOR="cp /tmp/msg.txt" \
     git rebase -i --update-refs main'

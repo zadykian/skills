@@ -9,7 +9,7 @@ set -euo pipefail
 . "$GITHUB_ACTION_PATH/../lib/report.sh"
 report_start pr-description
 
-skill=https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md
+skill=$(file_url skills/atomic-commits/SKILL.md)
 url=$skill#6-stack-mechanics-git--238
 # The form of a description, as section 6 shows it, in the parts that the fixes quote.
 problem_md='## Problem

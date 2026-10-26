@@ -1,6 +1,9 @@
 # shellcheck shell=bash
 # The cases of pr-description/check.sh, each a description of pull request #1.
 
+# The check links to the skill on main, as check runs it from this checkout.
+skill=https://github.com/zadykian/toolkit/blob/main/skills/atomic-commits/SKILL.md
+
 # describe starts the case $1, of pull request #1 into main, its default branch, with the
 # description $2 and the fields of the JSON $3 over it, and checks it.
 describe() {
@@ -13,6 +16,7 @@ describe() {
 setup warns-on-an-empty-description
 check pr-description
 warns '::warning title=pr-description%3A The description is empty::The description of #1 is empty.'
+summarizes "The rule: $skill#6-stack-mechanics-git--238"
 summarizes '## Problem
 
 What is wrong or missing today'

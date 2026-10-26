@@ -83,7 +83,7 @@ message() {
 }
 
 report_start atomic-commits
-skill=https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md
+skill=$(file_url skills/atomic-commits/SKILL.md)
 messages=$skill#3-commit-messages-conventional-commits-100
 # The skill fixes these, and no input changes them: the types of a header, at $messages, and
 # the most changed lines of a commit and of a pull request, at $skill#hard-rules.

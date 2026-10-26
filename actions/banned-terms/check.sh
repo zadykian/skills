@@ -12,7 +12,7 @@ set -euo pipefail
 # shellcheck source=actions/lib/glob.sh
 . "$GITHUB_ACTION_PATH/../lib/glob.sh"
 report_start banned-terms
-skill=https://github.com/zadykian/skills/blob/main/skills/banned-terms/SKILL.md
+skill=$(file_url skills/banned-terms/SKILL.md)
 
 # The list of terms.txt, which $skill#the-terms sets and no input changes: on its first line the
 # index, {TERM: KEY}, then each group's rule, its KEY, TITLE and HINT. A group's key is its number.
@@ -26,7 +26,7 @@ config=$(jq -Rnr '[inputs | select(test("^\\s*(#|$)") | not)
     read -r index
     while IFS=$'\t' read -r key title hint; do rule "$key" "$title" "$skill" "$hint"; done
 } <<<"$config"
-readme=https://github.com/zadykian/actions/blob/main/banned-terms/README.md
+readme=$(file_url actions/banned-terms/README.md)
 rule unread 'Files with no patch' "$readme#limits" "GitHub gives no patch of a binary file, nor of \
 a large one, so the check reads its path alone. Check the text that it adds by hand, or skip it \
 with \`exclude\`."

@@ -1,7 +1,9 @@
 # shellcheck shell=bash
 # The cases of banned-terms/check.sh. Their fixtures hold the terms of banned-terms/terms.txt.
 
-skill=https://github.com/zadykian/skills/blob/main/skills/banned-terms/SKILL.md
+# The check links to main, as check runs it from this checkout.
+main=https://github.com/zadykian/toolkit/blob/main
+skill=$main/skills/banned-terms/SKILL.md
 
 # start starts the case $1, of a pull request with no commit and no file.
 start() {
@@ -145,6 +147,19 @@ warns '::warning title=banned-terms%3A Files with no patch,file=logo.png::GitHub
 warns 'file=data.json::GitHub gives no patch of the file, so its lines go unread.'
 warnings 2
 summarizes '#### Files with no patch'
+summarizes "The rule: $main/actions/banned-terms/README.md#limits"
+
+# The check, where the runner downloads zadykian/toolkit/actions/banned-terms@v1.2.0, links to it.
+start links-at-the-ref-of-uses
+mkdir -p _actions/zadykian/toolkit
+ln -s "$ROOT" _actions/zadykian/toolkit/v1.2.0
+titled 'feat: add a string helper'
+files '{"filename": "logo.png", "status": "added", "changes": 0}'
+check banned-terms GITHUB_ACTION_PATH="$FAKE/_actions/zadykian/toolkit/v1.2.0/actions/banned-terms"
+tag=https://github.com/zadykian/toolkit/blob/v1.2.0
+summarizes "The rule: $tag/skills/banned-terms/SKILL.md
+"
+summarizes "The rule: $tag/actions/banned-terms/README.md#limits"
 
 # setup answers no commits: gh api fails, as on GitHub's 404.
 setup warns-where-it-cannot-read
