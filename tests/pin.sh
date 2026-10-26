@@ -54,6 +54,10 @@ setup pins-the-workflows-once
 start
 pin v1.2.3
 exits 0
+prints ".github/workflows/rules.yml:5: - uses: zadykian/toolkit/actions/x@$SHA # v1.2.3"
+pin v1.2.3
+exits 0
+prints "$FAKE/app pins v1.2.3 already"
 pinned "$SHA" v1.2.3
 
 setup refuses-a-version-it-cannot-resolve

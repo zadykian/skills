@@ -7,7 +7,8 @@
 # of an action of the toolkit, or of zadykian/actions before it, becomes
 # `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`.
 #
-# Each edit keeps its file's layout. It needs git.
+# Each edit keeps its file's layout, and a second run changes nothing. Each line it changes goes to
+# stdout, as PATH:LINE: TEXT. It needs git.
 
 set -eu
 
@@ -20,15 +21,21 @@ die() {
 }
 
 # workflows pins each step that uses an action of the toolkit, as NAME@REF unquoted, with a comment
-# or none after it.
+# or none after it. It lists the steps in $tmp/steps.
 workflows() {
     for file in .github/workflows/*.yml .github/workflows/*.yaml; do
         [ -f "$file" ] || continue
-        awk -v sha="$sha" -v version="$version" '
+        awk -v sha="$sha" -v version="$version" -v changes="$tmp/changes" -v steps="$tmp/steps" '
             BEGIN { uses = "^[ \t]*(-[ \t]+)?uses:[ \t]+zadykian/(toolkit/)?actions/" }
             $0 ~ (uses "[A-Za-z0-9._-]+@[^ \t]+([ \t]*|[ \t]+#.*)$") {
-                $0 = substr($0, 1, index($0, "@") - 1) "@" sha " # " version
-                sub("zadykian/(toolkit/)?actions/", "zadykian/toolkit/actions/")
+                print FILENAME >>steps
+                line = substr($0, 1, index($0, "@") - 1) "@" sha " # " version
+                sub("zadykian/(toolkit/)?actions/", "zadykian/toolkit/actions/", line)
+                if (line != $0) {
+                    $0 = line
+                    sub("^[ \t]+", "", line)
+                    print FILENAME ":" FNR ": " line >>changes
+                }
             }
             { print }' "$file" >"$tmp/out"
         cmp -s "$tmp/out" "$file" || cat "$tmp/out" >"$file"
@@ -46,7 +53,11 @@ main() {
     tmp=$(mktemp -d)
     trap 'rm -rf "$tmp"' EXIT
     trap 'exit 1' HUP INT TERM
+    touch "$tmp/steps" "$tmp/changes"
     workflows
+    [ -s "$tmp/steps" ] || die "$2 has no workflow that uses an action of the toolkit"
+    [ -s "$tmp/changes" ] || printf '%s pins %s already\n' "$2" "$version" >"$tmp/changes"
+    cat "$tmp/changes"
 }
 
 main "$@"
