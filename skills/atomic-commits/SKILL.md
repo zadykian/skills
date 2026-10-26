@@ -123,8 +123,8 @@ instead.
 fix(checkout): stop double-charging on retried requests
 ```
 
-`fixup!` commits don't conform; they are temporary and must be autosquashed before pushing or
-reporting.
+A commit whose header starts `fixup!`, `squash!` or `amend!` is temporary and doesn't conform:
+autosquash it before pushing or reporting.
 
 ## 4. Work loop
 

@@ -121,6 +121,11 @@ agree "$(values "$check_ac" "^rule body-width 'A line of the body is over ([0-9]
     "$width"
 agree "$(values "$check_ac" 'Wrap the body at ([0-9]+) ')" "$width"
 
+setup holds-the-prefixes-of-a-temporary-commit
+prefixes=$(values "$skill_ac" '`([a-z]+)!`' '^A commit whose header starts ')
+agree "$(values "$check_ac" '([a-z]+)[|)]' "^temporary='\^\(\(")" "$prefixes"
+agree "$(values "$check_ac" '`([a-z]+)!' '^belongs to\. A ')" "$prefixes"
+
 setup leaves-out-the-paths-that-its-skill-does
 agree "$(values actions/atomic-commits/action.yml '^ +(.+)$' '^    default: \|$' '^$')" \
     "$(values "$skill_ac" "':\(exclude,glob\)([^']+)'")"
