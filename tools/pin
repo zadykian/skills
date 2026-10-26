@@ -58,7 +58,8 @@ workflows() {
 
 # edit prints settings.json with its source pinned, and exits 2 where it cannot find it. The repo
 # is on the one line that names it. The source spans the lines from the last { at or before it to
-# the first } at or after it. Its ref is on one of those lines, or else goes after the repo.
+# the first } at or after it. Its ref is on one of those lines, or else goes after the repo: on a
+# line of its own where the repo has one.
 edit() {
     awk -v version="$version" -v path="$settings" -v changes="$tmp/changes" '
         BEGIN {
@@ -91,11 +92,17 @@ edit() {
                 match(text[r], repo)
                 head = substr(text[r], 1, RSTART + RLENGTH - 1)
                 tail = substr(text[r], RSTART + RLENGTH)
-                text[r] = head ", \"ref\": \"" version "\"" tail
+                pin = "\"ref\": \"" version "\""
+                if (s < r && head ~ /^[ \t]*"repo"/ && tail ~ /^,?[ \t]*$/) {
+                    extra = substr(head, 1, index(head, "\"") - 1) pin (tail ~ /,/ ? "," : "")
+                    text[r] = head ","
+                } else
+                    text[r] = head ", " pin tail
             }
             for (i = 1; i <= NR; i++) {
                 print text[i]
                 if (text[i] != was[i]) report(i, text[i])
+                if (i == r && extra != "") { print extra; report(i + 1, extra) }
             }
         }' "$settings"
 }

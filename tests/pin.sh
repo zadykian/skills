@@ -68,6 +68,17 @@ pinned() {
 EOF
 }
 
+# sourced checks that app's settings.json gives its source of lines the ref $1.
+sourced() {
+    changes .claude/settings.json <<EOF
+9c9,10
+<         "repo": "zadykian/skills"
+---
+>         "repo": "zadykian/toolkit",
+>         "ref": "$1"
+EOF
+}
+
 setup pins-the-workflows-once
 start
 pin v1.2.3
@@ -110,3 +121,21 @@ pin v1.2.3
 exits 1
 prints 'names 0 marketplaces of zadykian/toolkit or zadykian/skills, not one'
 changes .github/workflows/rules.yml </dev/null
+
+setup gives-the-ref-a-line-of-its-own-in-a-source-of-lines
+start
+settings '      "source": {
+        "source": "github",
+        "repo": "zadykian/skills"
+      },'
+pin v1.2.3
+exits 0
+prints '.claude/settings.json:10: "ref": "v1.2.3"'
+sourced v1.2.3
+git -C "$FAKE/toolkit" commit -q --allow-empty -m 'fix: mend it'
+git -C "$FAKE/toolkit" tag v1.3.0
+SHA=$(git -C "$FAKE/toolkit" rev-parse HEAD)
+pin v1.3.0
+exits 0
+pinned "$SHA" v1.3.0
+sourced v1.3.0
