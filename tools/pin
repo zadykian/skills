@@ -10,12 +10,15 @@
 # edit settings.json, so this moves both pins at once.
 #
 # Each edit keeps its file's layout, and a second run changes nothing. Where a check fails, it
-# writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT. It needs git.
+# writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT. It needs git and jq.
 
 set -eu
 
 semver='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
 settings=.claude/settings.json
+# sources is the jq path of each marketplace's source that names the toolkit's repository.
+sources='.extraKnownMarketplaces[]? | .source? | objects |
+    select(.repo == "zadykian/toolkit" or .repo == "zadykian/skills")'
 
 # die prints a message of the script's and exits with status 1.
 die() {
@@ -97,14 +100,23 @@ edit() {
         }' "$settings"
 }
 
-# marketplace pins the source of the toolkit's marketplace in settings.json. A repository without
-# settings.json gets a note.
+# marketplace pins the source of the toolkit's marketplace in settings.json, and checks with jq
+# that the edit changes that source alone. A repository without settings.json gets a note.
 marketplace() {
     if [ ! -f "$settings" ]; then
         printf 'tools/pin: no %s, so the workflows alone are pinned\n' "$settings" >&2
         return
     fi
+    command -v jq >/dev/null || die "no jq"
+    count=$(jq "[$sources] | length" "$settings" 2>/dev/null) || die "$settings is not valid JSON"
+    [ "$count" = 1 ] ||
+        die "$settings names $count marketplaces of zadykian/toolkit or zadykian/skills, not one"
     edit >"$tmp/out" || die "$settings: no one line holds its source's repo, or its ref"
+    jq -S --arg ref "$version" "($sources)"' += {repo: "zadykian/toolkit", ref: $ref}' \
+        "$settings" >"$tmp/want"
+    if ! jq -S . "$tmp/out" >"$tmp/got" 2>/dev/null || ! cmp -s "$tmp/want" "$tmp/got"; then
+        die "the edit of $settings would change more than its source: edit it by hand"
+    fi
     stage "$settings"
 }
 

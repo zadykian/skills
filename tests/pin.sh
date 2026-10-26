@@ -102,3 +102,11 @@ changes .claude/settings.json <<'EOF'
 ---
 >       "source": { "source": "github", "repo": "zadykian/toolkit", "ref": "v1.2.3" },
 EOF
+
+setup refuses-settings-without-the-toolkit-and-writes-nothing
+start
+settings '      "source": { "source": "github", "repo": "o/skills" },'
+pin v1.2.3
+exits 1
+prints 'names 0 marketplaces of zadykian/toolkit or zadykian/skills, not one'
+changes .github/workflows/rules.yml </dev/null
