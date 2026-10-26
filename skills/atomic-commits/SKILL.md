@@ -9,7 +9,8 @@ description: "Use when implementing code changes in a git repo - deliver small, 
 
 1. Every commit is one logical change, builds, and passes tests on its own.
 2. Target ≤ 100 changed lines per commit (typically 10–60). Only purely mechanical commits (rename,
-   move, formatting, regenerated code) may exceed this, and their body says so.
+   move, formatting, regenerated code) may exceed this, and their body says `mechanical`,
+   capitalized or not.
 3. Every commit message follows Conventional Commits 1.0.0 (section 3). A change that fits two types
    is two commits.
 4. No PR exceeds 300 changed lines against its own base. Larger work becomes a stack of PRs, each of

@@ -95,6 +95,12 @@ setup holds-the-cap-of-a-commit
 agree "$(values "$check_ac" '^max_commit_lines=([0-9]+)')" \
     "$(values "$skill_ac" 'Target ≤ ([0-9]+) changed lines per commit')"
 
+setup holds-the-word-of-a-mechanical-commit
+word=$(values "$skill_ac" 'their body says `([a-z]+)`')
+agree "$(values "$check_ac" '\[\[ \$\{body,,\} == \*([a-z]+)\* \]\]')" "$word"
+agree "$(values "$check_ac" 'its body says so: \\`([a-z]+)\\`')" "$word"
+agree "$(values "$check_ac" 'its body does not say \\`([a-z]+)\\`')" "$word"
+
 setup holds-the-cap-of-a-pull-request
 agree "$(values "$check_ac" ' max_pr_lines=([0-9]+)$')" \
     "$(values "$skill_ac" 'No PR exceeds ([0-9]+) changed lines')"
