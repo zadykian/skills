@@ -1,9 +1,10 @@
-# skills
+# toolkit
 
 [Claude Code](https://code.claude.com/docs/en/overview) skills and hooks for work in a GitHub
-repository. They plan a change as an issue, commit it in small steps, and land the stack by
-fast-forward. They keep prose short, and lint each file as Claude edits it. The repository is a
-plugin marketplace, `zadykian`, of three bundles that share one version.
+repository, and GitHub Actions that check each pull request against the same rules. The skills
+plan a change as an issue, commit it in small steps, and land the stack by fast-forward. They keep
+prose short, and the hooks lint each file as Claude edits it. The skills and hooks are a plugin
+marketplace, `zadykian`, of three bundles. They and the actions release at one version.
 
 ## The bundles
 
@@ -27,9 +28,9 @@ unasked where its description fits the task, unless it runs by hand only. [flow]
 In a session, for yourself, on Claude Code 2.1.275 or later, which adds the marketplace too:
 
 ```text
-/plugin install flow --marketplace zadykian/skills
-/plugin install docs --marketplace zadykian/skills
-/plugin install lint --marketplace zadykian/skills
+/plugin install flow --marketplace zadykian/toolkit
+/plugin install docs --marketplace zadykian/toolkit
+/plugin install lint --marketplace zadykian/toolkit
 ```
 
 For everyone who works in a repository, in its `.claude/settings.json`. Claude Code reads it once
@@ -39,7 +40,7 @@ the folder is trusted, fetches the marketplace, and loads the bundles enabled th
 {
   "extraKnownMarketplaces": {
     "zadykian": {
-      "source": { "source": "github", "repo": "zadykian/skills", "ref": "vX.Y.Z" },
+      "source": { "source": "github", "repo": "zadykian/toolkit", "ref": "vX.Y.Z" },
       "autoUpdate": true
     }
   },
@@ -59,7 +60,7 @@ One skill alone, with [gh](https://cli.github.com/) 2.90 or later, copied into t
 `.claude/skills`, where it runs as `/land`:
 
 ```sh
-gh skill install zadykian/skills land --agent claude-code --scope project
+gh skill install zadykian/toolkit land --agent claude-code --scope project
 ```
 
 gh installs the latest release, or the one a `land@v1.0.0` names, and pins it with `--pin`. It
