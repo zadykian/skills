@@ -28,8 +28,9 @@ the `writing` skill sets it.
    language's style for names; never `util` or `part2`.
 3. A type stays with its methods. The package or module comment stays in one file; move a long
    one's details to the files they explain, or to a decision record.
-4. For a test file, group by the behaviour the tests cover, and keep helpers beside their tests.
-   Code that the tests of several files share goes in one file, named for what it holds.
+4. For a test file, group by the behaviour the tests cover, and keep each fixture and assertion
+   function beside the tests that call it. Code that the tests of several files share goes in one
+   file, named for what it holds.
 
 ## Move
 
@@ -39,7 +40,7 @@ the `writing` skill sets it.
   no longer uses.
 - The moved code must pass every linter the repository runs, at the limits its config sets, such
   as a line's length, a function's length or its complexity. Break a function over a limit into
-  helpers named for what they do. The behaviour stays the same.
+  smaller functions, each named for what it does. The behaviour stays the same.
 - Trim the comments as they move, as the `trim` skill does: purpose or reason only.
 - Every file must pass every gate outright: no baseline, no exclusion.
 
