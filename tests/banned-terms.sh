@@ -1,5 +1,6 @@
 # shellcheck shell=bash
-# The cases of banned-terms/check.sh. Their fixtures hold the terms of banned-terms/terms.txt.
+# The cases of banned-terms/check.sh. Their fixtures hold the terms of
+# skills/banned-terms/terms.json.
 
 # The check links to main, as check runs it from this checkout.
 main=https://github.com/zadykian/toolkit/blob/main
@@ -40,6 +41,15 @@ changed() {
         '{filename: $path, status: $status, changes: 1, patch: $patch}'
 }
 
+# listed leaves a tree of the action in $FAKE whose skill's terms.json holds the text $1, or which
+# has no terms.json where $1 is omitted. Pass "$tree" to check, which then runs on that tree.
+listed() {
+    mkdir -p "$FAKE/actions/banned-terms" "$FAKE/skills/banned-terms"
+    ln -s "$ROOT/actions/lib" "$FAKE/actions/lib"
+    [ $# = 0 ] || printf '%s\n' "$1" >"$FAKE/skills/banned-terms/terms.json"
+    tree=GITHUB_ACTION_PATH=$FAKE/actions/banned-terms
+}
+
 # matches checks that the title $1 gives a finding of each term after it, and no other.
 matches() {
     local term
@@ -73,6 +83,46 @@ The rule: $skill
 How to fix it:
 
 Names no responsibility: name what it does"
+
+# The groups of the skill's terms.json, which jq reads apart from check.sh: TERMS, a tab and HINT
+# a line. The first term of each warns, with its group's rule.
+groups=$(jq -r '.[] | [(.terms | join(", ")), .hint] | join("\t")' \
+    "$ROOT/skills/banned-terms/terms.json") || true
+start warns-on-each-group-of-the-skills-terms
+[ -n "$groups" ] || fail "skills/banned-terms/terms.json lists no group"
+title="feat: $(cut -f1 <<<"$groups" | sed 's/,.*//' | paste -sd ' ' -)"
+titled "$title"
+check banned-terms
+while IFS=$'\t' read -r terms hint; do
+    summarizes "#### $terms
+
+The rule: $skill
+
+- The title says \`${terms%%,*}\`: \`$title\`
+
+How to fix it:
+
+$hint"
+done <<<"$groups"
+
+# A term is lowercased, and splits at each character other than a letter or a digit. A hint's
+# line ends become spaces.
+start splits-each-term-of-the-list
+listed '[{"terms": ["foo", "Bar-baz"], "hint": "Say it"}, {"terms": ["QUX"], "hint": "Drop\nit"}]'
+titled 'feat: foo baz qux quux'
+check banned-terms "$tree"
+warns "::warning title=banned-terms%3A foo%2C bar%2C baz::The title says \`foo\`"
+warns "::warning title=banned-terms%3A foo%2C bar%2C baz::The title says \`baz\`"
+warns "::warning title=banned-terms%3A qux::The title says \`qux\`"
+warnings 3
+summarizes $'How to fix it:\n\nSay it'
+summarizes $'How to fix it:\n\nDrop it'
+
+start warns-without-the-list
+listed
+check banned-terms "$tree"
+warns '::warning::banned-terms could not check #1: skills/banned-terms/terms.json, which lists'
+warnings 1
 
 start quotes-a-backtick
 titled $'fix: drop  the `utils`\tmodule'

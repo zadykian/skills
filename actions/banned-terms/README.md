@@ -35,20 +35,10 @@ which hash to pin.
 
 ## The terms
 
-[terms.txt](terms.txt) is the source of the list, in the skill's order, and no input changes it.
-Each line is a group of terms, then a colon and the group's hint:
-
-```text
-helper, helpers: Names no responsibility: name what it does
-util, utils, utility, utilities: Names no responsibility: name what it does
-misc, miscellaneous: A grab bag: group by purpose
-stuff, thing, things: Names nothing: name it
-etc: An open list: name each item, or lead the examples with "such as"
-various: Say which ones, or how many
-simply, basically, obviously: Filler: delete it
-```
-
-Each group is a rule of the report: its title lists the terms, and its fix is the hint.
+The list is [terms.json](../../skills/banned-terms/terms.json), beside the skill, and no input
+changes it. The action reads the file at its pinned ref, as the runner downloads the whole
+repository. Each group of the file, of its `terms` and a `hint`, is a rule of the report: its title
+lists the terms, and its fix is the hint.
 
 A term matches a token. A text splits into tokens at each character other than an ASCII letter or
 digit, then before each hump of camelCase and PascalCase, and each token is lowercased. So

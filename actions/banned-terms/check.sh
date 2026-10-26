@@ -1,8 +1,8 @@
 #!/bin/bash
-# Warns on the terms of terms.txt in what pull request $PR of $GH_REPO adds: the paths and lines
-# of its files, its title, its description and its commit messages. It reads the environment that
-# lib/report.sh names, and never fails the job. It skips the files that the globs of $EXCLUDE
-# match, as lib/glob.sh reads them.
+# Warns on the terms of the banned-terms skill in what pull request $PR of $GH_REPO adds: the
+# paths and lines of its files, its title, its description and its commit messages. It reads the
+# environment that lib/report.sh names, and never fails the job. It skips the files that the globs
+# of $EXCLUDE match, as lib/glob.sh reads them.
 # shellcheck disable=SC2016 # The jq programs' $ variables are jq's, in single quotes.
 
 set -euo pipefail
@@ -14,14 +14,19 @@ set -euo pipefail
 report_start banned-terms
 skill=$(file_url skills/banned-terms/SKILL.md)
 
-# The list of terms.txt, which $skill#the-terms sets and no input changes: on its first line the
-# index, {TERM: KEY}, then each group's rule, its KEY, TITLE and HINT. A group's key is its number.
-config=$(jq -Rnr '[inputs | select(test("^\\s*(#|$)") | not)
-    | capture("^(?<terms>[^:]*):\\s*(?<hint>.*)") | .terms |= [ascii_downcase
-        | splits("[^a-z0-9]+") | select(. != "")]]
+# The list is skills/banned-terms/terms.json, which the skill reads too, and no input changes it.
+# The runner downloads the whole repository at the action's ref, skills/ included. The file is an
+# array of groups, each {"terms": [TERM...], "hint": HINT}. A term splits at each character other
+# than a letter or a digit. config holds on its first line the index, {TERM: KEY}, then each
+# group's rule, its KEY, TITLE and HINT, whose line ends become spaces. A group's key is its number.
+list=skills/banned-terms/terms.json
+json=$GITHUB_ACTION_PATH/../../$list
+[ -f "$json" ] || cannot_check "$list, which lists the terms, is missing."
+config=$(jq -r 'map({terms: [.terms[] | ascii_downcase | splits("[^a-z0-9]+") | select(. != "")],
+        hint: (.hint | gsub("\n"; " "))})
     | (reduce to_entries[] as $group ({}; .[$group.value.terms[]] = "\($group.key)")) as $index
     | ($index | tojson), (to_entries[] | ["\(.key)", (.value.terms | join(", ")), .value.hint]
-        | join("\t"))' "$GITHUB_ACTION_PATH/terms.txt")
+        | join("\t"))' "$json")
 {
     read -r index
     while IFS=$'\t' read -r key title hint; do rule "$key" "$title" "$skill" "$hint"; done

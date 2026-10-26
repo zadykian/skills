@@ -45,7 +45,7 @@ of the list.
 
 The terms are in [terms.json](terms.json), beside this file: an array of groups, each of its
 `terms` and a `hint` on what to write instead. Read the file before you name something or write
-prose.
+prose. [The action](#the-action) reads the same file.
 
 ## How a term matches
 
