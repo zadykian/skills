@@ -1,9 +1,9 @@
 name: release
 
-# Publishes each version of the marketplace on main as a GitHub Release with its tag, vX.Y.Z, at
-# a commit that ships it, where no tag of that name is yet. gh skill installs the latest
-# release unless told another. The fast-forward workflow's pushes start no workflow, so its runs
-# that complete start this one. A push to main by hand starts it too.
+# Publishes the marketplace's version as a GitHub Release with its tag, vX.Y.Z, once a raise of it
+# lands on main. gh skill installs the latest release unless told another. The fast-forward
+# workflow's pushes start no workflow, so its runs that complete start this one. A push to main by
+# hand starts it too.
 
 on:
   push:
@@ -33,31 +33,21 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
-      # A version ships at the last commit that changed the bundles while the marketplace gave
-      # that version, as the next change raises it. Its notes are CHANGELOG.md's section there.
-      # The token may not tag a commit whose workflows differ from main's, so the newest version
-      # is tagged at main's head, whose bundles are the same. An older version's commit may still
-      # be refused, and the maintainer then runs this step's `gh release create` by hand.
-      - name: Release the new versions
+      # A version is released once, where no tag of its name is yet. tools/versioncheck refuses a
+      # raise that the commits since the last release do not call for, and nothing is published
+      # then. The notes list those commits, as tools/releasenotes writes them. The token may not
+      # tag a commit whose workflows differ from main's, so the tag is at main's head. Its target
+      # is the SHA checked out, as main may since have moved past the commits that the notes list.
+      - name: Release the version
         run: |
-          catalog=.claude-plugin/marketplace.json
-          for sha in $(git log --reverse --format=%H -- skills hooks .claude-plugin); do
-            version=$(git show "$sha:$catalog" 2>/dev/null | jq -r '.metadata.version // empty') ||
-              version=
-            [ -z "$version" ] || printf '%s %s\n' "$version" "$sha"
-          done | awk '!($1 in at) { order[++n] = $1 } { at[$1] = $2 }
-            END { for (i = 1; i <= n; i++) print order[i], at[order[i]] }' >"$RUNNER_TEMP/versions"
-          last=$(git log -1 --format=%H -- skills hooks .claude-plugin)
-          while read -r version sha; do
-            tag=v$version
-            if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
-              continue
-            fi
-            [ "$sha" != "$last" ] || sha=$(git rev-parse HEAD)
-            git show "$sha:CHANGELOG.md" | awk -v heading="## $version" \
-              '$0 == heading { on = 1; next } on && /^## / { exit } on' >"$RUNNER_TEMP/notes.md"
-            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$sha" --title "$tag" \
-              --notes-file "$RUNNER_TEMP/notes.md"
-          done <"$RUNNER_TEMP/versions"
+          version=$(jq -r .metadata.version .claude-plugin/marketplace.json)
+          if git rev-parse --verify --quiet "refs/tags/v$version" >/dev/null; then
+            echo "v$version is released."
+            exit 0
+          fi
+          tools/versioncheck
+          tools/releasenotes >"$RUNNER_TEMP/notes.md"
+          gh release create "v$version" --repo "$GITHUB_REPOSITORY" --title "v$version" \
+            --target "$(git rev-parse HEAD)" --notes-file "$RUNNER_TEMP/notes.md"
         env:
           GH_TOKEN: ${{ github.token }}

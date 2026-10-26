@@ -3,10 +3,10 @@
 # tools/lastrelease finds it: the highest tag vX.Y.Z that HEAD reaches.
 #
 # The marketplace has one version, X.Y.Z, its metadata.version, and each bundle in it gives the
-# same, as Claude Code updates a plugin only when its version changes. CHANGELOG.md's first
-# heading is `## X.Y.Z` for it. Each bundle takes its skills from the repository's root, source
-# ./ with strict false, and lists each as ./skills/NAME. Each directory of skills/ holds SKILL.md
-# and is in one bundle. A hook's script, ${CLAUDE_PLUGIN_ROOT}/PATH, is an executable file.
+# same, as Claude Code updates a plugin only when its version changes. Each bundle takes its skills
+# from the repository's root, source ./ with strict false, and lists each as ./skills/NAME. Each
+# directory of skills/ holds SKILL.md and is in one bundle. A hook's script,
+# ${CLAUDE_PLUGIN_ROOT}/PATH, is an executable file.
 #
 # A change need not raise the version, as the commits since the last release may land unreleased,
 # but it is never below that release's. Raised, it is the version they call for, as bump says.
@@ -135,8 +135,6 @@ main() {
     version=$(jq -r '.metadata.version // ""' "$marketplace")
     printf '%s\n' "$version" | grep -Eqx "$semver" ||
         finding "the marketplace's version, '$version', is not of the form X.Y.Z"
-    [ "$(grep -m 1 '^## ' CHANGELOG.md 2>/dev/null)" = "## $version" ] ||
-        finding "CHANGELOG.md's first heading is not ## $version"
     : >"$tmp/listed"
     entries "$version"
     skills

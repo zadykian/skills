@@ -73,10 +73,10 @@ skill changes for a repository. Each bundle's page says what facts a repository 
 
 ## Versions
 
-The marketplace has one version, `X.Y.Z`, which each bundle gives too, and
-[CHANGELOG.md](CHANGELOG.md) says what each version changed. Claude Code updates a bundle only
-when its version changes. A change need not raise it: commits land on `main` unreleased, and the
-last pull request of a stack raises it, for the skills, hooks and actions at once. It raises:
+The marketplace has one version, `X.Y.Z`, which each bundle gives too. Claude Code updates a
+bundle only when its version changes. A change need not raise it: commits land on `main`
+unreleased, and the last pull request of a stack raises it, for the skills, hooks and actions at
+once. It raises:
 
 - the patch, for a fix, a clearer wording, or any other commit;
 - the minor, for a `feat`: a new step, argument or skill;
@@ -85,9 +85,11 @@ last pull request of a stack raises it, for the skills, hooks and actions at onc
   marks a break by a `!` in its header, or a `BREAKING CHANGE:` footer. Before 1.0, a break
   raises the minor.
 
-The largest change since the last release sets the part it raises. A version that lands on `main` is
-released as the tag `vX.Y.Z` and a GitHub Release. [CLAUDE.md](CLAUDE.md) says how a change is
-made and checked.
+The largest change since the last release sets the part it raises. Once a raise lands on `main`,
+the release workflow tags `main`'s head `vX.Y.Z` and publishes a GitHub Release. Its notes list
+the commits since the last release, as breaking changes, features, fixes and other changes. Under
+a breaking change goes its `BREAKING CHANGE:` footer, which says what a repository must change.
+[CLAUDE.md](CLAUDE.md) says how a change is made and checked.
 
 ## License
 
