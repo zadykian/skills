@@ -104,7 +104,7 @@ jobs:
       - uses: zadykian/toolkit/actions/banned-terms@SHA # vX.Y.Z
 ```
 
-[Versions](#versions) says which hash to pin. The `edited` type checks the title and the
+[Pin a release](#pin-a-release) says which hash to pin. The `edited` type checks the title and the
 description again once they change, and `pull-requests: write` lets each check keep its comment.
 
 `ff` runs in a workflow of its own, on a comment: [its README](actions/ff/README.md#usage) gives
@@ -120,17 +120,17 @@ skill changes for a repository. Each bundle's page says what facts a repository 
 
 ## Versions
 
-The marketplace has one version, `X.Y.Z`, which each bundle gives too. Claude Code updates a
-bundle only when its version changes. A change need not raise it: commits land on `main`
-unreleased, and the last pull request of a stack raises it, for the skills, hooks and actions at
-once. It raises:
+One version, `X.Y.Z`, covers every part: the skills, the hooks and the actions. The marketplace
+gives it, and each bundle too, as Claude Code updates a bundle only when its version changes. A
+change need not raise it: commits land on `main` unreleased, and the last pull request of a stack
+raises it. It raises:
 
 - the patch, for a fix, a clearer wording, or any other commit;
-- the minor, for a `feat`: a new step, argument or skill;
-- the major, for a break, such as a renamed skill, an argument changed or dropped, or a step a
-  repository relies on, gone. So is a make target that a repository must now write. A commit
-  marks a break by a `!` in its header, or a `BREAKING CHANGE:` footer. Before 1.0, a break
-  raises the minor.
+- the minor, for a `feat`: a new step, argument, input, skill or action;
+- the major, for a break, such as a renamed skill or action, an argument or input changed or
+  dropped, or a step a repository relies on, gone. So is a make target that a repository must now
+  write. A commit marks a break by a `!` in its header, or a `BREAKING CHANGE:` footer. Before
+  1.0, a break raises the minor.
 
 The largest change since the last release sets the part it raises. Once a raise lands on `main`,
 the release workflow tags `main`'s head `vX.Y.Z` and publishes a GitHub Release. Its notes list
@@ -138,8 +138,28 @@ the commits since the last release, as breaking changes, features, fixes and oth
 a breaking change goes its `BREAKING CHANGE:` footer, which says what a repository must change.
 [CLAUDE.md](CLAUDE.md) says how a change is made and checked.
 
-A repository pins its actions to the same release as the marketplace's [`ref`](#install). Each
-action's `uses:` names the SHA of the release's tag, with the tag in a comment.
+### Pin a release
+
+A repository pins the skills and the actions to the same release, so that its checks hold the
+rules its skills teach:
+
+- the marketplace's `"ref"` in `.claude/settings.json` names the release's tag, as
+  [Install](#install) shows;
+- each action's `uses:` names the full hash of the tag's commit, with the tag in a comment, as
+  `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. `git rev-parse vX.Y.Z^{commit}` prints the hash.
+
+A released tag is never moved or deleted, and no major tag, such as `v1`, follows the releases.
+
+Dependabot moves an action's hash and comment, but not the marketplace's `ref`, which it does not
+read. So a repository's `github-actions` update in `.github/dependabot.yml` ignores every action
+of the toolkit, `ignore: [{dependency-name: "zadykian/toolkit*"}]`, and `tools/pin` moves both to
+a release. Run it from a clone of this repository that has the tag:
+
+```sh
+tools/pin vX.Y.Z DIR
+```
+
+It pins the repository whose work tree is `DIR`. Its header comment says what it changes.
 
 ## License
 
