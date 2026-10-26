@@ -49,6 +49,9 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
 
 ## A change to a skill, a hook or an action
 
+- A change to a rule that a check holds edits the skill and the check in the same pull request,
+  so that the two never ship apart. `tests/rules.sh` fails where a check's value differs from its
+  skill's.
 - A skill is generic, and reads no notes of a repository's. It names no repository's paths, jobs,
   terms, people or languages: those go in the repository's CLAUDE.md or `.claude/rules/`. A skill
   names another by its bare name, as both install paths name them differently.
