@@ -55,3 +55,13 @@ start
 pin v1.2.3
 exits 0
 pinned "$SHA" v1.2.3
+
+setup refuses-a-version-it-cannot-resolve
+start
+pin 1.2.3
+exits 1
+prints '1.2.3 is not of the form vX.Y.Z'
+pin v1.2.4
+exits 1
+prints 'no tag v1.2.4 in'
+prints 'git fetch --tags'

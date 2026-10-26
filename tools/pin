@@ -11,6 +11,8 @@
 
 set -eu
 
+semver='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
+
 # die prints a message of the script's and exits with status 1.
 die() {
     printf 'tools/pin: %s\n' "$*" >&2
@@ -36,9 +38,10 @@ workflows() {
 main() {
     [ $# = 2 ] || die "usage: tools/pin vX.Y.Z DIR"
     version=$1
+    printf '%s\n' "$version" | grep -Eqx "v$semver" || die "$version is not of the form vX.Y.Z"
     root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
     sha=$(git -C "$root" rev-parse -q --verify "refs/tags/$version^{commit}") ||
-        die "no tag $version in $root"
+        die "no tag $version in $root: git fetch --tags, then run it again"
     CDPATH='' cd -- "$2" 2>/dev/null || die "no directory $2"
     tmp=$(mktemp -d)
     trap 'rm -rf "$tmp"' EXIT
