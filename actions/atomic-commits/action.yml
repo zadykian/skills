@@ -1,0 +1,45 @@
+name: Atomic commits
+description: >-
+  Warns on a pull request whose commits, size or title break the rules of the atomic-commits
+  skill. It never blocks the merge.
+author: zadykian
+branding:
+  icon: git-commit
+  color: blue
+
+inputs:
+  token:
+    description: The token that reads the pull request, and comments on it.
+    default: ${{ github.token }}
+  comment:
+    description: true keeps one comment of the report on the pull request, false none.
+    default: 'true'
+  exclude:
+    description: >-
+      Globs of the paths that no count of changed lines takes in, one a line, as git's :(glob)
+      pathspecs match them.
+    default: |
+      **/go.sum
+      **/*.pb.go
+      **/*_gen.go
+      **/*.g.cs
+      **/*.Designer.cs
+      **/*ModelSnapshot.cs
+      **/package-lock.json
+      **/packages.lock.json
+      **/vendor/**
+
+# It reads the pull request through GitHub's API alone, and checks out nothing, so that it runs
+# none of the pull request's code.
+runs:
+  using: composite
+  steps:
+    - name: Check the commits
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        GH_REPO: ${{ github.repository }}
+        PR: ${{ github.event.pull_request.number }}
+        COMMENT: ${{ inputs.comment }}
+        EXCLUDE: ${{ inputs.exclude }}
+      run: '"$GITHUB_ACTION_PATH/check.sh"'

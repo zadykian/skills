@@ -1,0 +1,157 @@
+#!/bin/bash
+# Runs the cases of each tests/NAME.sh, or of those named, `tests/run [NAME...]`, and fails where
+# any case fails. tests/gh, the fake gh, answers each case's canned JSON. It needs git and jq.
+#
+# A case file is bash, which tests/run sources under set -euo pipefail: a command that fails stops
+# the run. Its cases call these functions, each case setup first:
+#
+#   setup CASE                    starts the case CASE, in $FAKE, a directory of its own
+#   answer PATH JSON [JSON...]    gh api PATH answers JSON, and with --paginate a page an argument
+#   pull [JSON]                   prints pull request #1 as setup answers it, JSON's fields over it
+#   refuse METHOD PATH [STATUS]   gh api -X METHOD PATH fails with HTTP STATUS, 403 where omitted
+#   check NAME [VAR=VALUE...]     runs NAME/check.sh as its action.yml step does, with the VARs;
+#                                 the case fails where it exits non-zero, as that fails the job
+#   step [VAR=VALUE...] FILE [ARG...]  runs the script FILE with the ARGs and the VARs
+#   exits N                       the last step exited with the status N
+#   prints TEXT                   its output holds TEXT
+#   warns TEXT                    one of its ::warning lines holds TEXT
+#   warnings N                    it printed N ::warning lines
+#   summarizes TEXT               the job summary holds TEXT
+#   wrote METHOD PATH [TEXT]      gh api wrote METHOD PATH, with a body whose text holds TEXT
+#   writes N                      gh api made N writes in the case
+#   fail REASON                   fails the case, which goes on
+#
+# setup sets the environment of a pull request event: GH_REPO=o/r, PR=1, COMMENT=true, and
+# GITHUB_STEP_SUMMARY and RUNNER_TEMP in $FAKE, its current directory. ROOT is the repository's
+# root. Pass a case's inputs to check as VAR=VALUE, so that none leaks into the next case. git
+# reads no config of the user's, and commits as test.
+#
+# gh answers repos/o/r/pulls/1 with `pull`, from feat into main, its head $HEAD_SHA, and
+# repos/o/r/issues/1/comments with none. A PATH is what the check passes to gh api, without
+# per_page and page.
+
+# The case files call the functions below, which ShellCheck does not see, as it reads no case.
+# shellcheck disable=SC2329
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+HEAD_SHA=0123456789abcdef0123456789abcdef01234567
+# The caller's git variables would point the cases' git at the caller's repository, as the GIT_DIR
+# that git rebase --exec sets does.
+unset "${!GIT_@}"
+export ROOT PATH="$ROOT/tests:$PATH" GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
+export GIT_AUTHOR_NAME=test GIT_AUTHOR_EMAIL=test@example.com
+export GIT_COMMITTER_NAME=test GIT_COMMITTER_EMAIL=test@example.com
+cases=0 failed=0 file='' name=''
+
+# setup starts the case $1 afresh, in a directory of its own.
+setup() {
+    name=$1
+    cases=$((cases + 1))
+    export FAKE="$tmp/$cases"
+    mkdir -p "$FAKE/api" "$FAKE/temp"
+    cd "$FAKE"
+    export GH_REPO=o/r PR=1 COMMENT=true GITHUB_EVENT_NAME=pull_request
+    export GITHUB_STEP_SUMMARY="$FAKE/summary" RUNNER_TEMP="$FAKE/temp"
+    export GITHUB_SERVER_URL=https://github.com GITHUB_REPOSITORY=o/r GITHUB_RUN_ID=7
+    : >"$GITHUB_STEP_SUMMARY"
+    : >"$FAKE/writes"
+    : >"$FAKE/refusals"
+    answer repos/o/r/pulls/1 "$(pull)"
+    answer repos/o/r/issues/1/comments '[]'
+}
+
+# answer leaves the JSON $2, and each after it, as gh api's pages for the path $1.
+answer() {
+    printf '%s\n' "${@:2}" >"$FAKE/api/${1//\//%}"
+}
+
+# pull prints the JSON of pull request #1 as setup answers it, with the fields of the JSON $1 over
+# its own.
+pull() {
+    jq -n --arg sha "$HEAD_SHA" --argjson over "${1:-null}" '{number: 1, title: "feat: add a check",
+        body: "", base: {ref: "main"}, head: {ref: "feat", sha: $sha}} * ($over // {})'
+}
+
+# summarizes checks that the job summary holds the text $1.
+summarizes() {
+    [[ $(cat "$GITHUB_STEP_SUMMARY") == *"$1"* ]] ||
+        fail "no summary '$1': $(cat "$GITHUB_STEP_SUMMARY")"
+}
+
+# refuse has gh api refuse the method $1 on the path $2, with the HTTP status $3, 403 by default.
+refuse() {
+    printf '%s %s %s\n' "$1" "$2" "${3:-403}" >>"$FAKE/refusals"
+}
+
+# wrote checks that gh api wrote the method $1 on the path $2, with a body whose text holds $3.
+wrote() {
+    jq -e -s --arg method "$1" --arg path "$2" --arg text "${3-}" 'any(.[]; .method == $method and
+        .path == $path and ((.input.body // "") | contains($text)))' "$FAKE/writes" >/dev/null ||
+        fail "no $1 $2 holding '${3-}': $(cat "$FAKE/writes")"
+}
+
+# writes checks that gh api made $1 writes in the case.
+writes() {
+    local count
+    count=$(($(wc -l <"$FAKE/writes")))
+    [ "$count" = "$1" ] || fail "$count writes, not $1: $(cat "$FAKE/writes")"
+}
+
+# fail reports that the case fails, for the reason $*.
+fail() {
+    echo "FAIL $file: $name: $*"
+    failed=1
+}
+
+# step runs `env "$@"`: the script after the VAR=VALUE arguments, with its own arguments. Its
+# output goes to $FAKE/out, and its status to STATUS.
+step() {
+    STATUS=0
+    env "$@" >"$FAKE/out" 2>&1 </dev/null || STATUS=$?
+}
+
+# check runs the check.sh of the action $1, with the VAR=VALUE arguments after it, and fails the
+# case where it exits non-zero.
+check() {
+    step GITHUB_ACTION_PATH="$ROOT/actions/$1" "${@:2}" "$ROOT/actions/$1/check.sh"
+    [ "$STATUS" = 0 ] || fail "$1/check.sh exited with $STATUS: $(cat "$FAKE/out")"
+}
+
+# exits checks that the last step exited with the status $1.
+exits() {
+    [ "$STATUS" = "$1" ] || fail "exited with $STATUS, not $1: $(cat "$FAKE/out")"
+}
+
+# prints checks that the last step's output holds the text $1.
+prints() {
+    [[ $(cat "$FAKE/out") == *"$1"* ]] || fail "no output '$1': $(cat "$FAKE/out")"
+}
+
+# warns checks that one of the last step's ::warning lines holds the text $1.
+warns() {
+    grep '^::warning' "$FAKE/out" | grep -F -- "$1" >/dev/null ||
+        fail "no warning '$1': $(cat "$FAKE/out")"
+}
+
+# warnings checks that the last step printed $1 ::warning lines.
+warnings() {
+    local count
+    count=$(grep -c '^::warning' "$FAKE/out") || true
+    [ "$count" = "$1" ] || fail "$count warnings, not $1: $(cat "$FAKE/out")"
+}
+
+shopt -s nullglob
+names=("$@")
+[ $# -gt 0 ] || names=("$ROOT"/tests/*.sh)
+for file in "${names[@]}"; do
+    file=tests/$(basename "$file" .sh).sh
+    # shellcheck source=/dev/null
+    . "$ROOT/$file"
+done
+cd "$ROOT"
+[ "$failed" != 0 ] || echo "PASS: $cases cases"
+exit "$failed"
