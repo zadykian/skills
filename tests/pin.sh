@@ -23,6 +23,24 @@ jobs:
 EOF
 }
 
+# settings makes app's settings.json, whose marketplace zadykian has the source $1.
+settings() {
+    mkdir -p "$FAKE/app/.claude"
+    cat >"$FAKE/app/.claude/settings.json" <<EOF
+{
+  "extraKnownMarketplaces": {
+    "other": {
+      "source": { "source": "github", "repo": "o/plugins", "ref": "v9.0.0" }
+    },
+    "zadykian": {
+$1
+      "autoUpdate": true
+    }
+  }
+}
+EOF
+}
+
 # pin runs toolkit's tools/pin at the version $1 on app, and keeps app in old on the first run.
 pin() {
     [ -d "$FAKE/old" ] || cp -R "$FAKE/app" "$FAKE/old"
@@ -69,3 +87,17 @@ pin v1.2.4
 exits 1
 prints 'no tag v1.2.4 in'
 prints 'git fetch --tags'
+
+setup pins-a-source-of-one-line-once
+start
+settings '      "source": { "source": "github", "repo": "zadykian/skills" },'
+pin v1.2.3
+pin v1.2.3
+exits 0
+prints 'pins v1.2.3 already'
+changes .claude/settings.json <<'EOF'
+7c7
+<       "source": { "source": "github", "repo": "zadykian/skills" },
+---
+>       "source": { "source": "github", "repo": "zadykian/toolkit", "ref": "v1.2.3" },
+EOF

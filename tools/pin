@@ -1,18 +1,21 @@
 #!/bin/sh
-# Pins a repository's actions to one release of the toolkit:
+# Pins a repository's actions and marketplace to one release of the toolkit:
 #
 #   tools/pin vX.Y.Z DIR
 #
 # The tag vX.Y.Z of this script's repository names the commit, SHA. In DIR's workflows, each step
 # of an action of the toolkit, or of zadykian/actions before it, becomes
-# `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`.
+# `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. DIR's .claude/settings.json gives the tag as the
+# ref of the marketplace of zadykian/toolkit, or of zadykian/skills before it. Dependabot cannot
+# edit settings.json, so this moves both pins at once.
 #
-# Each edit keeps its file's layout, and a second run changes nothing. Each line it changes goes to
-# stdout, as PATH:LINE: TEXT. It needs git.
+# Each edit keeps its file's layout, and a second run changes nothing. Where a check fails, it
+# writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT. It needs git.
 
 set -eu
 
 semver='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
+settings=.claude/settings.json
 
 # die prints a message of the script's and exits with status 1.
 die() {
@@ -50,6 +53,57 @@ workflows() {
     done
 }
 
+# edit prints settings.json with its source pinned, and exits 2 where it cannot find it. The repo
+# is on the one line that names it. The source spans the lines from the last { at or before it to
+# the first } at or after it. Its ref is on one of those lines, or else goes after the repo.
+edit() {
+    awk -v version="$version" -v path="$settings" -v changes="$tmp/changes" '
+        BEGIN {
+            repo = "\"repo\"[ \t]*:[ \t]*\"zadykian/(toolkit|skills)\""
+            ref = "\"ref\"[ \t]*:[ \t]*\"[^\"]*\""
+        }
+        # set sets the string that ends the match of the pattern p in the line i to v.
+        function set(i, p, v,    key) {
+            match(text[i], p)
+            key = substr(text[i], RSTART, RLENGTH)
+            sub(/"[^"]*"$/, "", key)
+            text[i] = substr(text[i], 1, RSTART - 1) key v substr(text[i], RSTART + RLENGTH)
+        }
+        # report prints the line n of the new text, line, to changes.
+        function report(n, line) {
+            sub(/^[ \t]+/, "", line)
+            print path ":" n ": " line >>changes
+        }
+        { text[NR] = was[NR] = $0 }
+        $0 ~ repo { r = NR; repos++ }
+        END {
+            if (repos != 1) exit 2
+            for (s = r; s > 1 && !index(text[s], "{"); s--);
+            for (e = r; e < NR && !index(text[e], "}"); e++);
+            for (i = s; i <= e; i++) if (text[i] ~ ref) { f = i; refs++ }
+            if (refs > 1) exit 2
+            set(r, repo, "\"zadykian/toolkit\"")
+            if (refs) set(f, ref, "\"" version "\"")
+            else {
+                match(text[r], repo)
+                head = substr(text[r], 1, RSTART + RLENGTH - 1)
+                tail = substr(text[r], RSTART + RLENGTH)
+                text[r] = head ", \"ref\": \"" version "\"" tail
+            }
+            for (i = 1; i <= NR; i++) {
+                print text[i]
+                if (text[i] != was[i]) report(i, text[i])
+            }
+        }' "$settings"
+}
+
+# marketplace pins the source of the toolkit's marketplace in settings.json, where there is one.
+marketplace() {
+    [ -f "$settings" ] || return 0
+    edit >"$tmp/out" || die "$settings: no one line holds its source's repo, or its ref"
+    stage "$settings"
+}
+
 main() {
     [ $# = 2 ] || die "usage: tools/pin vX.Y.Z DIR"
     version=$1
@@ -64,6 +118,7 @@ main() {
     touch "$tmp/steps" "$tmp/changes" "$tmp/staged"
     workflows
     [ -s "$tmp/steps" ] || die "$2 has no workflow that uses an action of the toolkit"
+    marketplace
     while IFS= read -r file; do
         cat "$tmp/new/$file" >"$file"
     done <"$tmp/staged"
