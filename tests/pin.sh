@@ -36,9 +36,13 @@ changes() {
     [ "$got" = "$(cat)" ] || fail "$1 changed as: $got"
 }
 
-# pinned checks that app's workflow uses y at the commit $1, the tag $2.
+# pinned checks that app's workflow uses x and y at the commit $1, the tag $2.
 pinned() {
     changes .github/workflows/rules.yml <<EOF
+5c5
+<       - uses: zadykian/actions/x@9c02fe599a7f620e98cd3d89ba9a0858e2f8b147 # v2.0.0
+---
+>       - uses: zadykian/toolkit/actions/x@$1 # $2
 7c7
 <         uses: zadykian/toolkit/actions/y@v1.0.0
 ---

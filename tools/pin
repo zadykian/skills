@@ -4,7 +4,8 @@
 #   tools/pin vX.Y.Z DIR
 #
 # The tag vX.Y.Z of this script's repository names the commit, SHA. In DIR's workflows, each step
-# of an action of the toolkit becomes `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`.
+# of an action of the toolkit, or of zadykian/actions before it, becomes
+# `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`.
 #
 # Each edit keeps its file's layout. It needs git.
 
@@ -22,9 +23,10 @@ workflows() {
     for file in .github/workflows/*.yml .github/workflows/*.yaml; do
         [ -f "$file" ] || continue
         awk -v sha="$sha" -v version="$version" '
-            BEGIN { uses = "^[ \t]*(-[ \t]+)?uses:[ \t]+zadykian/toolkit/actions/" }
+            BEGIN { uses = "^[ \t]*(-[ \t]+)?uses:[ \t]+zadykian/(toolkit/)?actions/" }
             $0 ~ (uses "[A-Za-z0-9._-]+@[^ \t]+([ \t]*|[ \t]+#.*)$") {
                 $0 = substr($0, 1, index($0, "@") - 1) "@" sha " # " version
+                sub("zadykian/(toolkit/)?actions/", "zadykian/toolkit/actions/")
             }
             { print }' "$file" >"$tmp/out"
         cmp -s "$tmp/out" "$file" || cat "$tmp/out" >"$file"
