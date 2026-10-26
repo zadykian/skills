@@ -89,7 +89,8 @@ Spec: <https://www.conventionalcommits.org/en/v1.0.0/>
   lowercase, no trailing period.
 
 **Body** (optional): one blank line after the header; free-form paragraphs explaining why the change
-was made. Wrap at 72.
+was made. Wrap at 72, footers included, except the trailers and a line that holds a URL. The
+trailers are a last paragraph of footers that are each `Token: value`.
 
 **Footers** (optional): one blank line after the body (or the header, if there is no body). Each
 footer is `Token: value` or `Token #value`, and tokens use `-` instead of spaces: `Refs: #412`,

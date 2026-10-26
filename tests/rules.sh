@@ -121,7 +121,7 @@ agree "$(values "$check_ac" "^rule header-length 'The header is over ([0-9]+) ch
 agree "$(values "$check_ac" 'Shorten the header to ([0-9]+) characters')" "$cap"
 
 setup holds-the-width-of-a-body
-width=$(values "$skill_ac" 'Wrap at ([0-9]+)\.$')
+width=$(values "$skill_ac" 'Wrap at ([0-9]+)[^0-9]')
 agree "$(values "$check_ac" '-le ([0-9]+) \] \|\| .* finding body-width')" "$width"
 agree "$(values "$check_ac" "^rule body-width 'A line of the body is over ([0-9]+) characters'")" \
     "$width"
