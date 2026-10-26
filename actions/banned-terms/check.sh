@@ -15,20 +15,29 @@ report_start banned-terms
 skill=$(file_url skills/banned-terms/SKILL.md)
 
 # The list is skills/banned-terms/terms.json, which the skill reads too, and no input changes it.
-# The runner downloads the whole repository at the action's ref, skills/ included. The file is an
-# array of groups, each {"terms": [TERM...], "hint": HINT}. A term splits at each character other
-# than a letter or a digit. config holds on its first line the index, {TERM: KEY}, then each
-# group's rule, its KEY, TITLE and HINT, whose line ends become spaces. A group's key is its number.
+# The runner downloads the whole repository at the action's ref, skills/ included. The file holds
+# one array of groups, each {"terms": [TERM...], "hint": HINT}, as group checks: a TERM at least,
+# each with a letter or a digit, and a HINT that is not blank. A term splits at each character
+# other than a letter or a digit. config holds on its first line the index, {TERM: KEY}, then each
+# group's rule, its KEY, TITLE and HINT, whose line ends become spaces. A group's key is its
+# number. config is empty where the file holds no such array.
 list=skills/banned-terms/terms.json
 json=$GITHUB_ACTION_PATH/../../$list
 [ -f "$json" ] || cannot_check "$list, which lists the terms, is missing."
-config=$(jq -r 'map({terms: [.terms[] | ascii_downcase | splits("[^a-z0-9]+") | select(. != "")],
+jq empty "$json" 2>/dev/null || cannot_check "$list is not valid JSON."
+config=$(jq -sr 'def group: type == "object" and (.hint | type == "string" and test("\\S"))
+        and (.terms | type == "array" and length > 0
+            and all(.[]; type == "string" and test("[A-Za-z0-9]")));
+    select(length == 1 and (.[0] | type == "array" and all(.[]; group))) | .[0]
+    | map({terms: [.terms[] | ascii_downcase | splits("[^a-z0-9]+") | select(. != "")],
         hint: (.hint | gsub("\n"; " "))})
     | (reduce to_entries[] as $group ({}; .[$group.value.terms[]] = "\($group.key)")) as $index
     | ($index | tojson), (to_entries[] | ["\(.key)", (.value.terms | join(", ")), .value.hint]
         | join("\t"))' "$json")
+[ -n "$config" ] || cannot_check "$list holds no array of groups, each of its terms and a hint."
 {
     read -r index
+    [ "$index" != '{}' ] || cannot_check "$list lists no term."
     while IFS=$'\t' read -r key title hint; do rule "$key" "$title" "$skill" "$hint"; done
 } <<<"$config"
 readme=$(file_url actions/banned-terms/README.md)

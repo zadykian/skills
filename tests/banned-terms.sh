@@ -124,6 +124,30 @@ check banned-terms "$tree"
 warns '::warning::banned-terms could not check #1: skills/banned-terms/terms.json, which lists'
 warnings 1
 
+start warns-where-the-list-is-no-json
+listed '[{"terms": ["foo"], "hint": "Say it"}'
+check banned-terms "$tree"
+warns '::warning::banned-terms could not check #1: skills/banned-terms/terms.json is not valid JSON'
+warnings 1
+
+# Each of these is no array of groups: no value, two, no array, a group of no object, terms of no
+# array, no term, a term with no letter or digit, no hint, and a blank one.
+for json in '' '[] []' '{}' '["foo"]' '[{"terms": "foo", "hint": "Say it"}]' \
+    '[{"terms": [], "hint": "Say it"}]' '[{"terms": ["--"], "hint": "Say it"}]' \
+    '[{"terms": ["foo"]}]' '[{"terms": ["foo"], "hint": " "}]'; do
+    start "warns-where-the-list-is-malformed: $json"
+    listed "$json"
+    check banned-terms "$tree"
+    warns '::warning::banned-terms could not check #1: skills/banned-terms/terms.json holds no'
+    warnings 1
+done
+
+start warns-where-the-list-is-empty
+listed '[]'
+check banned-terms "$tree"
+warns '::warning::banned-terms could not check #1: skills/banned-terms/terms.json lists no term.'
+warnings 1
+
 start quotes-a-backtick
 titled $'fix: drop  the `utils`\tmodule'
 check banned-terms
