@@ -66,6 +66,51 @@ gh skill install zadykian/toolkit land --agent claude-code --scope project
 gh installs the latest release, or the one a `land@v1.0.0` names, and pins it with `--pin`. It
 copies no hooks: the lint bundle's come with the plugin alone.
 
+## The actions
+
+| Action                                   | Skill          | What it does                                       |
+| ---------------------------------------- | -------------- | -------------------------------------------------- |
+| [atomic-commits](actions/atomic-commits) | atomic-commits | Warns on a PR's commits, its size or its title     |
+| [pr-description](actions/pr-description) | atomic-commits | Warns on a description off Problem, Changes, Stack |
+| [banned-terms](actions/banned-terms)     | banned-terms   | Warns on vague names and fillers that a PR adds    |
+| [ff](actions/ff)                         | land           | Lands a PR by fast-forward on a `/ff` comment      |
+
+The three checks warn and never block. Each annotates the pull request, writes a job summary and
+keeps one comment of its own up to date, and its job passes. A check reads the pull request
+through GitHub's API alone and checks out nothing, so it runs none of the pull request's code. No
+input changes a rule: each check holds its skill's own, and links each finding to the rule.
+
+The checks run in one workflow, `.github/workflows/rules.yml`, a step each:
+
+```yaml
+name: rules
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: zadykian/toolkit/actions/atomic-commits@SHA # vX.Y.Z
+      - uses: zadykian/toolkit/actions/pr-description@SHA # vX.Y.Z
+      - uses: zadykian/toolkit/actions/banned-terms@SHA # vX.Y.Z
+```
+
+[Versions](#versions) says which hash to pin. The `edited` type checks the title and the
+description again once they change, and `pull-requests: write` lets each check keep its comment.
+
+`ff` runs in a workflow of its own, on a comment: [its README](actions/ff/README.md#usage) gives
+it, with the permissions it needs. Each action's README says what it checks or does, and its
+inputs.
+
 ## The repository's rules
 
 A skill's rules hold in every repository, and it runs as the marketplace ships it. A repository's
