@@ -199,7 +199,7 @@ Claude uses it as it works on the files that `writing` covers too, as its `paths
 as `/lint:banned-terms`. The list holds in every repository, which adds no term of its own and
 allows none of the list.
 
-In CI, [zadykian/actions/banned-terms][bt-action] warns on these terms in what a pull request
+In CI, the toolkit's [`banned-terms` action][bt-action] warns on these terms in what a pull request
 adds, and never blocks the merge.
 
-[bt-action]: https://github.com/zadykian/actions/tree/main/banned-terms
+[bt-action]: ../actions/banned-terms

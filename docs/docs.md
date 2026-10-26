@@ -6,8 +6,8 @@ policy, and [`trim`][trim] brings files to it. Install the plugin `docs` as the
 copy a skill into a repository, where it runs as `/writing` or `/trim`:
 
 ```sh
-gh skill install zadykian/skills writing --agent claude-code --scope project
-gh skill install zadykian/skills trim --agent claude-code --scope project
+gh skill install zadykian/toolkit writing --agent claude-code --scope project
+gh skill install zadykian/toolkit trim --agent claude-code --scope project
 ```
 
 `trim` reads `writing` for the policy, so a repository that installs `trim` installs `writing` too.

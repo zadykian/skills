@@ -15,8 +15,8 @@ A pull request's description opens with `## Problem`, one to three sentences, th
 bullets by behavior. `## Stack` follows in a stack, and a `BREAKING CHANGE:` footer ends it where
 the title has `!`. It runs to 200 words at most.
 
-In CI, [zadykian/actions/atomic-commits][ac-action] warns on a pull request whose commits, size or
-title break the skill's rules, and [zadykian/actions/pr-description][pd-action] on its
+In CI, the toolkit's [`atomic-commits` action][ac-action] warns on a pull request whose commits,
+size or title break the skill's rules, and the [`pr-description` action][pd-action] on its
 description. Both only warn: neither blocks the merge.
 
 Every rule of the skill holds in every repository: the header, its types and scopes, and the
@@ -44,8 +44,8 @@ Lands a stack of approved pull requests on `main`, the bottom first, by fast-for
 /flow:land 41 42 [vX.Y.Z]
 ```
 
-It needs `gh`, logged in, and a `/ff` workflow, as zadykian/actions's [`ff` action][ff-action]
-sets up. The repository's CLAUDE.md names the facts of how its changes land, which add to the
+It needs `gh`, logged in, and a `/ff` workflow, as the toolkit's [`ff` action][ff-action] sets
+up. The repository's CLAUDE.md names the facts of how its changes land, which add to the
 skill's steps and change none of them:
 
 - the checks to wait for, and a known flake that gets one rerun;
@@ -53,6 +53,6 @@ skill's steps and change none of them:
 - the release: its workflow, and whether the skill pushes the tag.
 
 [cc]: https://www.conventionalcommits.org/en/v1.0.0/
-[ac-action]: https://github.com/zadykian/actions/tree/main/atomic-commits
-[pd-action]: https://github.com/zadykian/actions/tree/main/pr-description
-[ff-action]: https://github.com/zadykian/actions/tree/main/ff
+[ac-action]: ../actions/atomic-commits
+[pd-action]: ../actions/pr-description
+[ff-action]: ../actions/ff
