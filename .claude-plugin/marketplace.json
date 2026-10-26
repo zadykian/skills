@@ -19,8 +19,8 @@
         "name": "Aleksandr Zadykian",
         "url": "https://github.com/zadykian"
       },
-      "homepage": "https://github.com/zadykian/skills/blob/main/docs/flow.md",
-      "repository": "https://github.com/zadykian/skills",
+      "homepage": "https://github.com/zadykian/toolkit/blob/main/docs/flow.md",
+      "repository": "https://github.com/zadykian/toolkit",
       "license": "MIT",
       "category": "development",
       "keywords": ["github", "issues", "conventional-commits", "stacked-prs", "fast-forward"],
@@ -36,8 +36,8 @@
         "name": "Aleksandr Zadykian",
         "url": "https://github.com/zadykian"
       },
-      "homepage": "https://github.com/zadykian/skills/blob/main/docs/docs.md",
-      "repository": "https://github.com/zadykian/skills",
+      "homepage": "https://github.com/zadykian/toolkit/blob/main/docs/docs.md",
+      "repository": "https://github.com/zadykian/toolkit",
       "license": "MIT",
       "category": "productivity",
       "keywords": ["writing", "documentation", "comments", "vale"],
@@ -53,8 +53,8 @@
         "name": "Aleksandr Zadykian",
         "url": "https://github.com/zadykian"
       },
-      "homepage": "https://github.com/zadykian/skills/blob/main/docs/lint.md",
-      "repository": "https://github.com/zadykian/skills",
+      "homepage": "https://github.com/zadykian/toolkit/blob/main/docs/lint.md",
+      "repository": "https://github.com/zadykian/toolkit",
       "license": "MIT",
       "category": "development",
       "keywords": ["lint", "hooks", "make", "refactoring"],
