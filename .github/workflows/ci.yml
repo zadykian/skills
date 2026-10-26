@@ -50,3 +50,17 @@ jobs:
           BEFORE: ${{ github.event_name == 'push' && github.event.before || '' }}
           # zizmor's online audits, which look the actions up on GitHub, need a token.
           GH_TOKEN: ${{ github.token }}
+
+  # make test: the cases of each tests/NAME.sh, against the fake gh.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The pull request's own head, as in the lint job, since it lands as it is.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - run: make test
