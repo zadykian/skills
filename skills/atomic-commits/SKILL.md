@@ -220,8 +220,8 @@ BREAKING CHANGE: what changed, and what callers must do.
 
 - `## Problem` comes first: one to three sentences, and the issue it closes, if any.
 - `## Changes` holds bullets by behavior, not by file.
-- `## Stack` is in each PR of a stack, and required when the base isn't `main`. It says
-  `PR N of M`, then the base and the next PR.
+- `## Stack` is in each PR of a stack, and required when the base isn't the default branch. It
+  says `PR N of M`, then the base and the next PR.
 - No other sections or headings, at any level. 200 words at most, not counting code blocks and
   HTML comments.
 

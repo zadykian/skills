@@ -161,6 +161,11 @@ setup holds-the-form-of-a-stack
 agree "$(values "$check_pd" " of='(PR [^']+)'" | sed -E 's/\[0-9\]\+/N/; s/\[0-9\]\+/M/')" \
     "$(values "$skill_ac" '`(PR [A-Z] of [A-Z])`')"
 
+# The base that needs no `## Stack`: the check's field of the pull request, its _ as a space.
+setup holds-the-base-that-needs-no-stack
+agree "$(values "$check_pd" ' main=\$\(jq -r \.base\.repo\.([a-z_]+) ' | sed 's/_/ /g')" \
+    "$(values "$skill_ac" 'required when the base isn.t the ([a-z ]+[a-z])\.')"
+
 setup gates-hold-the-caps-of-writing
 writing=skills/writing/SKILL.md
 agree "$(values tools/sizecheck '^max=([0-9]+)$')" \
