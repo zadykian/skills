@@ -1,6 +1,6 @@
 #!/bin/sh
-# Checks the marketplace's bundles and its version in the work tree, against the last release: the
-# highest tag vX.Y.Z that HEAD reaches.
+# Checks the marketplace's bundles and its version in the work tree, against the last release, as
+# tools/lastrelease finds it: the highest tag vX.Y.Z that HEAD reaches.
 #
 # The marketplace has one version, X.Y.Z, its metadata.version, and each bundle in it gives the
 # same, as Claude Code updates a plugin only when its version changes. CHANGELOG.md's first
@@ -114,7 +114,7 @@ bump() {
 # released checks the version $1 against the last release, where there is one.
 released() {
     printf '%s\n' "$1" | grep -Eqx "$semver" || return 0
-    last=$(git tag --merged HEAD 2>/dev/null | grep -Ex "v$semver" | sort -V | tail -n 1)
+    last=$("$(dirname -- "$0")/lastrelease")
     if [ -z "$last" ] || [ "$1" = "${last#v}" ]; then
         return 0
     elif higher "$1" "${last#v}"; then

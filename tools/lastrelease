@@ -1,0 +1,13 @@
+#!/bin/sh
+# Prints the last release: the highest tag vX.Y.Z that HEAD reaches, or nothing before the first.
+# tools/versioncheck checks the version against it, and tools/releasenotes lists the commits since
+# it, so that both read the same release.
+#
+# A release is a lightweight tag, as gh release create makes it, which git tag --merged lists, as
+# git describe does only with --tags. grep keeps the tags of the form vX.Y.Z, which describe's
+# glob cannot pin: v2.0.0-rc.1 is no release. It needs git.
+
+set -eu
+
+git tag --merged HEAD 2>/dev/null |
+    grep -Ex 'v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)' | sort -V | tail -n 1
