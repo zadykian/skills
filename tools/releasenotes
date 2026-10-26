@@ -6,7 +6,8 @@
 # changes, Features, Fixes and Other changes, each where it has a commit. Its kind is the one that
 # tools/versioncheck bumps the version for. A breaking change has a ! before its header's colon, or
 # a BREAKING CHANGE: footer. Of the rest, a feat is a feature, a fix a fix, and any other commit
-# another change.
+# another change. Under a breaking change's line goes the text of its footer, which says what to
+# change.
 #
 # It needs git. Run it from the repository's root.
 
@@ -20,6 +21,26 @@ footer='^BREAKING[ -]CHANGE: '
 # headed succeeds where the header $2 matches the extended regex $1.
 headed() {
     printf '%s\n' "$2" | grep -Eq "$1"
+}
+
+# footers prints the text of each BREAKING CHANGE: or BREAKING-CHANGE: footer of the message in
+# the file $1, as a paragraph indented under the commit's line. A footer's text runs to the next
+# footer, as Conventional Commits ends it there, or to the message's end.
+footers() {
+    awk -v footer="$footer" '
+        {
+            if ($0 ~ footer) {
+                on = 1
+                blank = 0
+                sub(footer, "")
+                print ""
+            } else if ($0 ~ /^[A-Za-z0-9-]+(: | #)/) {
+                on = 0
+            }
+        }
+        on && $0 == "" { blank = 1 }
+        on && $0 != "" { if (blank) print ""; blank = 0; print "  " $0 }
+    ' "$1"
 }
 
 # section prints the section titled $1, of the lines in the file $tmp/$2, where it has any.
@@ -48,6 +69,7 @@ main() {
             kind=others
         fi
         printf '%s\n' "- $header ($sha)" >>"$tmp/$kind"
+        [ "$kind" != breaking ] || footers "$tmp/message" >>"$tmp/$kind"
     done <"$tmp/log"
     section 'Breaking changes' breaking
     section Features features

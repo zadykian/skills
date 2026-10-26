@@ -39,6 +39,8 @@ notes '## Breaking changes
 - feat(x)!: drop the old input
 - refactor: move y
 
+  y moved to z.
+
 ## Features
 
 - feat(x): add z
@@ -50,6 +52,25 @@ notes '## Breaking changes
 ## Other changes
 
 - docs: describe v'
+
+setup gives-the-text-of-a-breaking-footer
+start
+git tag v1.2.3
+commit 'refactor!: move it' "$(printf '%s\n' 'It moves.' '' \
+    'BREAKING CHANGE: it moved to y, and its' 'input to z.' 'Refs: #1')"
+commit 'docs: note it' "$(printf '%s\n' 'BREAKING-CHANGE: x is gone.' 'Note: it stays.' '' \
+    'BREAKING CHANGE: Note: w is gone.' '' 'Co-Authored-By: a <a@example.com>')"
+notes '## Breaking changes
+
+- refactor!: move it
+
+  it moved to y, and its
+  input to z.
+- docs: note it
+
+  x is gone.
+
+  Note: w is gone.'
 
 setup lists-every-commit-before-the-first-release
 start
