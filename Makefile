@@ -25,10 +25,12 @@ lint-file:
 		$(if $(filter hooks/% tools/hookcheck,$(FILES)),hooks)
 lint-tree: lint
 
-# The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt.
+# The shell scripts, tools/ and hooks/ included, through ShellCheck and shfmt. -x follows each
+# source directive into the file it names, as lint-file checks a script without the files it
+# sources.
 shell:
 	@set -ef; files=$$(tools/files sh $(FILES)); [ -z "$$files" ] || { \
-		tools/run shellcheck $$files && tools/run shfmt -d -i 4 $$files; }
+		tools/run shellcheck -x $$files && tools/run shfmt -d -i 4 $$files; }
 
 # The size cap: 300 lines a file.
 sizecheck:
