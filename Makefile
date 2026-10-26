@@ -3,8 +3,6 @@
 # Each gate is a target of its own, and those that check files take FILES, every file of their kind
 # when it is empty: make vale FILES=README.md.
 FILES =
-# The ref against which tools/versioncheck compares the marketplace's version.
-BASE = origin/main
 # The commits gitleaks scans, as git log's options, which its --log-opts takes: every commit of
 # the history when empty.
 LOG_OPTS =
@@ -67,9 +65,9 @@ gitleaks:
 	tools/run gitleaks git --no-banner --redact --verbose \
 		$(if $(LOG_OPTS),--log-opts='$(LOG_OPTS)') .
 
-# The bundles, their skills and hooks, and a higher version where they changed since BASE.
+# The bundles, their skills and hooks, and the version against the last release's tag.
 versions:
-	tools/versioncheck $(BASE)
+	tools/versioncheck
 
 # The lint plugin's hooks, against throwaway repositories.
 hooks:

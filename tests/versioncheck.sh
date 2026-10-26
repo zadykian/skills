@@ -1,8 +1,9 @@
 # shellcheck shell=bash
 # The cases of tools/versioncheck, in work, a repository whose marketplace has one bundle, a, of
-# the skill x. Each case changes the work tree, and checks the findings on it.
+# the skill x. Each case changes the work tree, and checks the findings on it. A release is a
+# lightweight tag, as gh release create makes it.
 
-# start starts work, with the marketplace of the version $1 in its one commit, at origin/main.
+# start starts work, with the marketplace of the version $1 in its first commit.
 start() {
     git init -q -b main "$FAKE/work"
     cd "$FAKE/work" || return
@@ -11,7 +12,11 @@ start() {
     catalog "$1"
     git add .
     git commit -q -m 'chore: start'
-    git update-ref refs/remotes/origin/main HEAD
+}
+
+# commit commits the header $1, and no change.
+commit() {
+    git commit -q --allow-empty -m "$1"
 }
 
 # catalog writes the marketplace of the version $1, whose bundle gives the version $2, $1 where
@@ -53,3 +58,30 @@ mkdir skills/y
 finds 'y: no bundle lists it'
 rm -r skills
 finds 'x: listed, but skills/x/SKILL.md is missing'
+
+setup keeps-the-version-of-unreleased-commits
+start 1.2.3
+git tag v1.2.3
+commit 'feat!: drop it'
+passes
+
+setup refuses-a-version-below-the-last-release
+start 1.9.0
+git tag v1.9.0
+commit 'feat: add it'
+git tag v1.10.0
+git tag v2.0.0-rc.1
+git switch -qc side
+commit 'feat!: drop it'
+git tag v3.0.0
+git switch -q main
+catalog 1.9.1
+finds 'the version 1.9.1 is below the last release, v1.10.0'
+catalog 1.10.0
+passes
+
+setup takes-any-version-before-the-first-release
+start 1.2.3
+commit 'feat!: drop it'
+catalog 0.1.0
+passes

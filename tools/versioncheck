@@ -1,8 +1,6 @@
 #!/bin/sh
-# Checks the marketplace's bundles and its version, in the work tree and against BASE, origin/main
-# by default:
-#
-#   tools/versioncheck [BASE]
+# Checks the marketplace's bundles and its version in the work tree, against the last release: the
+# highest tag vX.Y.Z that HEAD reaches.
 #
 # The marketplace has one version, X.Y.Z, its metadata.version, and each bundle in it gives the
 # same, as Claude Code updates a plugin only when its version changes. CHANGELOG.md's first
@@ -10,9 +8,11 @@
 # ./ with strict false, and lists each as ./skills/NAME. Each directory of skills/ holds SKILL.md
 # and is in one bundle. A hook's script, ${CLAUDE_PLUGIN_ROOT}/PATH, is an executable file.
 #
-# Where BASE's marketplace has a version and skills/, hooks/ or the marketplace changed since,
-# the version is above BASE's. Each finding goes to stdout, and any fails the check. Without a
-# marketplace, there is nothing to check. It needs jq. Run it from the repository's root.
+# A change need not raise the version, as the commits since the last release may land unreleased,
+# but it is never below that release's.
+#
+# Each finding goes to stdout, and any fails the check. Without a marketplace, there is nothing to
+# check. It needs git and jq. Run it from the repository's root.
 
 set -eu
 
@@ -34,14 +34,6 @@ finding() {
 # higher succeeds where the version $2 is above the version $1.
 higher() {
     [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -n 1)" = "$2" ]
-}
-
-# changed succeeds where what the bundles ship differs from BASE in the work tree: a file changed,
-# staged or not, or a new file git does not ignore.
-changed() {
-    set -- skills hooks .claude-plugin
-    ! git diff --quiet "$base" -- "$@" ||
-        [ -n "$(git ls-files --others --exclude-standard -- "$@")" ]
 }
 
 # entries checks each bundle against the version $1, and the skills each lists.
@@ -97,10 +89,16 @@ hooks() {
     [ ! -s "$tmp/hooks" ] || finding "$(cat "$tmp/hooks")"
 }
 
+# released checks the version $1 against the last release, where there is one.
+released() {
+    printf '%s\n' "$1" | grep -Eqx "$semver" || return 0
+    last=$(git tag --merged HEAD 2>/dev/null | grep -Ex "v$semver" | sort -V | tail -n 1)
+    if [ -n "$last" ] && higher "$1" "${last#v}"; then
+        finding "the version $1 is below the last release, $last"
+    fi
+}
+
 main() {
-    base=${1:-origin/main}
-    git rev-parse --verify --quiet "$base^{commit}" >/dev/null ||
-        die "no commit $base: fetch it first"
     command -v jq >/dev/null || die "no jq"
     [ -f "$marketplace" ] || return 0
     jq -e '.plugins | type == "array" and length > 0' "$marketplace" >/dev/null 2>&1 ||
@@ -115,10 +113,7 @@ main() {
     entries "$version"
     skills
     hooks
-    if old=$(git show "$base:$marketplace" 2>/dev/null | jq -er '.metadata.version' 2>/dev/null) &&
-        changed && ! higher "$old" "$version"; then
-        finding "the bundles changed since $base, but the version $version is not above $old"
-    fi
+    released "$version"
     return "$status"
 }
 

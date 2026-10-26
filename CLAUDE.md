@@ -27,7 +27,7 @@ a version's parts mean.
 ```sh
 make lint                          # every gate, as CI's lint job runs them
 make vale FILES='PATHS'            # one gate, on some files
-make versions                      # the bundles and the version, against origin/main
+make versions                      # the bundles, and the version against the last release
 make hooks                         # the hooks, against throwaway repositories
 make test                          # the actions' cases, as CI's test job runs them
 claude --plugin-dir .              # a session with the work tree's skills
@@ -42,11 +42,11 @@ counted as errors.
 - A skill is generic, and reads no notes of a repository's. It names no repository's paths, jobs,
   terms, people or languages: those go in the repository's CLAUDE.md or `.claude/rules/`. A skill
   names another by its bare name, as both install paths name them differently.
-- Each change to `skills/`, `hooks/` or the catalog raises the version, as
-  [Versions](README.md#versions) says: in the catalog's `metadata.version` and in each bundle.
-  It adds its part to the version's section in CHANGELOG.md. `make versions` fails otherwise. A
-  change that breaks a repository's CLAUDE.md or targets says what to change there, in the
-  changelog.
+- A change need not raise the version: the last pull request of a stack raises it, as
+  [Versions](README.md#versions) says, in the catalog's `metadata.version` and in each bundle.
+  That pull request adds CHANGELOG.md's section for the version. `make versions` fails where the
+  version is below the last release's. A change that breaks a repository's CLAUDE.md or targets
+  says what to change there, in the changelog.
 - A new skill: its directory, its bundle's `skills` list, its row in the README's table, and its
   section in its bundle's page.
 - The repository is public. No secret, employer's name, internal host or address goes into it.
