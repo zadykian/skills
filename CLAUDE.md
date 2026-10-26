@@ -18,9 +18,9 @@ how to install and pin them, and what a version's parts mean.
 - `actions/NAME/`: an action, which a workflow uses as `zadykian/toolkit/actions/NAME@SHA`: its
   `action.yml`, its scripts, and a README of what it does and its inputs. A check's script is
   `check.sh`, and `ff`'s are the steps of its job.
-- `actions/lib/`: what each `check.sh` sources, as `$GITHUB_ACTION_PATH/../lib`. `report.sh`
-  turns its findings into annotations, a job summary and one comment, and its header comment is
-  its API. `glob.sh` gives `excluded PATH`, the one reading of the `exclude` inputs.
+- `actions/lib/`: what each `check.sh` sources. `report.sh` turns its findings into annotations,
+  a job summary and one comment, and its header comment is its API. `glob.sh` gives
+  `excluded PATH`, the one reading of the `exclude` inputs.
 - `tests/run`: runs the cases of each `tests/NAME.sh`, against `tests/gh`, the fake gh: of an
   action, of `actions/lib/`, of a tool, or, in `rules.sh`, of the checks against their skills. Its
   header comment says how to write a case.
@@ -47,7 +47,7 @@ claude --plugin-dir .              # a session with the work tree's skills
 online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make plugins` runs
 `claude plugin validate` on the marketplace and on the skills, its warnings counted as errors.
 
-## A change to a skill or a hook
+## A change to a skill, a hook or an action
 
 - A skill is generic, and reads no notes of a repository's. It names no repository's paths, jobs,
   terms, people or languages: those go in the repository's CLAUDE.md or `.claude/rules/`. A skill
@@ -60,9 +60,35 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
   give.
 - A new skill: its directory, its bundle's `skills` list, its row in the README's table, and its
   section in its bundle's page.
+- A new action: its directory, its `tests/NAME.sh`, and its row in the README's table. A new check
+  takes a step in `.github/workflows/rules.yml` too.
 - The repository is public. No secret, employer's name, internal host or address goes into it.
 - Prose keeps to the [writing](skills/writing/SKILL.md#the-caps-and-vale) skill's caps, as Vale,
   rumdl and `tools/sizecheck` check them.
+
+### How an action is built
+
+- `action.yml` passes `github.repository`, the pull request's number and the inputs in `env:`,
+  never as `${{ }}` in `run:`, which zizmor's template-injection audit refuses.
+- A check never blocks. `check.sh` exits 0 on findings and on its own errors: `report_start` traps
+  them, and each ends in one warning. A case of `tests/NAME.sh` fails where it exits non-zero.
+- A check reads the pull request through `gh api` alone, and checks out nothing, so it runs none of
+  the pull request's code. It runs on `pull_request`, of the types `opened, edited, reopened,
+  synchronize`.
+- Every check takes the inputs `token` and `comment`, and none that changes a rule. `check.sh`
+  holds its skill's values, or reads the skill's own file of them, as banned-terms reads
+  `skills/banned-terms/terms.json`.
+- `check.sh` reaches `actions/lib/` as `$GITHUB_ACTION_PATH/../lib`, as the runner downloads the
+  whole repository for `zadykian/toolkit/actions/NAME@SHA`.
+- A finding says where, quotes what is wrong, and links to the rule's section of the skill. The
+  link comes from `file_url`, at the action's own ref, never from a URL written out. The rule says
+  how to fix it, with a command where one exists.
+- `ff` runs on `issue_comment`, and acts on a `/ff` comment on a pull request alone. It checks out
+  the default branch, fetches the pull request's head and pushes it with git. It runs none of
+  the pull request's code. A refusal fails the job, and `comment-refusal.sh` comments why. Once
+  the push lands, closing the issues and deleting the branch only warn.
+- `ff` takes no inputs and uses no `actions/lib/`. `tests/ff.sh` runs its scripts in a clone of a
+  local origin, and a case checks where `main` ends and what the pull request is told.
 
 ## Commits and pull requests
 
