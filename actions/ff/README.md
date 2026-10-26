@@ -31,7 +31,7 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: zadykian/actions/ff@SHA # vX.Y.Z
+      - uses: zadykian/toolkit/actions/ff@SHA # vX.Y.Z
 ```
 
 [Versions](../../README.md#versions) says which hash to pin. The job's `if` starts a runner only for

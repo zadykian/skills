@@ -70,11 +70,11 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: zadykian/actions/pr-description@SHA # vX.Y.Z
+      - uses: zadykian/toolkit/actions/pr-description@SHA # vX.Y.Z
 ```
 
 The `edited` type checks the description again once it changes. `pull-requests: write` lets the
 action comment. It reads the pull request through GitHub's API alone, so the job checks out
 nothing.
 
-[section]: https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md#6-stack-mechanics-git--238
+[section]: ../../skills/atomic-commits/SKILL.md#6-stack-mechanics-git--238

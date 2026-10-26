@@ -25,7 +25,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: zadykian/actions/atomic-commits@SHA # vX.Y.Z
+      - uses: zadykian/toolkit/actions/atomic-commits@SHA # vX.Y.Z
 ```
 
 Pin it by the full hash of a version tag's commit, as the repository's
@@ -92,9 +92,9 @@ It reads what GitHub's API says of the commits, and runs none of their code. So 
 that each commit builds and passes the tests on its own, or that it holds one logical change, as
 [the hard rules][rules] say. The review of each commit checks those.
 
-[skill]: https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md
-[rules]: https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md#hard-rules
-[s2]: https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md#2-shape-each-commit
-[s3]: https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md#3-commit-messages-conventional-commits-100
-[s6]: https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md#6-stack-mechanics-git--238
-[s7]: https://github.com/zadykian/skills/blob/main/skills/atomic-commits/SKILL.md#7-verify
+[skill]: ../../skills/atomic-commits/SKILL.md
+[rules]: ../../skills/atomic-commits/SKILL.md#hard-rules
+[s2]: ../../skills/atomic-commits/SKILL.md#2-shape-each-commit
+[s3]: ../../skills/atomic-commits/SKILL.md#3-commit-messages-conventional-commits-100
+[s6]: ../../skills/atomic-commits/SKILL.md#6-stack-mechanics-git--238
+[s7]: ../../skills/atomic-commits/SKILL.md#7-verify

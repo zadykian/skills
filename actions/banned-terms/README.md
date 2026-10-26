@@ -1,9 +1,9 @@
 # banned-terms
 
 Warns on vague names and fillers, such as `helper`, `utils` and `simply`, in what a pull request
-adds. The [banned-terms](https://github.com/zadykian/skills/blob/main/skills/banned-terms/SKILL.md)
-skill teaches the agent to keep them out, and each finding links to it. The action never blocks the
-merge: its job passes, whatever it finds.
+adds. The [banned-terms](../../skills/banned-terms/SKILL.md) skill teaches the agent to keep them
+out, and each finding links to it. The action never blocks the merge: its job passes, whatever it
+finds.
 
 ## Usage
 
@@ -26,7 +26,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: zadykian/actions/banned-terms@SHA # vX.Y.Z
+      - uses: zadykian/toolkit/actions/banned-terms@SHA # vX.Y.Z
 ```
 
 The `edited` type checks the title and the description again once they change, and
