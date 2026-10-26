@@ -10,8 +10,8 @@ a version's parts mean.
   `"source": "./"` with `"strict": false`, lists them, and gives the marketplace's version.
   `lint`'s hooks are inline in its entry.
 - `skills/NAME/SKILL.md`: a skill, which a bundle offers as `/BUNDLE:NAME`, and
-  `gh skill install` copies as `/NAME`. Its directory holds `SKILL.md` alone, as gh copies the
-  whole directory into a repository.
+  `gh skill install` copies as `/NAME`. Its directory holds `SKILL.md`, and the data files it
+  reads, such as banned-terms' `terms.json`, as gh copies the whole directory into a repository.
 - `hooks/`: the lint bundle's hooks, which Claude Code runs from its copy of the marketplace.
 - `docs/BUNDLE.md`: what each skill of a bundle does, and what facts a repository names for it.
 - `tools/`: the gates' scripts. `tools/run` downloads the lint tools at the versions and SHA-256

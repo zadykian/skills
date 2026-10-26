@@ -1,0 +1,30 @@
+[
+  {
+    "terms": ["helper", "helpers"],
+    "hint": "Names no responsibility: name what it does"
+  },
+  {
+    "terms": ["util", "utils", "utility", "utilities"],
+    "hint": "Names no responsibility: name what it does"
+  },
+  {
+    "terms": ["misc", "miscellaneous"],
+    "hint": "A grab bag: group by purpose"
+  },
+  {
+    "terms": ["stuff", "thing", "things"],
+    "hint": "Names nothing: name it"
+  },
+  {
+    "terms": ["etc"],
+    "hint": "An open list: name each item, or lead the examples with \"such as\""
+  },
+  {
+    "terms": ["various"],
+    "hint": "Say which ones, or how many"
+  },
+  {
+    "terms": ["simply", "basically", "obviously"],
+    "hint": "Filler: delete it"
+  }
+]

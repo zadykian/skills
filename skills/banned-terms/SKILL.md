@@ -43,15 +43,9 @@ of the list.
 
 ## The terms
 
-| Terms                           | Hint                                                              |
-| ------------------------------- | ----------------------------------------------------------------- |
-| helper, helpers                 | Names no responsibility: name what it does                        |
-| util, utils, utility, utilities | Names no responsibility: name what it does                        |
-| misc, miscellaneous             | A grab bag: group by purpose                                      |
-| stuff, thing, things            | Names nothing: name it                                            |
-| etc                             | An open list: name each item, or lead the examples with "such as" |
-| various                         | Say which ones, or how many                                       |
-| simply, basically, obviously    | Filler: delete it                                                 |
+The terms are in [terms.json](terms.json), beside this file: an array of groups, each of its
+`terms` and a `hint` on what to write instead. Read the file before you name something or write
+prose.
 
 ## How a term matches
 
