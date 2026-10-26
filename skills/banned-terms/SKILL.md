@@ -77,6 +77,8 @@ though the action warns on it.
 
 ## The action
 
-[zadykian/actions/banned-terms](https://github.com/zadykian/actions/tree/main/banned-terms) warns
-on these terms in what a pull request adds. It reads the lines, the paths of the files added or
-renamed, the title and body, and the commit messages. It never blocks the merge.
+The toolkit's [`banned-terms` action][action] warns on these terms in what a pull request adds. It
+reads the lines, the paths of the files added or renamed, the title and body, and the commit
+messages. It never blocks the merge.
+
+[action]: https://github.com/zadykian/toolkit/tree/main/actions/banned-terms

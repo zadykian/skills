@@ -11,9 +11,9 @@ argument-hint: "PR... [vX.Y.Z]"
 
 Land the pull requests `$ARGUMENTS` on main, the bottom of the stack first. main takes
 fast-forwards only, so the commits CI checked are the commits that land. A comment `/ff` lands a
-pull request, through the workflow that zadykian/actions's
-[`ff` action](https://github.com/zadykian/actions/tree/main/ff) sets up. Never run `gh pr merge`,
-and never push to main.
+pull request, through the workflow that the toolkit's
+[`ff` action](https://github.com/zadykian/toolkit/tree/main/actions/ff) sets up. Never run
+`gh pr merge`, and never push to main.
 
 ## The repository's rules
 
