@@ -1,11 +1,61 @@
 #!/bin/sh
 # Prints a release's notes in Markdown: the commits since the last release, as tools/lastrelease
-# finds it, or every commit before the first release. Each commit is a line, `- HEADER (SHA)`,
-# oldest first.
+# finds it, or every commit before the first release.
+#
+# Each commit is a line, `- HEADER (SHA)`, oldest first, in the section of its kind: Breaking
+# changes, Features, Fixes and Other changes, each where it has a commit. Its kind is the one that
+# tools/versioncheck bumps the version for. A breaking change has a ! before its header's colon, or
+# a BREAKING CHANGE: footer. Of the rest, a feat is a feature, a fix a fix, and any other commit
+# another change.
 #
 # It needs git. Run it from the repository's root.
 
 set -eu
 
-last=$("$(dirname -- "$0")/lastrelease")
-git log --reverse --format='- %s (%h)' "${last:+refs/tags/$last..}HEAD"
+bang='^[a-z]+(\([^)]*\))?!: '
+feat='^feat(\([^)]*\))?: '
+fix='^fix(\([^)]*\))?: '
+footer='^BREAKING[ -]CHANGE: '
+
+# headed succeeds where the header $2 matches the extended regex $1.
+headed() {
+    printf '%s\n' "$2" | grep -Eq "$1"
+}
+
+# section prints the section titled $1, of the lines in the file $tmp/$2, where it has any.
+section() {
+    [ -s "$tmp/$2" ] || return 0
+    printf '## %s\n\n' "$1"
+    cat "$tmp/$2"
+    printf '\n'
+}
+
+main() {
+    last=$("$(dirname -- "$0")/lastrelease")
+    git log --reverse --format='%h %s' "${last:+refs/tags/$last..}HEAD" >"$tmp/log"
+    for kind in breaking features fixes others; do
+        : >"$tmp/$kind"
+    done
+    while read -r sha header; do
+        git log -1 --format=%B "$sha" >"$tmp/message"
+        if headed "$bang" "$header" || grep -Eq "$footer" "$tmp/message"; then
+            kind=breaking
+        elif headed "$feat" "$header"; then
+            kind=features
+        elif headed "$fix" "$header"; then
+            kind=fixes
+        else
+            kind=others
+        fi
+        printf '%s\n' "- $header ($sha)" >>"$tmp/$kind"
+    done <"$tmp/log"
+    section 'Breaking changes' breaking
+    section Features features
+    section Fixes fixes
+    section 'Other changes' others
+}
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 1' HUP INT TERM
+main "$@"

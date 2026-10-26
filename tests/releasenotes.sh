@@ -26,11 +26,41 @@ notes() {
         fail "the notes: $(cat "$FAKE/out")"
 }
 
+setup writes-each-section-oldest-first
+start
+git tag v1.2.3
+commit 'feat(x)!: drop the old input'
+commit 'refactor: move y' 'BREAKING CHANGE: y moved to z.'
+commit 'feat(x): add z'
+commit 'fix(x): mend w'
+commit 'docs: describe v' 'It quotes feat!: and a BREAKING CHANGE: footer.'
+notes '## Breaking changes
+
+- feat(x)!: drop the old input
+- refactor: move y
+
+## Features
+
+- feat(x): add z
+
+## Fixes
+
+- fix(x): mend w
+
+## Other changes
+
+- docs: describe v'
+
 setup lists-every-commit-before-the-first-release
 start
 commit 'feat: add it'
-notes '- chore: start
-- feat: add it'
+notes '## Features
+
+- feat: add it
+
+## Other changes
+
+- chore: start'
 
 setup ignores-a-tag-of-no-release
 start
@@ -46,5 +76,10 @@ commit 'feat!: drop it'
 git tag v3.0.0
 git switch -q main
 commit 'docs: describe it'
-notes '- fix: mend it
+notes '## Fixes
+
+- fix: mend it
+
+## Other changes
+
 - docs: describe it'
