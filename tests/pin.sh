@@ -73,6 +73,7 @@ start
 pin v1.2.3
 exits 0
 prints ".github/workflows/rules.yml:5: - uses: zadykian/toolkit/actions/x@$SHA # v1.2.3"
+prints 'no .claude/settings.json, so the workflows alone are pinned'
 pin v1.2.3
 exits 0
 prints "$FAKE/app pins v1.2.3 already"

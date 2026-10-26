@@ -97,9 +97,13 @@ edit() {
         }' "$settings"
 }
 
-# marketplace pins the source of the toolkit's marketplace in settings.json, where there is one.
+# marketplace pins the source of the toolkit's marketplace in settings.json. A repository without
+# settings.json gets a note.
 marketplace() {
-    [ -f "$settings" ] || return 0
+    if [ ! -f "$settings" ]; then
+        printf 'tools/pin: no %s, so the workflows alone are pinned\n' "$settings" >&2
+        return
+    fi
     edit >"$tmp/out" || die "$settings: no one line holds its source's repo, or its ref"
     stage "$settings"
 }
@@ -117,7 +121,8 @@ main() {
     trap 'exit 1' HUP INT TERM
     touch "$tmp/steps" "$tmp/changes" "$tmp/staged"
     workflows
-    [ -s "$tmp/steps" ] || die "$2 has no workflow that uses an action of the toolkit"
+    [ -s "$tmp/steps" ] || [ -f "$settings" ] ||
+        die "$2 has no $settings, and no workflow that uses an action of the toolkit"
     marketplace
     while IFS= read -r file; do
         cat "$tmp/new/$file" >"$file"
