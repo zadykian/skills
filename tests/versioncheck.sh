@@ -14,9 +14,11 @@ start() {
     git commit -q -m 'chore: start'
 }
 
-# commit commits the header $1, and no change.
+# commit commits the header $1, with the body $2 where given, and no change.
 commit() {
-    git commit -q --allow-empty -m "$1"
+    local message=(-m "$1")
+    [ -z "${2-}" ] || message+=(-m "$2")
+    git commit -q --allow-empty "${message[@]}"
 }
 
 # catalog writes the marketplace of the version $1, whose bundle gives the version $2, $1 where
@@ -40,6 +42,15 @@ finds() {
     step "$ROOT/tools/versioncheck"
     exits 1
     prints "$1"
+}
+
+# calls checks that the commits since the last release call for the version $1: the version $2
+# fails with the finding $3, and $1 passes, which the work tree then gives.
+calls() {
+    catalog "$2"
+    finds "$3"
+    catalog "$1"
+    passes
 }
 
 setup checks-the-bundles-and-their-skills
@@ -85,3 +96,43 @@ start 1.2.3
 commit 'feat!: drop it'
 catalog 0.1.0
 passes
+
+setup bumps-the-patch-for-the-rest
+start 1.2.3
+git tag v1.2.3
+commit 'fix(x): mend it'
+commit 'docs: describe it' 'It quotes feat!: and a BREAKING CHANGE: footer.'
+calls 1.2.4 1.3.0 \
+    'the version 1.3.0 is not the one the commits since v1.2.3 call for, 1.2.4: no commit is'
+
+setup bumps-the-minor-for-a-feature
+start 1.2.3
+git tag v1.2.3
+commit 'fix: mend it'
+commit 'feat(x): add it'
+calls 1.3.0 1.2.4 "1.3.0: $(git rev-parse --short HEAD) is a feature, and no commit is breaking"
+
+setup bumps-the-major-for-a-header-s-bang
+start 1.2.3
+git tag v1.2.3
+commit 'feat(x)!: drop it'
+commit 'feat: add it'
+calls 2.0.0 1.3.0 "call for, 2.0.0: $(git rev-parse --short HEAD~) is a breaking change"
+
+setup bumps-the-major-for-a-footer
+start 1.2.3
+git tag v1.2.3
+commit 'refactor: move it' 'BREAKING CHANGE: it moved.'
+calls 2.0.0 1.3.0 "call for, 2.0.0: $(git rev-parse --short HEAD) is a breaking change"
+git commit -qam 'chore: release 2.0.0'
+git tag v2.0.0
+commit 'fix: mend it'
+calls 2.0.1 3.0.0 'since v2.0.0 call for, 2.0.1'
+commit 'docs: note it' $'It changed.\n\nBREAKING-CHANGE: it changed.'
+calls 3.0.0 2.0.2 'call for, 3.0.0'
+
+setup bumps-the-minor-for-a-breaking-change-before-1.0
+start 0.3.1
+git tag v0.3.1
+commit 'feat!: drop it'
+calls 0.4.0 1.0.0 "0.4.0: $(git rev-parse --short HEAD) is a breaking change, before 1.0"

@@ -9,7 +9,7 @@
 # and is in one bundle. A hook's script, ${CLAUDE_PLUGIN_ROOT}/PATH, is an executable file.
 #
 # A change need not raise the version, as the commits since the last release may land unreleased,
-# but it is never below that release's.
+# but it is never below that release's. Raised, it is the version they call for, as bump says.
 #
 # Each finding goes to stdout, and any fails the check. Without a marketplace, there is nothing to
 # check. It needs git and jq. Run it from the repository's root.
@@ -89,12 +89,40 @@ hooks() {
     [ ! -s "$tmp/hooks" ] || finding "$(cat "$tmp/hooks")"
 }
 
+# bump sets next to the version that the commits since the tag $1 call for, and why to the reason.
+# A breaking change, by a ! before its header's colon or a BREAKING CHANGE: footer, bumps the
+# major, or the minor before 1.0. A feat bumps the minor, and any other commit the patch.
+bump() {
+    major=${1#v} minor=${1#v*.} patch=${1##*.}
+    major=${major%%.*} minor=${minor%.*}
+    git log --format='%h %s' "refs/tags/$1..HEAD" >"$tmp/log"
+    breaking=$(sed -En 's/^([0-9a-f]+) [a-z]+(\([^)]*\))?!: .*/\1/p' "$tmp/log" | head -n 1)
+    [ -n "$breaking" ] || breaking=$(git log -1 --format=%h -E --grep='^BREAKING[ -]CHANGE: ' \
+        "refs/tags/$1..HEAD")
+    feature=$(sed -En 's/^([0-9a-f]+) feat(\([^)]*\))?: .*/\1/p' "$tmp/log" | head -n 1)
+    if [ -n "$breaking" ] && [ "$major" != 0 ]; then
+        next=$((major + 1)).0.0 why="$breaking is a breaking change"
+    elif [ -n "$breaking" ]; then
+        next=0.$((minor + 1)).0 why="$breaking is a breaking change, before 1.0"
+    elif [ -n "$feature" ]; then
+        next=$major.$((minor + 1)).0 why="$feature is a feature, and no commit is breaking"
+    else
+        next=$major.$minor.$((patch + 1)) why='no commit is a feature or a breaking change'
+    fi
+}
+
 # released checks the version $1 against the last release, where there is one.
 released() {
     printf '%s\n' "$1" | grep -Eqx "$semver" || return 0
     last=$(git tag --merged HEAD 2>/dev/null | grep -Ex "v$semver" | sort -V | tail -n 1)
-    if [ -n "$last" ] && higher "$1" "${last#v}"; then
+    if [ -z "$last" ] || [ "$1" = "${last#v}" ]; then
+        return 0
+    elif higher "$1" "${last#v}"; then
         finding "the version $1 is below the last release, $last"
+    else
+        bump "$last"
+        [ "$1" = "$next" ] ||
+            finding "the version $1 is not the one the commits since $last call for, $next: $why"
     fi
 }
 

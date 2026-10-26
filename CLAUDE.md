@@ -45,8 +45,9 @@ counted as errors.
 - A change need not raise the version: the last pull request of a stack raises it, as
   [Versions](README.md#versions) says, in the catalog's `metadata.version` and in each bundle.
   That pull request adds CHANGELOG.md's section for the version. `make versions` fails where the
-  version is below the last release's. A change that breaks a repository's CLAUDE.md or targets
-  says what to change there, in the changelog.
+  version is below the last release's, or a raise that the commits since then do not call for. A
+  change that breaks a repository's CLAUDE.md or targets says what to change there, in the
+  changelog.
 - A new skill: its directory, its bundle's `skills` list, its row in the README's table, and its
   section in its bundle's page.
 - The repository is public. No secret, employer's name, internal host or address goes into it.

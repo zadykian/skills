@@ -78,10 +78,12 @@ The marketplace has one version, `X.Y.Z`, which each bundle gives too, and
 when its version changes. A change need not raise it: commits land on `main` unreleased, and the
 last pull request of a stack raises it, for the skills, hooks and actions at once. It raises:
 
-- the patch, for a fix or a clearer wording;
-- the minor, for a new step, argument or skill;
+- the patch, for a fix, a clearer wording, or any other commit;
+- the minor, for a `feat`: a new step, argument or skill;
 - the major, for a break, such as a renamed skill, an argument changed or dropped, or a step a
-  repository relies on, gone. So is a make target that a repository must now write.
+  repository relies on, gone. So is a make target that a repository must now write. A commit
+  marks a break by a `!` in its header, or a `BREAKING CHANGE:` footer. Before 1.0, a break
+  raises the minor.
 
 The largest change since the last release sets the part it raises. A version that lands on `main` is
 released as the tag `vX.Y.Z` and a GitHub Release. [CLAUDE.md](CLAUDE.md) says how a change is
