@@ -20,6 +20,14 @@ die() {
     exit 1
 }
 
+# stage keeps $tmp/out, the new text of the file $1, for main to write, where the two differ.
+stage() {
+    ! cmp -s "$tmp/out" "$1" || return 0
+    mkdir -p "$tmp/new/${1%/*}"
+    mv "$tmp/out" "$tmp/new/$1"
+    printf '%s\n' "$1" >>"$tmp/staged"
+}
+
 # workflows pins each step that uses an action of the toolkit, as NAME@REF unquoted, with a comment
 # or none after it. It lists the steps in $tmp/steps.
 workflows() {
@@ -38,7 +46,7 @@ workflows() {
                 }
             }
             { print }' "$file" >"$tmp/out"
-        cmp -s "$tmp/out" "$file" || cat "$tmp/out" >"$file"
+        stage "$file"
     done
 }
 
@@ -53,9 +61,12 @@ main() {
     tmp=$(mktemp -d)
     trap 'rm -rf "$tmp"' EXIT
     trap 'exit 1' HUP INT TERM
-    touch "$tmp/steps" "$tmp/changes"
+    touch "$tmp/steps" "$tmp/changes" "$tmp/staged"
     workflows
     [ -s "$tmp/steps" ] || die "$2 has no workflow that uses an action of the toolkit"
+    while IFS= read -r file; do
+        cat "$tmp/new/$file" >"$file"
+    done <"$tmp/staged"
     [ -s "$tmp/changes" ] || printf '%s pins %s already\n' "$2" "$version" >"$tmp/changes"
     cat "$tmp/changes"
 }
