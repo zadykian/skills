@@ -8,6 +8,7 @@
 #   finding KEY MESSAGE [FILE [LINE]]  records a finding of the rule KEY
 #   report_finish                      reports the findings, and exits 0
 #   cannot_check REASON                warns that the check could not run, and exits 0
+#   file_url PATH                      prints the URL of the file PATH at the action's ref
 #
 # report_start reads GH_REPO, owner/name, PR, the pull request's number, and COMMENT, true where
 # omitted. Where PR is empty, as on another event than pull_request, it warns and exits 0. It then
@@ -19,6 +20,10 @@
 # TITLE is a line of text, URL the rule's section of the skill, and FIX how to fix a finding, in
 # Markdown. MESSAGE says where and what is wrong, quoting it. FILE is a path from the repository's
 # root, and LINE a line of its new side: with both, the annotation shows in Files changed.
+#
+# file_url prints https://github.com/OWNER/REPO/blob/REF/PATH, where the step runs
+# `uses: OWNER/REPO/actions/NAME@REF` and PATH is a path from that repository's root. An action run
+# from a checkout, as `./actions/NAME`, links to PATH on main of zadykian/toolkit.
 #
 # report_finish reads the SHA of the pull request's head, then:
 #
@@ -38,7 +43,8 @@
 #   # shellcheck source=actions/lib/report.sh
 #   . "$GITHUB_ACTION_PATH/../lib/report.sh"
 #   report_start pr-description
-#   rule empty 'The description is empty' "$SKILL#6-stack-mechanics-git--238" \
+#   skill=$(file_url skills/atomic-commits/SKILL.md)
+#   rule empty 'The description is empty' "$skill#6-stack-mechanics-git--238" \
 #       "Describe the change under \`## Problem\` and \`## Changes\`."
 #   body=$(gh api "repos/$GH_REPO/pulls/$PR" --jq .body)
 #   [ -n "${body//[[:space:]]/}" ] || finding empty "The description of #$PR is empty."
@@ -73,6 +79,21 @@ cannot_check() {
 # status 0.
 report_exit() {
     [ "$1" = 0 ] || cannot_check "${report_error:-the check exited with $1}"
+}
+
+# file_url prints the URL of the file $1 at the ref of the action's step. A composite action's
+# own steps get no GITHUB_ACTION_REPOSITORY or GITHUB_ACTION_REF, as actions/runner's
+# ActionRunner.cs clears them, so it reads the action path. The runner downloads
+# OWNER/REPO/actions/NAME@REF into _actions/OWNER/REPO/REF/actions/NAME, as its ActionManager.cs
+# does, and REF may hold slashes. A checkout's ./actions/NAME runs in the workspace, at a commit
+# the step cannot tell. GITHUB_SHA is the merge commit on pull_request, while the checkout may
+# hold the head, or another repository. So it links to main.
+file_url() {
+    if [[ ${GITHUB_ACTION_PATH-} =~ /_actions/([^/]+/[^/]+)/(.+)/actions/[^/]+$ ]]; then
+        printf 'https://github.com/%s/blob/%s/%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "$1"
+    else
+        printf 'https://github.com/zadykian/toolkit/blob/main/%s\n' "$1"
+    fi
 }
 
 # rule declares the rule $1, titled $2, which the skill's section at the URL $3 sets, and whose

@@ -139,3 +139,21 @@ setup warns-on-another-event
 probe PR= GITHUB_EVENT_NAME=push </dev/null
 warns '::warning::probe checks a pull request, and the push event has none: run it on pull_request.'
 warnings 1
+
+# The runner downloads OWNER/REPO/actions/NAME@REF into _actions/OWNER/REPO/REF/actions/NAME.
+actions=/home/runner/work/_actions
+setup links-at-a-sha
+probe GITHUB_ACTION_PATH="$actions/o/r/$HEAD_SHA/actions/probe" <<<'file_url skills/x/SKILL.md'
+prints "https://github.com/o/r/blob/$HEAD_SHA/skills/x/SKILL.md"
+
+setup links-at-a-tag
+probe GITHUB_ACTION_PATH="$actions/o/r/v1.2.0/actions/probe" <<<'file_url skills/x/SKILL.md'
+prints 'https://github.com/o/r/blob/v1.2.0/skills/x/SKILL.md'
+
+setup links-at-a-branch-with-a-slash
+probe GITHUB_ACTION_PATH="$actions/o/r/feat/x/actions/probe" <<<'file_url a/README.md'
+prints 'https://github.com/o/r/blob/feat/x/a/README.md'
+
+setup links-a-checkout-to-main
+probe GITHUB_ACTION_PATH=/home/runner/work/r/r/actions/probe <<<'file_url skills/x/SKILL.md'
+prints 'https://github.com/zadykian/toolkit/blob/main/skills/x/SKILL.md'
