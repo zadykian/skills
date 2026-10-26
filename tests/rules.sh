@@ -150,6 +150,12 @@ setup quotes-the-form-of-a-description
 agree "$(values "$check_pd" "^([a-z]+_md=')?(.*[^'])'?\$" "^problem_md='" '^# ')" \
     "$(values "$skill_ac" '^(.+)$' '^```markdown$' '^```$')"
 
+# The check's pattern of an attribution line, (MARK )?TEXT, as TEXT or MARK TEXT, the skill's forms.
+setup holds-the-line-that-may-follow-a-footer
+agree "$(values "$check_pd" " by='\^(\(.+ \)\?[^']*[^' ]) '\$" |
+    sed -E 's/\t\((.+) \)\?(.+)$/\t\2 or \1 \2/')" \
+    "$(values "$skill_ac" 'that starts (`[^`]+` or `[^`]+`)' | tr -d '`')"
+
 # The check's pattern of the line, its counts as N and M, as the skill names them.
 setup holds-the-form-of-a-stack
 agree "$(values "$check_pd" " of='(PR [^']+)'" | sed -E 's/\[0-9\]\+/N/; s/\[0-9\]\+/M/')" \

@@ -197,7 +197,8 @@ main ← feat/retry-1-gateway ← feat/retry-2-policy ← feat/retry-3-checkout
 
 PR titles use the Conventional Commits header format too, because a squash merge turns the title
 into the commit on `main`. A PR containing a breaking commit has `!` in its title and the
-`BREAKING CHANGE:` footer at the end of its description.
+`BREAKING CHANGE:` footer at the end of its description. Only an attribution line may follow it,
+one that starts `Generated with` or `🤖 Generated with`.
 
 PR description:
 
