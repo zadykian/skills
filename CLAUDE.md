@@ -17,6 +17,10 @@ a version's parts mean.
 - `CHANGELOG.md`: a `## X.Y.Z` section per version, the newest first.
 - `tools/`: the gates' scripts. `tools/run` downloads the lint tools at the versions and SHA-256
   sums it pins, into `.cache/tools`.
+- `actions/NAME/`: a GitHub Action, which a workflow uses as `zadykian/toolkit/actions/NAME@SHA`,
+  and a README of what it does. A `check.sh` reaches `actions/lib/` as `$GITHUB_ACTION_PATH/../lib`.
+- `tests/run`: runs the cases of each `tests/NAME.sh` against `tests/gh`, the fake gh. Its header
+  comment says how to write a case.
 
 ## Commands
 
@@ -25,11 +29,13 @@ make lint                          # every gate, as CI's lint job runs them
 make vale FILES='PATHS'            # one gate, on some files
 make versions                      # the bundles and the version, against origin/main
 make hooks                         # the hooks, against throwaway repositories
+make test                          # the actions' cases, as CI's test job runs them
 claude --plugin-dir .              # a session with the work tree's skills
 ```
 
-`make lint` needs `jq` and `claude` on the `PATH`. `make plugins` runs `claude plugin validate`
-on the marketplace and on the skills, its warnings counted as errors.
+`make lint` needs `jq` and `claude` on the `PATH`, and `make test` needs `git` and `jq`.
+`make plugins` runs `claude plugin validate` on the marketplace and on the skills, its warnings
+counted as errors.
 
 ## A change to a skill or a hook
 
