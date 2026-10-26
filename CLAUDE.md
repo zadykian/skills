@@ -14,7 +14,6 @@ a version's parts mean.
   whole directory into a repository.
 - `hooks/`: the lint bundle's hooks, which Claude Code runs from its copy of the marketplace.
 - `docs/BUNDLE.md`: what each skill of a bundle does, and what facts a repository names for it.
-- `CHANGELOG.md`: a `## X.Y.Z` section per version, the newest first.
 - `tools/`: the gates' scripts. `tools/run` downloads the lint tools at the versions and SHA-256
   sums it pins, into `.cache/tools`.
 - `actions/NAME/`: a GitHub Action, which a workflow uses as `zadykian/toolkit/actions/NAME@SHA`,
