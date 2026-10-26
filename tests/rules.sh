@@ -5,7 +5,8 @@
 # follows it. Backticks quote the skills' Markdown here, never a command.
 # shellcheck disable=SC2016
 
-check_ac=actions/atomic-commits/check.sh skill_ac=skills/atomic-commits/SKILL.md
+check_ac=actions/atomic-commits/check.sh check_pd=actions/pr-description/check.sh
+skill_ac=skills/atomic-commits/SKILL.md
 
 # values prints each match of the regex $2 in the file $1: a line of FILE:LINE, a tab, and the
 # match's last group. With the regex $3, it reads the first line that $3 matches, past the match.
@@ -57,6 +58,39 @@ agree() {
     done
 }
 
+# slugs prints the anchor of each heading of the Markdown file $1, as GitHub makes it: lowercase,
+# with its spaces as -, and its characters other than letters, digits, spaces, _ and - dropped.
+slugs() {
+    local line fenced=false
+    while IFS= read -r line; do
+        if [[ $line =~ ^\ *(\`\`\`|~~~) ]]; then
+            if $fenced; then fenced=false; else fenced=true; fi
+        elif ! $fenced && [[ $line =~ ^#{1,6}\ +(.+) ]]; then
+            line=${BASH_REMATCH[1],,} line=${line//[^[:alnum:] _-]/}
+            echo "${line// /-}"
+        fi
+    done <"$ROOT/$1"
+}
+
+# links checks that each $skill#ANCHOR of the check $1 names a heading of its skill: the file of
+# skills/ that its skill= line names, as a URL or as the PATH of $(file_url PATH). A check with
+# such anchors fails where it has no such line.
+links() {
+    local anchors page headings at anchor
+    anchors=$(values "$1" '\$skill#([a-z0-9-]+)')
+    [[ $anchors == *$'\t'* ]] || return 0
+    page=$(values "$1" '^skill=.*[ /](skills/[a-z-]+/SKILL\.md)\)?$')
+    if [[ $page != *$'\t'* ]]; then
+        fail "$1 links to \$skill#ANCHOR, but no skill= line names a file of skills/"
+        return
+    fi
+    page=${page#*$'\t'} headings=$(slugs "$page")
+    while IFS=$'\t' read -r at anchor; do
+        grep -qxF -- "$anchor" <<<"$headings" ||
+            fail "$at links to $page#$anchor, which names no heading of it"
+    done <<<"$anchors"
+}
+
 setup holds-the-cap-of-a-commit
 agree "$(values "$check_ac" '^max_commit_lines=([0-9]+)')" \
     "$(values "$skill_ac" 'Target ≤ ([0-9]+) changed lines per commit')"
@@ -90,3 +124,36 @@ agree "$(values "$check_ac" 'Wrap the body at ([0-9]+) ')" "$width"
 setup leaves-out-the-paths-that-its-skill-does
 agree "$(values actions/atomic-commits/action.yml '^ +(.+)$' '^    default: \|$' '^$')" \
     "$(values "$skill_ac" "':\(exclude,glob\)([^']+)'")"
+
+setup holds-the-cap-of-a-description
+agree "$(values "$check_pd" '^max=([0-9]+)$')" \
+    "$(values "$skill_ac" ' ([0-9]+) words at most, not counting code blocks')"
+
+setup holds-the-sections-of-a-description
+sections=$(values "$skill_ac" '^- `## ([[:alpha:]]+)`')
+agree "$(values "$check_pd" '([[:alpha:]]+)[ )]' '^names=\(')" "$sections"
+agree "$(values "$check_pd" '=\$\(first ([[:alpha:]]+)\)')" "$sections"
+
+# The check's form of a description runs from problem_md to footer_md, each part quoted.
+setup quotes-the-form-of-a-description
+agree "$(values "$check_pd" "^([a-z]+_md=')?(.*[^'])'?\$" "^problem_md='" '^# ')" \
+    "$(values "$skill_ac" '^(.+)$' '^```markdown$' '^```$')"
+
+# The check's pattern of the line, its counts as N and M, as the skill names them.
+setup holds-the-form-of-a-stack
+agree "$(values "$check_pd" " of='(PR [^']+)'" | sed -E 's/\[0-9\]\+/N/; s/\[0-9\]\+/M/')" \
+    "$(values "$skill_ac" '`(PR [A-Z] of [A-Z])`')"
+
+setup gates-hold-the-caps-of-writing
+writing=skills/writing/SKILL.md
+agree "$(values tools/sizecheck '^max=([0-9]+)$')" \
+    "$(values "$writing" 'Files of ([0-9]+) lines or fewer')"
+agree "$(values .rumdl.toml '^line-length = ([0-9]+)$')" \
+    "$(values "$writing" 'prose wrapped at ([0-9]+) columns')"
+agree "$(values .vale/styles/Microsoft/SentenceLength.yml '^max: ([0-9]+)$')" \
+    "$(values "$writing" 'Sentences of ([0-9]+) words or fewer')"
+agree "$(values .vale.ini '^([[:alpha:]-]+\.[[:alpha:]]+) = error$')" \
+    "$(values "$writing" '\(`([[:alpha:]-]+\.[[:alpha:]]+)`\)')"
+
+setup links-to-headings-of-its-skill
+for script in "$ROOT"/actions/*/check.sh; do links "${script#"$ROOT"/}"; done
