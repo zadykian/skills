@@ -172,6 +172,7 @@ report_text() {
 # that its marker starts, or creates one where $2, the count of findings, is not 0. It fails as gh
 # fails.
 report_comment() {
+    # The comments made so far start with this marker, so it keeps the old name, zadykian/actions.
     local marker="<!-- zadykian/actions:$report_name -->" ids id body run note
     ids=$(gh api --paginate "repos/$GH_REPO/issues/$PR/comments?per_page=100" \
         --jq ".[] | select(.body | startswith(\"$marker\")) | .id") || return
