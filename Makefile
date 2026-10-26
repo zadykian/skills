@@ -17,10 +17,12 @@ CLAUDE = claude
 lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks versions hooks plugins
 
 # What the lint plugin's hooks run here: the gates of the file Claude edited, and every gate at
-# the end of its turn.
+# the end of its turn. An action's metadata and dependabot.yml go through zizmor, as a workflow
+# does.
 lint-file:
 	@$(MAKE) --no-print-directory shell sizecheck vale lychee rumdl FILES='$(FILES)' \
-		$(if $(filter .github/workflows/%,$(FILES)),actionlint zizmor) \
+		$(if $(filter .github/workflows/%,$(FILES)),actionlint) \
+		$(if $(filter .github/workflows/% .github/dependabot.yml %/action.yml,$(FILES)),zizmor) \
 		$(if $(filter skills/% hooks/% .claude-plugin/%,$(FILES)),versions plugins) \
 		$(if $(filter hooks/% tools/hookcheck,$(FILES)),hooks)
 lint-tree: lint
@@ -55,7 +57,8 @@ actionlint:
 	shellcheck="$$(tools/run -path shellcheck)" && \
 		tools/run actionlint -shellcheck="$$shellcheck" -pyflakes=
 
-# The workflows, with the online audits where GH_TOKEN is set, as in CI.
+# The workflows, the actions' metadata and dependabot.yml, with the online audits where GH_TOKEN
+# is set, as in CI.
 zizmor:
 	tools/run zizmor .
 
