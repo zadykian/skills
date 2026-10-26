@@ -12,7 +12,7 @@ LOG_OPTS =
 CLAUDE = claude
 
 .PHONY: lint lint-file lint-tree shell sizecheck vale lychee rumdl actionlint zizmor gitleaks \
-	versions hooks plugins
+	versions hooks plugins test
 
 lint: shell sizecheck vale lychee rumdl actionlint zizmor gitleaks versions hooks plugins
 
@@ -80,3 +80,7 @@ plugins:
 		[ -d skills ] || exit 0; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
 		mkdir "$$tmp/skills" && cp -R skills README.md LICENSE "$$tmp/skills"; \
 		$(CLAUDE) plugin validate "$$tmp/skills" --strict
+
+# The actions' cases, of each tests/NAME.sh, against tests/gh, the fake gh. They need git and jq.
+test:
+	tests/run
