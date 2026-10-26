@@ -185,6 +185,8 @@ main ← feat/retry-1-gateway ← feat/retry-2-policy ← feat/retry-3-checkout
 - Always edit from the top branch. To change a commit in a lower PR, make a `--fixup` commit on the
   top branch and run `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --update-refs main`; this
   rewrites the stack and moves every branch ref.
+- A PR holds no merge commit. Catch up with `main` by rebasing from the top branch, never by
+  merging it in: `git fetch origin && git rebase --update-refs origin/main`.
 - Push and open PRs only when the user asked for it. Push each branch with
   `git push --force-with-lease origin <branch>`. Open each PR against the branch below it:
   `gh pr create --base feat/retry-1-gateway --head feat/retry-2-policy`.
