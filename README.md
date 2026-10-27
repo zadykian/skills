@@ -2,7 +2,7 @@
 
 [Claude Code](https://code.claude.com/docs/en/overview) skills and hooks for work in a GitHub
 repository, and GitHub Actions that check each pull request against the same rules. The skills
-plan a change as an issue, commit it in small steps, and land the stack by fast-forward. They keep
+plan a change as an issue, commit it in small steps, and land the stack by GitHub's merge. They keep
 prose short, and the hooks lint each file as Claude edits it. The skills and hooks are a plugin
 marketplace, `zadykian`, of three bundles. They and the actions release at one version.
 
@@ -12,7 +12,7 @@ marketplace, `zadykian`, of three bundles. They and the actions release at one v
 | ------ | -------------- | ------------------------------------ | ------------------------------------- |
 | flow   | atomic-commits | by Claude as it commits              | Small commits, stacks of small PRs    |
 | flow   | issue          | `/flow:issue [topic]`                | Plans a change, then files the issue  |
-| flow   | land           | `/flow:land PR... [vX.Y.Z]`, by hand | Lands a stack by `/ff`, tags releases |
+| flow   | land           | `/flow:land PR... [vX.Y.Z]`, by hand | Lands a stack by merge, tags releases |
 | docs   | writing        | by Claude as it edits a file         | The policy for comments and docs      |
 | docs   | trim           | `/docs:trim FILE...`                 | Trims comments and docs to the policy |
 | lint   | split-file     | `/lint:split-file FILE`              | Splits a file over the line cap       |
