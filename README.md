@@ -89,6 +89,10 @@ on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 permissions: {}
 
 jobs:
@@ -106,6 +110,8 @@ jobs:
 
 [Pin a release](#pin-a-release) says which hash to pin. The `edited` type checks the title and the
 description again once they change, and `pull-requests: write` lets each check keep its comment.
+The `concurrency` group cancels a pull request's older run once a newer event starts one, as the
+two would race to create each comment.
 
 `ff` runs in a workflow of its own, on a comment: [its README](actions/ff/README.md#usage) gives
 it, with the permissions it needs. Each action's README says what it checks or does, and its
