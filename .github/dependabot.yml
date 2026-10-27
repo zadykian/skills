@@ -1,6 +1,8 @@
 # Weekly updates of the claude that CI validates with, and of the actions that the workflows and
 # actions/ff/action.yml pin, each release a week old at least. Dependabot cannot see the tools that
-# tools/run pins: they are bumped by hand.
+# tools/run pins: they are bumped by hand. It ignores the actions of zadykian/toolkit, whose hash
+# pins the release that the marketplace's ref in .claude/settings.json names. Dependabot cannot
+# edit that file, so tools/pin moves both.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -15,3 +17,4 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    ignore: [{dependency-name: "zadykian/toolkit*"}]
