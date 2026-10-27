@@ -2,11 +2,13 @@
 # The cases of tools/pin, which pins app to a release of toolkit. app uses toolkit's actions as the
 # repositories that use them lay them out. old keeps app's files from before the case's first run.
 
-# start makes toolkit, its commit SHA tagged v1.2.3, and app's workflow, of x, y and checkout.
+# start makes toolkit, of the actions x and y, its commit SHA tagged v1.2.3, and app's workflow, of
+# x, y and checkout.
 start() {
     git init -q -b main "$FAKE/toolkit"
-    mkdir "$FAKE/toolkit/tools"
+    mkdir -p "$FAKE/toolkit/tools" "$FAKE/toolkit/actions/x" "$FAKE/toolkit/actions/y"
     cp "$ROOT/tools/pin" "$FAKE/toolkit/tools"
+    touch "$FAKE/toolkit/actions/x/action.yml" "$FAKE/toolkit/actions/y/action.yml"
     git -C "$FAKE/toolkit" add .
     git -C "$FAKE/toolkit" commit -q -m 'feat: add tools/pin'
     git -C "$FAKE/toolkit" tag -a v1.2.3 -m v1.2.3
@@ -120,6 +122,16 @@ settings '      "source": { "source": "github", "repo": "o/skills" },'
 pin v1.2.3
 exits 1
 prints 'names 0 marketplaces of zadykian/toolkit or zadykian/skills, not one'
+changes .github/workflows/rules.yml </dev/null
+
+setup refuses-an-action-the-release-lacks-and-writes-nothing
+start
+git -C "$FAKE/toolkit" rm -rq actions/y
+git -C "$FAKE/toolkit" commit -q -m 'feat(y)!: remove the y action'
+git -C "$FAKE/toolkit" tag v2.0.0
+pin v2.0.0
+exits 1
+prints '.github/workflows/rules.yml:7: v2.0.0 has no action y: remove the step, as the release'
 changes .github/workflows/rules.yml </dev/null
 
 setup gives-the-ref-a-line-of-its-own-in-a-source-of-lines
