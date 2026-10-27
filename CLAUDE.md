@@ -17,7 +17,7 @@ how to install and pin them, and what a version's parts mean.
 - `docs/BUNDLE.md`: what each skill of a bundle does, and what facts a repository names for it.
 - `actions/NAME/`: an action, which a workflow uses as `zadykian/toolkit/actions/NAME@SHA`: its
   `action.yml`, its scripts, and a README of what it does and its inputs. A check's script is
-  `check.sh`, and `ff`'s are the steps of its job.
+  `check.sh`.
 - `actions/lib/`: what each `check.sh` sources. `report.sh` turns its findings into annotations,
   a job summary and one comment, and its header comment is its API. `glob.sh` gives
   `excluded PATH`, the one reading of the `exclude` inputs.
@@ -86,21 +86,15 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
 - A finding says where, quotes what is wrong, and links to the rule's section of the skill. The
   link comes from `file_url`, at the action's own ref, never from a URL written out. The rule says
   how to fix it, with a command where one exists.
-- `ff` runs on `issue_comment`, and acts on a `/ff` comment on a pull request alone. It checks out
-  the default branch, fetches the pull request's head and pushes it with git. It runs none of
-  the pull request's code. A refusal fails the job, and `comment-refusal.sh` comments why. Once
-  the push lands, closing the issues and deleting the branch only warn.
-- `ff` takes no inputs and uses no `actions/lib/`. `tests/ff.sh` runs its scripts in a clone of a
-  local origin, and a case checks where `main` ends and what the pull request is told.
 
 ## Commits and pull requests
 
 - [atomic-commits](skills/atomic-commits/SKILL.md) sets how commits and pull requests are cut and
   written. `.github/workflows/rules.yml` warns on a pull request that breaks its rules.
 - A commit's scope is the name of the skill or the action it changes, as `feat(land):` or
-  `fix(ff):`. Where a skill and an action share a name, as `atomic-commits` and `banned-terms` do,
-  the scope covers both. The hooks take `lint`, their bundle's name, and `actions/lib/` takes
-  `lib`. A change across them takes none.
+  `fix(pr-description):`. Where a skill and an action share a name, as `atomic-commits` and
+  `banned-terms` do, the scope covers both. The hooks take `lint`, their bundle's name, and
+  `actions/lib/` takes `lib`. A change across them takes none.
 - Commits are signed, as `main`'s ruleset requires.
 
 ## How changes land
