@@ -71,7 +71,7 @@ copies no hooks: the lint bundle's come with the plugin alone.
 | Action                                   | Skill          | What it does                                       |
 | ---------------------------------------- | -------------- | -------------------------------------------------- |
 | [atomic-commits](actions/atomic-commits) | atomic-commits | Warns on a PR's commits, its size or its title     |
-| [pr-description](actions/pr-description) | atomic-commits | Warns on a description off Problem, Changes, Stack |
+| [pr-description](actions/pr-description) | atomic-commits | Warns on a description off Problem, then Changes   |
 | [banned-terms](actions/banned-terms)     | banned-terms   | Warns on vague names and fillers that a PR adds    |
 | [ff](actions/ff)                         | land           | Lands a PR by fast-forward on a `/ff` comment      |
 

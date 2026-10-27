@@ -13,8 +13,8 @@ which leaves `main` green. Claude uses it as it commits in a git repository, or 
 `github/gh-stack` extension.
 
 A pull request's description opens with `## Problem`, one to three sentences, then `## Changes`,
-bullets by behavior. `## Stack` follows in a stack, and a `BREAKING CHANGE:` footer ends it where
-the title has `!`. It runs to 200 words at most.
+bullets by behavior. A `BREAKING CHANGE:` footer ends it where the title has `!`. It runs to 200
+words at most.
 
 In CI, the toolkit's [`atomic-commits` action][ac-action] warns on a pull request whose commits,
 size or title break the skill's rules, and the [`pr-description` action][pd-action] on its
