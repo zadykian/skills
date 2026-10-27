@@ -17,7 +17,6 @@
       "Bash(gh run view:*)"
     ],
     "deny": [
-      "Bash(gh pr merge *)",
       "Bash(git push * main)",
       "Bash(git push * main *)",
       "Bash(git push * +main)",

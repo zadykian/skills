@@ -5,9 +5,10 @@
 #
 # The tag vX.Y.Z of this script's repository names the commit, SHA. In DIR's workflows, each step
 # of an action of the toolkit, or of zadykian/actions before it, becomes
-# `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. DIR's .claude/settings.json gives the tag as the
-# ref of the marketplace of zadykian/toolkit, or of zadykian/skills before it. Dependabot cannot
-# edit settings.json, so this moves both pins at once.
+# `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. A step of an action that SHA lacks, one the
+# release removed, fails a check: pinned, it would fail to run. DIR's .claude/settings.json gives
+# the tag as the ref of the marketplace of zadykian/toolkit, or of zadykian/skills before it.
+# Dependabot cannot edit settings.json, so this moves both pins at once.
 #
 # Each edit keeps its file's layout, and a second run changes nothing. Where a check fails, it
 # writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT. It needs git and jq.
@@ -35,15 +36,18 @@ stage() {
 }
 
 # workflows pins each step that uses an action of the toolkit, as NAME@REF unquoted, with a comment
-# or none after it. It lists the steps in $tmp/steps.
+# or none after it. It lists each step in $tmp/steps, as NAME PATH:LINE.
 workflows() {
     for file in .github/workflows/*.yml .github/workflows/*.yaml; do
         [ -f "$file" ] || continue
         awk -v sha="$sha" -v version="$version" -v changes="$tmp/changes" -v steps="$tmp/steps" '
             BEGIN { uses = "^[ \t]*(-[ \t]+)?uses:[ \t]+zadykian/(toolkit/)?actions/" }
             $0 ~ (uses "[A-Za-z0-9._-]+@[^ \t]+([ \t]*|[ \t]+#.*)$") {
-                print FILENAME >>steps
-                line = substr($0, 1, index($0, "@") - 1) "@" sha " # " version
+                head = substr($0, 1, index($0, "@") - 1)
+                name = head
+                sub(uses, "", name)
+                print name " " FILENAME ":" FNR >>steps
+                line = head "@" sha " # " version
                 sub("zadykian/(toolkit/)?actions/", "zadykian/toolkit/actions/", line)
                 if (line != $0) {
                     $0 = line
@@ -54,6 +58,14 @@ workflows() {
             { print }' "$file" >"$tmp/out"
         stage "$file"
     done
+}
+
+# released checks that SHA has the action of each step in $tmp/steps.
+released() {
+    while read -r name at; do
+        git -C "$root" cat-file -e "$sha:actions/$name/action.yml" 2>/dev/null ||
+            die "$at: $version has no action $name: remove the step, as the release's notes say"
+    done <"$tmp/steps"
 }
 
 # edit prints settings.json with its source pinned, and exits 2 where it cannot find it. The repo
@@ -140,6 +152,7 @@ main() {
     trap 'exit 1' HUP INT TERM
     touch "$tmp/steps" "$tmp/changes" "$tmp/staged"
     workflows
+    released
     [ -s "$tmp/steps" ] || [ -f "$settings" ] ||
         die "$2 has no $settings, and no workflow that uses an action of the toolkit"
     marketplace

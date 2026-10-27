@@ -16,16 +16,11 @@ What is wrong or missing today, and why it matters: one to three sentences. Clos
 
 - One bullet per high-level change, said by behavior, not by file.
 
-## Stack
-
-PR 2 of 3. Base: #41. Next: feat(checkout): retry failed gateway calls.
-
 BREAKING CHANGE: what changed, and what callers must do.
 ```
 
-`## Stack` goes in each pull request of a stack, and the `BREAKING CHANGE:` footer where the
-title has `!`. An attribution line, such as `🤖 Generated with [Claude Code](...)`, may end the
-description.
+The `BREAKING CHANGE:` footer goes where the title has `!`. An attribution line, such as
+`🤖 Generated with [Claude Code](...)`, may end the description.
 
 ## Rules
 
@@ -39,8 +34,7 @@ HTML comment or a code block is no prose: a template's comments, left alone, are
 | `empty` | The description is empty, or blank |
 | `problem` | `## Problem` is missing, has text or a heading before it, or holds no prose |
 | `changes` | `## Changes` is missing, comes before Problem, or holds no bullet |
-| `sections` | A heading other than the three, at any level, or one out of order or repeated |
-| `stack` | Into a branch other than the default, with no `## Stack`; or Stack lacks `PR N of M` |
+| `sections` | A heading other than the two, at any level, or one out of order or repeated |
 | `breaking` | The title has `!`, but no `BREAKING CHANGE:` footer ends the body; or vice versa |
 | `length` | The description holds over 200 words, outside code blocks and HTML comments |
 

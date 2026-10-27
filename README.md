@@ -2,7 +2,7 @@
 
 [Claude Code](https://code.claude.com/docs/en/overview) skills and hooks for work in a GitHub
 repository, and GitHub Actions that check each pull request against the same rules. The skills
-plan a change as an issue, commit it in small steps, and land the stack by fast-forward. They keep
+plan a change as an issue, commit it in small steps, and land the stack by GitHub's merge. They keep
 prose short, and the hooks lint each file as Claude edits it. The skills and hooks are a plugin
 marketplace, `zadykian`, of three bundles. They and the actions release at one version.
 
@@ -12,7 +12,7 @@ marketplace, `zadykian`, of three bundles. They and the actions release at one v
 | ------ | -------------- | ------------------------------------ | ------------------------------------- |
 | flow   | atomic-commits | by Claude as it commits              | Small commits, stacks of small PRs    |
 | flow   | issue          | `/flow:issue [topic]`                | Plans a change, then files the issue  |
-| flow   | land           | `/flow:land PR... [vX.Y.Z]`, by hand | Lands a stack by `/ff`, tags releases |
+| flow   | land           | `/flow:land PR... [vX.Y.Z]`, by hand | Lands a stack by merge, tags releases |
 | docs   | writing        | by Claude as it edits a file         | The policy for comments and docs      |
 | docs   | trim           | `/docs:trim FILE...`                 | Trims comments and docs to the policy |
 | lint   | split-file     | `/lint:split-file FILE`              | Splits a file over the line cap       |
@@ -71,11 +71,10 @@ copies no hooks: the lint bundle's come with the plugin alone.
 | Action                                   | Skill          | What it does                                       |
 | ---------------------------------------- | -------------- | -------------------------------------------------- |
 | [atomic-commits](actions/atomic-commits) | atomic-commits | Warns on a PR's commits, its size or its title     |
-| [pr-description](actions/pr-description) | atomic-commits | Warns on a description off Problem, Changes, Stack |
+| [pr-description](actions/pr-description) | atomic-commits | Warns on a description off Problem, then Changes   |
 | [banned-terms](actions/banned-terms)     | banned-terms   | Warns on vague names and fillers that a PR adds    |
-| [ff](actions/ff)                         | land           | Lands a PR by fast-forward on a `/ff` comment      |
 
-The three checks warn and never block. Each annotates the pull request, writes a job summary and
+The checks warn and never block. Each annotates the pull request, writes a job summary and
 keeps one comment of its own up to date, and its job passes. A check reads the pull request
 through GitHub's API alone and checks out nothing, so it runs none of the pull request's code. No
 input changes a rule: each check holds its skill's own, and links each finding to the rule.
@@ -113,9 +112,7 @@ description again once they change, and `pull-requests: write` lets each check k
 The `concurrency` group cancels a pull request's older run once a newer event starts one, as the
 two would race to create each comment.
 
-`ff` runs in a workflow of its own, on a comment: [its README](actions/ff/README.md#usage) gives
-it, with the permissions it needs. Each action's README says what it checks or does, and its
-inputs.
+Each action's README says what it checks, and its inputs.
 
 ## The repository's rules
 
