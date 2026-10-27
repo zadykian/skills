@@ -1,6 +1,7 @@
 #!/bin/sh
 # Prints a release's notes in Markdown: the commits since the last release, as tools/lastrelease
-# finds it, or every commit before the first release.
+# finds it, or every commit before the first release. It leaves out merge commits: a merge lands a
+# pull request's commits, which the notes list.
 #
 # Each commit is a line, `- HEADER (SHA)`, oldest first, in the section of its kind: Breaking
 # changes, Features, Fixes and Other changes, each where it has a commit. Its kind is the one that
@@ -53,7 +54,7 @@ section() {
 
 main() {
     last=$("$(dirname -- "$0")/lastrelease")
-    git log --reverse --format='%h %s' "${last:+refs/tags/$last..}HEAD" >"$tmp/log"
+    git log --reverse --no-merges --format='%h %s' "${last:+refs/tags/$last..}HEAD" >"$tmp/log"
     for kind in breaking features fixes others; do
         : >"$tmp/$kind"
     done

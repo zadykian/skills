@@ -91,14 +91,15 @@ hooks() {
 
 # bump sets next to the version that the commits since the tag $1 call for, and why to the reason.
 # A breaking change, by a ! before its header's colon or a BREAKING CHANGE: footer, bumps the
-# major, or the minor before 1.0. A feat bumps the minor, and any other commit the patch.
+# major, or the minor before 1.0. A feat bumps the minor, and any other commit the patch. It
+# leaves out merge commits, as a merge's message may quote a pull request's body, footers included.
 bump() {
     major=${1#v} minor=${1#v*.} patch=${1##*.}
     major=${major%%.*} minor=${minor%.*}
-    git log --format='%h %s' "refs/tags/$1..HEAD" >"$tmp/log"
+    git log --no-merges --format='%h %s' "refs/tags/$1..HEAD" >"$tmp/log"
     breaking=$(sed -En 's/^([0-9a-f]+) [a-z]+(\([^)]*\))?!: .*/\1/p' "$tmp/log" | head -n 1)
-    [ -n "$breaking" ] || breaking=$(git log -1 --format=%h -E --grep='^BREAKING[ -]CHANGE: ' \
-        "refs/tags/$1..HEAD")
+    [ -n "$breaking" ] || breaking=$(git log -1 --no-merges --format=%h -E \
+        --grep='^BREAKING[ -]CHANGE: ' "refs/tags/$1..HEAD")
     feature=$(sed -En 's/^([0-9a-f]+) feat(\([^)]*\))?: .*/\1/p' "$tmp/log" | head -n 1)
     if [ -n "$breaking" ] && [ "$major" != 0 ]; then
         next=$((major + 1)).0.0 why="$breaking is a breaking change"

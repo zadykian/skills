@@ -16,6 +16,16 @@ commit() {
     git commit -q --allow-empty "${message[@]}"
 }
 
+# merge commits the header $1 on a branch off main, and merges it as GitHub merges a pull request:
+# by a merge commit, whose message quotes the pull request's title and body, a footer included.
+merge() {
+    git switch -qC pr
+    commit "$1"
+    git switch -q main
+    git merge -q --no-ff --no-edit -m 'Merge pull request #1 from o/pr' -m "$1" \
+        -m 'BREAKING CHANGE: it quotes a footer.' pr
+}
+
 # notes checks that tools/releasenotes prints the notes $1, each commit's SHA left out, and HEAD's
 # line with its SHA.
 notes() {
@@ -96,6 +106,20 @@ git switch -qc side
 commit 'feat!: drop it'
 git tag v3.0.0
 git switch -q main
+commit 'docs: describe it'
+notes '## Fixes
+
+- fix: mend it
+
+## Other changes
+
+- docs: describe it'
+
+setup leaves-out-merge-commits
+start
+merge 'feat: add it'
+git tag v1.2.3
+merge 'fix: mend it'
 commit 'docs: describe it'
 notes '## Fixes
 

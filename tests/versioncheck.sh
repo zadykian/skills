@@ -21,6 +21,16 @@ commit() {
     git commit -q --allow-empty "${message[@]}"
 }
 
+# merge commits the header $1 on a branch off main, and merges it as GitHub merges a pull request:
+# by a merge commit, whose message quotes the pull request's title and body, a footer included.
+merge() {
+    git switch -qC pr
+    commit "$1"
+    git switch -q main
+    git merge -q --no-ff --no-edit -m 'Merge pull request #1 from o/pr' -m "$1" \
+        -m 'BREAKING CHANGE: it quotes a footer.' pr
+}
+
 # catalog writes the marketplace of the version $1, whose bundle gives the version $2, $1 where
 # omitted.
 catalog() {
@@ -132,3 +142,10 @@ start 0.3.1
 git tag v0.3.1
 commit 'feat!: drop it'
 calls 0.4.0 1.0.0 "0.4.0: $(git rev-parse --short HEAD) is a breaking change, before 1.0"
+
+setup leaves-out-merge-commits
+start 1.2.3
+merge 'feat: add it'
+git tag v1.2.3
+merge 'fix: mend it'
+calls 1.2.4 2.0.0 'since v1.2.3 call for, 1.2.4: no commit is a feature or a breaking change'
