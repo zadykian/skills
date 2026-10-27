@@ -18,9 +18,6 @@ What is wrong or missing today, and why it matters: one to three sentences. Clos
 changes_md='## Changes
 
 - One bullet per high-level change, said by behavior, not by file.'
-stack_md='## Stack
-
-PR 2 of 3. Base: #41. Next: feat(checkout): retry failed gateway calls.'
 footer_md='BREAKING CHANGE: what changed, and what callers must do.'
 
 # template prints the parts $1, $2... of the form as a Markdown code block.
@@ -79,10 +76,9 @@ section() {
 }
 
 rule empty 'The description is empty' "$url" "Describe the pull request in the form that section \
-6 sets. \`## Stack\` goes in a pull request of a stack alone, and the footer where the title has \
-\`!\`.
+6 sets, and end it in the footer where the title has \`!\`.
 
-$(template "$problem_md" "$changes_md" "$stack_md" "$footer_md")"
+$(template "$problem_md" "$changes_md" "$footer_md")"
 
 # The most words of a description, as $url sets it. No input changes it.
 max=200
@@ -197,41 +193,25 @@ else
     [ "$bullets" != 0 ] || finding changes "$at holds no bullet${opening:+: it opens $opening}."
 fi
 
-rule sections 'The description has a heading other than the three, or out of order' "$url" "Keep \
+rule sections 'The description has a heading other than the two, or out of order' "$url" "Keep \
 to these headings, at level 2 and in this order, each once: fold any other into them. A heading \
 in a code block is no heading.
 
-$(template "$problem_md" "$changes_md" "$stack_md")"
-names=(Problem Changes Stack) last=-1
+$(template "$problem_md" "$changes_md")"
+names=(Problem Changes) last=-1
 for i in "${!h_texts[@]}"; do
     at="The heading ${h_quotes[i]}, line $((h_starts[i] + 1)) of the description,"
     k=-1
-    for j in 0 1 2; do [ "${h_levels[i]} ${h_texts[i]}" != "2 ${names[j]}" ] || k=$j; done
+    for j in "${!names[@]}"; do [ "${h_levels[i]} ${h_texts[i]}" != "2 ${names[j]}" ] || k=$j; done
     if [ "$k" = -1 ]; then
-        finding sections "$at is not one of \`## Problem\`, \`## Changes\` and \`## Stack\`."
+        finding sections "$at is neither \`## Problem\` nor \`## Changes\`."
     elif [ "$k" -le "$last" ]; then
-        finding sections "$at comes after \`## ${names[last]}\`: they go Problem, Changes, Stack,\
- each once."
+        finding sections "$at comes after \`## ${names[last]}\`: they go Problem, then Changes, \
+each once."
     else
         last=$k
     fi
 done
-
-rule stack 'A pull request of a stack has no Stack section that says PR N of M' "$url" "In each \
-pull request of a stack, say where it stands: \`PR N of M\`, then its base and the next pull \
-request. One into a branch other than the default is part of a stack.
-
-$(template "$stack_md")"
-base=$(jq -r .base.ref <<<"$pull") main=$(jq -r .base.repo.default_branch <<<"$pull")
-s=$(first Stack) of='PR [0-9]+ of [0-9]+'
-if [ "$s" = -1 ]; then
-    [ "$base" = "$main" ] || finding stack "#$PR is into $(quote "$base"), not the default branch \
-$(quote "$main"), and its description has no \`## Stack\` heading."
-elif [[ ! $(section "$s") =~ $of ]]; then
-    opening=$(section "$s" | grep -m 1 '[^[:blank:]]' || true)
-    finding stack "\`## Stack\`, line $((h_starts[s] + 1)) of the description, does not say \
-\`PR N of M\`${opening:+: it opens $(quote "$opening")}."
-fi
 
 rule breaking "The title's ! and the BREAKING CHANGE: footer do not match" "$url" "A breaking \
 change has both: \`!\` before the title's colon, as \`feat(scope)!: ...\`, and the footer, as \

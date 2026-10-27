@@ -4,12 +4,12 @@
 # The check links to the skill on main, as check runs it from this checkout.
 skill=https://github.com/zadykian/toolkit/blob/main/skills/atomic-commits/SKILL.md
 
-# describe starts the case $1, of pull request #1 into main, its default branch, with the
-# description $2 and the fields of the JSON $3 over it, and checks it.
+# describe starts the case $1, of pull request #1 with the description $2 and the fields of the
+# JSON $3 over it, and checks it.
 describe() {
     setup "$1"
     answer repos/o/r/pulls/1 "$(pull "$(jq -n --arg body "$2" --argjson over "${3:-null}" \
-        '{body: $body, base: {repo: {default_branch: "main"}}} * ($over // {})')")"
+        '{body: $body} * ($over // {})')")"
     check pr-description
 }
 
@@ -91,21 +91,21 @@ warns "\`## Changes\`, line 5 of the description, holds no bullet."
 warnings 2
 
 describe warns-on-another-heading "$clean"$'\n\n### Testing\n\nRan it.'
-warns "The heading \`### Testing\`, line 9 of the description, is not one of \`## Problem\`,"
+warns "The heading \`### Testing\`, line 9 of the description, is neither \`## Problem\` nor"
 warnings 1
 
 describe warns-on-a-setext-title $'Add a check\n===\n\n'"$clean"
-warns "The heading \`Add a check\` over \`===\`, line 1 of the description, is not one of"
+warns "The heading \`Add a check\` over \`===\`, line 1 of the description, is neither"
 warns "is not its first section: \`Add a check\` comes before it."
 warnings 2
 
 describe warns-on-a-setext-heading "$clean"$'\n---\n\nA note\n---'
-warns "The heading \`A note\` over \`---\`, line 10 of the description, is not one of"
+warns "The heading \`A note\` over \`---\`, line 10 of the description, is neither"
 warnings 1
 
-describe warns-on-sections-out-of-order "$problem"$'\n\n## Stack\n\nPR 1 of 2.'"$changes"
-warns "The heading \`## Changes\`, line 9 of the description, comes after \`## Stack\`: they go"
-warnings 1
+describe warns-on-sections-out-of-order "${changes:2}"$'\n\n'"$problem"
+warns "The heading \`## Problem\`, line 5 of the description, comes after \`## Changes\`: they go"
+warnings 3
 
 describe warns-on-a-repeated-section "$clean$changes"
 warns "The heading \`## Changes\`, line 9 of the description, comes after \`## Changes\`"
@@ -114,20 +114,10 @@ warnings 1
 describe ignores-headings-in-fences "$clean"$'\n\n```sh\n# Notes\n```\n\n~~~\nNotes\n---\n~~~'
 warnings 0
 
+# A pull request of a stack takes no Stack section either, as GitHub's stack shows its place.
 stack=$'\n\n## Stack\n\nPR 2 of 2. Base: #41.'
-describe passes-a-stacked-pull-request "$clean$stack" '{"base": {"ref": "feat-1"}}'
-warnings 0
-
-describe passes-a-default-branch-of-its-own "$clean" '{"base": {"ref": "trunk",
-    "repo": {"default_branch": "trunk"}}}'
-warnings 0
-
-describe warns-on-a-stack-without-a-section "$clean" '{"base": {"ref": "feat-1"}}'
-warns "#1 is into \`feat-1\`, not the default branch \`main\`, and its description has no"
-warnings 1
-
-describe warns-on-a-stack-without-its-place "$clean"$'\n\n## Stack\n\nBase: #41.'
-warns "\`## Stack\`, line 9 of the description, does not say \`PR N of M\`: it opens \`Base: #41.\`"
+describe warns-on-a-stack-section "$clean$stack" '{"base": {"ref": "feat-1"}}'
+warns "The heading \`## Stack\`, line 9 of the description, is neither \`## Problem\` nor"
 warnings 1
 
 footer=$'\n\nBREAKING CHANGE: the v1 inputs are gone.'

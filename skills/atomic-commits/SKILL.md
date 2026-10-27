@@ -213,19 +213,13 @@ What is wrong or missing today, and why it matters: one to three sentences. Clos
 
 - One bullet per high-level change, said by behavior, not by file.
 
-## Stack
-
-PR 2 of 3. Base: #41. Next: feat(checkout): retry failed gateway calls.
-
 BREAKING CHANGE: what changed, and what callers must do.
 ```
 
 - `## Problem` comes first: one to three sentences, and the issue it closes, if any.
 - `## Changes` holds bullets by behavior, not by file.
-- `## Stack` is in each PR of a stack, and required when the base isn't the default branch. It
-  says `PR N of M`, then the base and the next PR.
-- No other sections or headings, at any level. 200 words at most, not counting code blocks and
-  HTML comments.
+- No other sections or headings, at any level. GitHub shows a PR's place in its stack, so the
+  description doesn't. 200 words at most, not counting code blocks and HTML comments.
 
 ## 7. Verify
 
