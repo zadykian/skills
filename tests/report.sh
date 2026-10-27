@@ -65,7 +65,12 @@ summarizes "merge. No findings remain as of \`0123456\`."
 warnings 0
 
 marker='<!-- zadykian/actions:probe -->'
-old=$(jq -nc --arg body "$marker"$'\nOld.' '[{id: 5, body: $body}]')
+# marked prints a page of the comments of the ids given, each of which the marker starts.
+marked() {
+    jq -nc --arg body "$marker"$'\nOld.' '[$ARGS.positional[] | {id: tonumber, body: $body}]' \
+        --args "$@"
+}
+old=$(marked 5)
 setup comments
 probe <<<"finding a 'Found.'"
 wrote POST repos/o/r/issues/1/comments "$marker
@@ -83,6 +88,39 @@ answer repos/o/r/issues/1/comments "$old"
 probe </dev/null
 wrote PATCH repos/o/r/issues/comments/5 "No findings remain as of \`0123456\`."
 writes 1
+
+setup leaves-the-oldest-comment
+answer repos/o/r/issues/1/comments "$(marked 5 6)" "$(marked 7)"
+probe <<<"finding a 'Found.'"
+wrote PATCH repos/o/r/issues/comments/5 '- Found.'
+wrote DELETE repos/o/r/issues/comments/6
+wrote DELETE repos/o/r/issues/comments/7
+writes 3
+
+# Another run creates the comment 5 once this one has read the comments, and before its own.
+setup moves-its-report-to-the-oldest
+answer 'POST repos/o/r/issues/1/comments' '{"id": 9}'
+later repos/o/r/issues/1/comments "$(marked 5 9)"
+probe <<<"finding a 'Found.'"
+wrote POST repos/o/r/issues/1/comments '- Found.'
+wrote PATCH repos/o/r/issues/comments/5 '- Found.'
+wrote DELETE repos/o/r/issues/comments/9
+writes 3
+
+setup keeps-its-comment-as-the-oldest
+answer 'POST repos/o/r/issues/1/comments' '{"id": 5}'
+later repos/o/r/issues/1/comments "$(marked 5 9)"
+probe <<<"finding a 'Found.'"
+wrote DELETE repos/o/r/issues/comments/9
+writes 2
+
+setup passes-over-a-comment-deleted-first
+answer repos/o/r/issues/1/comments "$(marked 5 6)"
+refuse DELETE repos/o/r/issues/comments/6 404
+probe <<<"finding a 'Found.'"
+wrote PATCH repos/o/r/issues/comments/5 '- Found.'
+grep -qF -- '-X DELETE repos/o/r/issues/comments/6' "$FAKE/calls" || fail "deleted no comment 6"
+warnings 1
 
 setup comments-nothing-clean
 probe </dev/null
@@ -103,6 +141,13 @@ warns "::warning::probe $refused accessible by integration (HTTP 403)"
 warns "::Finding 9.%0A$rule_a%0AThe job summary holds 3 more findings."
 warnings 10
 summarizes '- Finding 12.'
+
+setup warns-on-a-refused-delete
+answer repos/o/r/issues/1/comments "$(marked 5 6)"
+refuse DELETE repos/o/r/issues/comments/6
+probe <<<"finding a 'Found.'"
+warns "::warning::probe $refused accessible by integration (HTTP 403)"
+warnings 2
 
 setup cuts-a-long-comment
 probe <<'CHECK'

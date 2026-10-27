@@ -31,8 +31,9 @@
 #   the merge", then gives each rule with findings a section: its title, link, findings and fix;
 # - where COMMENT is true, keeps one comment on the pull request to the report, the one that
 #   <!-- zadykian/actions:NAME --> starts: it creates or edits it. A clean check edits it to say
-#   that no findings remain, and never creates one. A report over GitHub's limit is cut, with a
-#   note. A refusal, as of a fork's read-only token, is one warning;
+#   that no findings remain, and never creates one. Runs that race may each create one, so it
+#   then keeps the oldest, with its report, and deletes the others. A report over GitHub's limit
+#   is cut, with a note. A refusal, as of a fork's read-only token, is one warning;
 # - prints a ::warning for each of the first findings, 10 at most, as GitHub shows 10 a step. The
 #   last says how many more the summary holds.
 #
@@ -168,14 +169,21 @@ report_text() {
     done
 }
 
+# report_marked prints the ids of the pull request's comments that the marker $1 starts, the
+# oldest first, as GitHub lists them by ascending id.
+report_marked() {
+    gh api --paginate "repos/$GH_REPO/issues/$PR/comments?per_page=100" \
+        --jq ".[] | select(.body | startswith(\"$1\")) | .id"
+}
+
 # report_comment keeps the action's comment on the pull request to the report $1: it edits the one
-# that its marker starts, or creates one where $2, the count of findings, is not 0. It fails as gh
-# fails.
+# that its marker starts, or creates one where $2, the count of findings, is not 0. Runs that race
+# may each create one, so it then moves the report to the oldest and deletes the others: the run
+# that ends last leaves one. It fails as gh fails, but on a comment that another run deleted first.
 report_comment() {
     # The comments made so far start with this marker, so it keeps the old name, zadykian/actions.
-    local marker="<!-- zadykian/actions:$report_name -->" ids id body run note
-    ids=$(gh api --paginate "repos/$GH_REPO/issues/$PR/comments?per_page=100" \
-        --jq ".[] | select(.body | startswith(\"$marker\")) | .id") || return
+    local marker="<!-- zadykian/actions:$report_name -->" ids id body run note first other error
+    ids=$(report_marked "$marker") || return
     id=${ids%%$'\n'*}
     [ -n "$id" ] || [ "$2" != 0 ] || return 0
     # GitHub takes 65536 characters at most.
@@ -186,8 +194,17 @@ report_comment() {
     if [ -n "$id" ]; then
         gh api -X PATCH "repos/$GH_REPO/issues/comments/$id" --input - <<<"$body" >/dev/null
     else
-        gh api -X POST "repos/$GH_REPO/issues/$PR/comments" --input - <<<"$body" >/dev/null
-    fi
+        id=$(gh api -X POST "repos/$GH_REPO/issues/$PR/comments" --input - --jq .id <<<"$body")
+    fi || return
+    ids=$(report_marked "$marker") || return
+    first=${ids%%$'\n'*}
+    if [ -n "$first" ] && [ "$first" != "$id" ]; then
+        gh api -X PATCH "repos/$GH_REPO/issues/comments/$first" --input - <<<"$body" >/dev/null
+    fi || return
+    for other in ${ids#"$first"}; do
+        error=$(gh api -X DELETE "repos/$GH_REPO/issues/comments/$other" 2>&1) ||
+            [[ $error == *'(HTTP 404)'* ]] || { printf '%s\n' "$error" >&2 && return 1; }
+    done
 }
 
 # report_finish reports the findings, and exits 0. A comment's refusal takes one of the 10
