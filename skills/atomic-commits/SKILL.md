@@ -190,10 +190,12 @@ main ← feat/retry-1-gateway ← feat/retry-2-policy ← feat/retry-3-checkout
 - Push and open PRs only when the user asked for it. Push each branch with
   `git push --force-with-lease origin <branch>`. Open each PR against the branch below it:
   `gh pr create --base feat/retry-1-gateway --head feat/retry-2-policy`.
-- After the bottom PR merges (squash or merge commit), from the top branch:
-  `git rebase --update-refs --onto main feat/retry-1-gateway`, force-push the moved branches, and
-  retarget the next PR with `gh pr edit <number> --base main` if the host didn't already. A
-  fast-forward lands the very commits, so it needs the retarget alone.
+- Once the PRs are open, link them as one stack on GitHub, bottom first:
+  `gh stack link feat/retry-1-gateway feat/retry-2-policy feat/retry-3-checkout`. It needs gh's
+  stack extension: `gh extension install github/gh-stack`.
+- Once a lower PR lands, GitHub retargets the next one and rebases the rest. Before editing again,
+  fetch them and move each local branch to its remote one, the top branch last: `git fetch origin`,
+  then `git switch -C <branch> origin/<branch>` for each.
 
 PR titles use the Conventional Commits header format too, because a squash merge turns the title
 into the commit on `main`. A PR containing a breaking commit has `!` in its title and the

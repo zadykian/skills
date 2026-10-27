@@ -9,7 +9,8 @@ land the stack of pull requests by fast-forward. The bundle is `flow@zadykian`, 
 Has Claude deliver a change as small, self-contained [Conventional Commits][cc], each of which
 builds and passes the tests. A change over 300 lines becomes a stack of pull requests, each of
 which leaves `main` green. Claude uses it as it commits in a git repository, or as
-`/flow:atomic-commits`.
+`/flow:atomic-commits`. To link a stack on GitHub, it needs `gh`, logged in, with the
+`github/gh-stack` extension.
 
 A pull request's description opens with `## Problem`, one to three sentences, then `## Changes`,
 bullets by behavior. `## Stack` follows in a stack, and a `BREAKING CHANGE:` footer ends it where
