@@ -35,6 +35,19 @@ wrote POST repos/o/r/issues/1/comments New.
 wrote POST repos/o/r/issues/1/comments 'On the pull request.'
 writes 3
 
+setup answers-a-write
+answer 'POST repos/o/r/issues/1/comments' '{"id": 9, "body": "New."}'
+same 9 gh api -X POST repos/o/r/issues/1/comments -f body=New. --jq .id
+same '{}' gh api -X DELETE repos/o/r/issues/comments/9
+wrote DELETE repos/o/r/issues/comments/9
+writes 2
+
+setup answers-later
+later repos/o/r/issues/1/comments '[{"id": 5}]' '[{"id": 9}]'
+same '' gh api repos/o/r/issues/1/comments --jq '.[].id'
+same $'5\n9' gh api --paginate repos/o/r/issues/1/comments --jq '.[].id'
+same 5 gh api repos/o/r/issues/1/comments --jq '.[].id'
+
 setup refuses-a-write
 refuse POST repos/o/r/issues/1/comments
 same 'gh: Resource not accessible by integration (HTTP 403)' \

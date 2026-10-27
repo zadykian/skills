@@ -3,15 +3,15 @@
 # [--paginate] [--jq FILTER]` prints what the case answers for PATH, with tests/run's answer: the
 # first page, or with --paginate each page, through --jq's filter as gh applies it. PATH drops its
 # per_page and page parameters, and a GET's fields join its query. A PATH with no answer fails as
-# GitHub's 404 does. `gh api graphql -f query=QUERY` reads too: it prints the answer for graphql,
-# whatever QUERY asks.
+# GitHub's 404 does. Once read, PATH answers the case's later answer, where it has one. `gh api
+# graphql -f query=QUERY` reads too: it prints the answer for graphql, whatever QUERY asks.
 #
-# A write, of any other method, answers {}: `gh api -X METHOD PATH [-f KEY=VALUE]... [--input
-# FILE]` logs METHOD, PATH and the body, the fields or the JSON of FILE, a line of JSON in
-# $FAKE/writes. `gh pr comment N --body BODY` writes as `gh api repos/$GH_REPO/issues/N/comments
-# -f body=BODY` does. A call that tests/run's refuse names fails as GitHub's refusal does, and
-# writes nothing. `gh release create ... --notes-file FILE` leaves FILE in $FAKE/notes.
-# $FAKE/calls logs every call.
+# A write, of any other method, answers the case's answer for `METHOD PATH`, or {}, through --jq's
+# filter. `gh api -X METHOD PATH [-f KEY=VALUE]... [--input FILE]` logs METHOD, PATH and the body,
+# the fields or the JSON of FILE, a line of JSON in $FAKE/writes. `gh pr comment N --body BODY`
+# writes as `gh api repos/$GH_REPO/issues/N/comments -f body=BODY` does. A call that tests/run's
+# refuse names fails as GitHub's refusal does, and writes nothing. `gh release create ...
+# --notes-file FILE` leaves FILE in $FAKE/notes. $FAKE/calls logs every call.
 
 set -euo pipefail
 
@@ -75,7 +75,9 @@ if [ "$method" != GET ] && [ "$key" != graphql ]; then
     body=$(if [ -n "$input" ]; then cat -- "$input"; else jq -n '$ARGS.named' "${args[@]}"; fi)
     jq -cn --arg method "$method" --arg path "$key" --argjson input "$body" \
         '{method: $method, path: $path, input: $input}' >>"$FAKE/writes"
-    echo '{}'
+    answer="$FAKE/api/$method ${key//\//%}"
+    [ -f "$answer" ] || answer=-
+    jq -n -rc "input | ($filter)" "$answer" <<<'{}'
     exit 0
 fi
 file=$FAKE/api/${key//\//%}
@@ -88,3 +90,5 @@ if $paginate; then
 else
     jq -n -rc "input | ($filter)" "$file"
 fi
+# As another's write would, the later answer replaces this one.
+[ ! -f "$file.later" ] || mv -- "$file.later" "$file"
