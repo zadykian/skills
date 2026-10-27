@@ -1,7 +1,7 @@
 name: ci
 
 # Every pull request, whatever its base, since pull requests are stacked, each on the one below it.
-# On main, the commits pushed by hand: the fast-forward workflow's pushes start no workflow.
+# On main, each push: GitHub's merge pushes one as each pull request lands.
 on:
   pull_request:
   push:
@@ -21,9 +21,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # A pull request's own head, which lands as it is, by fast-forward, rather than GitHub's
-          # merge of it. The whole history, which brings the tags too: gitleaks scans every commit,
-          # and the version check reads the last release's tag.
+          # A pull request's own head, rather than GitHub's test merge of it. The head lands as it
+          # is: its commits go under a merge commit whose tree is the head's, as main's ruleset
+          # requires the branch to be up to date. The whole history, which brings the tags too:
+          # gitleaks scans every commit, and the version check reads the last release's tag.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
@@ -50,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The pull request's own head, as in the lint job, since it lands as it is.
+          # The pull request's own head, as in the lint job, since its tree is the tree that lands.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - run: make test

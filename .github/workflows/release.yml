@@ -1,17 +1,12 @@
 name: release
 
 # Publishes the marketplace's version as a GitHub Release with its tag, vX.Y.Z, once a raise of it
-# lands on main. gh skill installs the latest release unless told another. The fast-forward
-# workflow's pushes start no workflow, so its runs that complete start this one. A push to main by
-# hand starts it too.
+# lands on main. gh skill installs the latest release unless told another. GitHub's merge of a
+# pull request pushes to main, and that push starts this workflow. So does a push by hand.
 
 on:
   push:
     branches: [main]
-  # zizmor: ignore[dangerous-triggers] the job reads main alone, never a pull request's code.
-  workflow_run:
-    workflows: [fast-forward]
-    types: [completed]
   workflow_dispatch:
 
 permissions: {}
@@ -21,7 +16,6 @@ concurrency:
 
 jobs:
   release:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
