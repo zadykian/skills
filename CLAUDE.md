@@ -105,7 +105,6 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
 
 ## How changes land
 
-- [land](skills/land/SKILL.md) sets how pull requests land. Its `/ff` workflow is
-  `.github/workflows/fast-forward.yml`.
+- [land](skills/land/SKILL.md) sets how pull requests land, by GitHub's merge commits.
 - `.github/workflows/release.yml` releases a raised version once it lands on `main`, with the
   notes that `tools/releasenotes` writes from the commits since the last release.
