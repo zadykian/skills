@@ -146,18 +146,23 @@ sections=$(values "$skill_ac" '^- `## ([[:alpha:]]+)`')
 agree "$(values "$check_pd" '([[:alpha:]]+)[ )]' '^names=\(')" "$sections"
 agree "$(values "$check_pd" '=\$\(first 2 ([[:alpha:]]+)\)')" "$sections"
 
-# The check's form of a description runs from problem_md to footer_md, each part quoted.
+# The check's form of a description runs from title_md to footer_md, each part quoted.
 setup quotes-the-form-of-a-description
-agree "$(values "$check_pd" "^([a-z]+_md=')?(.*[^'])'?\$" "^problem_md='" '^# ')" \
+agree "$(values "$check_pd" "^([a-z]+_md=')?(.*[^'])'?\$" "^title_md='" '^# ')" \
     "$(values "$skill_ac" '^(.+)$' '^```markdown$' '^```$')"
+
+# The template's first line is the form's one heading at level 1, the title's.
+setup heads-the-template-of-a-description-by-its-title
+agree "$(values "$template_ac" '^(.+)$' '^')" \
+    "$(values "$skill_ac" '^(# .+)$' '^```markdown$' '^```$')"
 
 setup heads-the-template-of-a-description-by-its-sections
 agree "$(values "$template_ac" '^## ([[:alpha:]]+)$')" "$sections"
 
-# The template's comments that open with a capital are the form's lines, in order, past rumdl's
-# directive. A bullet's drops its -, and the footer's opens with when it goes in.
+# The template's comments are the form's lines, in order. A bullet's drops its -, and the footer's
+# opens with when it goes in.
 setup guides-the-template-of-a-description-by-its-form
-agree "$(values "$template_ac" '^<!-- (Where the title has !, end with: )?([A-Z].+) -->$')" \
+agree "$(values "$template_ac" '^<!-- (Where the title has !, end with: )?(.+) -->$')" \
     "$(values "$skill_ac" '^(- )?([^#].*)$' '^```markdown$' '^```$')"
 
 # Each template beside its skill, and the toolkit's own copy of it in .github/.

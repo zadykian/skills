@@ -207,6 +207,8 @@ GitHub offers it for a new pull request where a repository copies it to
 `.github/pull_request_template.md`. Filled in, a description reads:
 
 ```markdown
+# {NAME}
+
 ## Problem
 
 What is wrong or missing today, and why it matters: one to three sentences. Closes #12.
@@ -218,10 +220,13 @@ What is wrong or missing today, and why it matters: one to three sentences. Clos
 BREAKING CHANGE: what changed, and what callers must do.
 ```
 
-- `## Problem` comes first: one to three sentences, and the issue it closes, if any.
+- `# {NAME}` comes first: the pull request's title, word for word, and the description's one
+  level-1 heading.
+- `## Problem` follows it: one to three sentences, and the issue it closes, if any.
 - `## Changes` holds bullets by behavior, not by file.
 - No other sections or headings, at any level. GitHub shows a PR's place in its stack, so the
-  description doesn't. 200 words at most, not counting code blocks and HTML comments.
+  description doesn't. 200 words at most, not counting code blocks and HTML comments, but counting
+  the title.
 
 ## 7. Verify
 

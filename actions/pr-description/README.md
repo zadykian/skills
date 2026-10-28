@@ -1,13 +1,15 @@
 # pr-description
 
 Warns on a pull request whose description strays from the compact form that
-[atomic-commits §6][section] sets: the problem it solves, then its high-level changes. It never
-blocks the merge: it annotates the pull request, writes a job summary, keeps one comment of its
-own up to date, and its job passes, findings or not.
+[atomic-commits §6][section] sets: its title, the problem it solves, then its high-level changes.
+It never blocks the merge: it annotates the pull request, writes a job summary, keeps one comment
+of its own up to date, and its job passes, findings or not.
 
 ## The format
 
 ```markdown
+# {NAME}
+
 ## Problem
 
 What is wrong or missing today, and why it matters: one to three sentences. Closes #12.
@@ -19,8 +21,9 @@ What is wrong or missing today, and why it matters: one to three sentences. Clos
 BREAKING CHANGE: what changed, and what callers must do.
 ```
 
-The `BREAKING CHANGE:` footer goes where the title has `!`. An attribution line, such as
-`🤖 Generated with [Claude Code](...)`, may end the description.
+`{NAME}` is the pull request's title, word for word. The `BREAKING CHANGE:` footer goes where
+the title has `!`. An attribution line, such as `🤖 Generated with [Claude Code](...)`, may end
+the description.
 
 ## Rules
 
@@ -32,9 +35,10 @@ HTML comment or a code block is no prose: a template's comments, left alone, are
 | Key | Finding when |
 | --- | --- |
 | `empty` | The description is empty, or blank |
-| `problem` | `## Problem` is missing, has text or a heading before it, or holds no prose |
+| `title` | The first line is no heading `# {NAME}` of the title: none, another level, a setext one, other text, or `{NAME}` itself |
+| `problem` | `## Problem` is missing, has text or a heading other than the title's before it, or holds no prose |
 | `changes` | `## Changes` is missing, comes before Problem, or holds no bullet |
-| `sections` | A heading other than the two, at any level, or one out of order or repeated |
+| `sections` | A heading other than the title's and the two, or one out of order or repeated |
 | `breaking` | The title has `!`, but no `BREAKING CHANGE:` footer ends the body; or vice versa |
 | `length` | The description holds over 200 words, outside code blocks and HTML comments |
 
