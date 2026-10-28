@@ -72,6 +72,15 @@ pin() {
     step "$FAKE/toolkit/tools/pin" "$1" "$FAKE/app"
 }
 
+# piped runs tools/pin as sh runs it from a pipe, at the version $1 on app: it clones toolkit.
+piped() {
+    [ -d "$FAKE/old" ] || cp -R "$FAKE/app" "$FAKE/old"
+    # The inner sh expands $0, $1 and $2: the script, the version and app.
+    # shellcheck disable=SC2016
+    step TOOLKIT_URL="file://$FAKE/toolkit" sh -c 'sh -s -- "$1" "$2" <"$0"' "$ROOT/tools/pin" \
+        "$1" "$FAKE/app"
+}
+
 # changes checks that app's file $1 differs from old's as the diff on stdin says.
 changes() {
     local got
@@ -233,3 +242,20 @@ templates v1.3.0
 pin v1.3.0
 exits 0
 copied
+
+setup pins-from-a-pipe-by-a-clone-of-the-tag
+start
+settings '      "source": { "source": "github", "repo": "zadykian/toolkit" },'
+templates v1.3.0
+piped v1.3.0
+exits 0
+prints '.claude/settings.json:7: "source": { "source": "github", "repo": "zadykian/toolkit", "ref": "v1.3.0" },'
+prints '.github/ISSUE_TEMPLATE/change.yml:1: v1.3.0:skills/issue/change.yml'
+copied
+
+setup refuses-from-a-pipe-a-tag-it-cannot-clone
+start
+piped v9.9.9
+exits 1
+prints "no tag v9.9.9 in file://$FAKE/toolkit"
+diff -r "$FAKE/old" "$FAKE/app" || fail 'it wrote a file'
