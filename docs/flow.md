@@ -14,7 +14,9 @@ which leaves `main` green. Claude uses it as it commits in a git repository, or 
 
 A pull request's description opens with `## Problem`, one to three sentences, then `## Changes`,
 bullets by behavior. A `BREAKING CHANGE:` footer ends it where the title has `!`. It runs to 200
-words at most.
+words at most. A repository copies [the skill's template][pr-template] to
+`.github/pull_request_template.md`, and GitHub then fills each new pull request's description
+with that form.
 
 In CI, the toolkit's [`atomic-commits` action][ac-action] warns on a pull request whose commits,
 size or title break the skill's rules, and the [`pr-description` action][pd-action] on its
@@ -64,4 +66,5 @@ steps and change none of them:
 [cc]: https://www.conventionalcommits.org/en/v1.0.0/
 [ac-action]: ../actions/atomic-commits
 [pd-action]: ../actions/pr-description
+[pr-template]: ../skills/atomic-commits/pull_request_template.md
 [gh-stack]: https://github.com/github/gh-stack

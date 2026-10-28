@@ -114,6 +114,15 @@ two would race to create each comment.
 
 Each action's README says what it checks, and its inputs.
 
+## The templates
+
+| Template                                                                   | Skill          | Path in a repository               |
+| -------------------------------------------------------------------------- | -------------- | ---------------------------------- |
+| [pull_request_template.md](skills/atomic-commits/pull_request_template.md) | atomic-commits | `.github/pull_request_template.md` |
+
+A skill writes a text in its template's form. A repository copies each template, of the release
+it pins, to its path, where GitHub offers it to whoever opens a new pull request.
+
 ## The repository's rules
 
 A skill's rules hold in every repository, and it runs as the marketplace ships it. A repository's
