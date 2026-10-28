@@ -45,10 +45,11 @@ lychee:
 	@set -ef; files=$$(tools/files md $(FILES)); [ -z "$$files" ] || \
 		tools/run lychee --offline --include-fragments --no-progress $$files
 
-# rumdl (.rumdl.toml) on the Markdown files, with no cache, which it would keep in the tree.
+# rumdl (.rumdl.toml) on the Markdown files, with no cache, which it would keep in the tree. A
+# warning on its config, such as an unknown rule in a file's directive, fails the gate too.
 rumdl:
 	@set -ef; files=$$(tools/files md $(FILES)); [ -z "$$files" ] || \
-		tools/run rumdl check --no-cache $$files
+		tools/run rumdl check --no-cache --deny-config-warnings $$files
 
 # The workflows' shell scripts go through the pinned ShellCheck.
 actionlint:
