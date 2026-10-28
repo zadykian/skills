@@ -13,6 +13,12 @@ describe() {
     check pr-description
 }
 
+# titled starts the case $1 as describe does, of the title $2, and of the description $3 under
+# the title's heading.
+titled() {
+    describe "$1" "# $2"$'\n\n'"$3" "$(jq -n --arg title "$2" '{title: $title}')"
+}
+
 setup warns-on-an-empty-description
 check pr-description
 warns '::warning title=pr-description%3A The description is empty::The description of #1 is empty.'
@@ -63,6 +69,16 @@ warnings 1
 
 describe warns-on-a-setext-title $'feat: add a check\n===\n\n'"$problem$changes"
 warns "The description opens with \`feat: add a check\` over \`===\`, line 1, a setext heading,"
+warnings 1
+
+describe warns-on-another-title $'# Add a check\n\n'"$problem$changes"
+warns "The heading \`# Add a check\`, line 1 of the description, differs from the title,"
+warns "from the title, \`feat: add a check\`."
+warnings 1
+
+describe warns-on-the-placeholder-of-the-template $'\n# {NAME}\n\n'"$problem$changes"
+warns "The heading \`# {NAME}\`, line 2 of the description, is the template's: replace \`{NAME}\`"
+warns "with the title, \`feat: add a check\`."
 warnings 1
 
 describe warns-on-no-problem "$head${changes:2}"
@@ -148,21 +164,21 @@ warnings 1
 
 footer=$'\n\nBREAKING CHANGE: the v1 inputs are gone.'
 by=$'\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)'
-describe passes-a-breaking-change "$clean$footer" '{"title": "feat(api)!: drop the v1 inputs"}'
+titled passes-a-breaking-change 'feat(api)!: drop the v1 inputs' "$problem$changes$footer"
 warnings 0
 
-describe passes-a-footer-and-an-attribution "$clean${footer/ /-}$by" '{"title": "feat!: drop it"}'
+titled passes-a-footer-and-an-attribution 'feat!: drop it' "$problem$changes${footer/ /-}$by"
 warnings 0
 
-describe passes-an-attribution "$clean$by<!-- end -->" '{"title": "fix: keep it!"}'
+titled passes-an-attribution 'fix: keep it!' "$problem$changes$by<!-- end -->"
 warnings 0
 
-describe warns-on-a-bang-without-a-footer "$clean" '{"title": "feat(api)!: drop the v1 inputs"}'
+titled warns-on-a-bang-without-a-footer 'feat(api)!: drop the v1 inputs' "$problem$changes"
 warns "The title \`feat(api)!: drop the v1 inputs\` has \`!\`, but the description does not end in"
 warns "a \`BREAKING CHANGE:\` footer: it ends in \`- Add it.\`"
 warnings 1
 
-describe warns-on-text-after-the-footer "$clean$footer"$'\n\nThanks!' '{"title": "feat!: drop it"}'
+titled warns-on-text-after-the-footer 'feat!: drop it' "$problem$changes$footer"$'\n\nThanks!'
 warns "does not end in a \`BREAKING CHANGE:\` footer: it ends in \`Thanks!\`"
 warnings 1
 

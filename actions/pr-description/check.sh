@@ -44,6 +44,7 @@ $(template "$title_md" "$problem_md" "$changes_md" "$footer_md")"
 # The most words of a description, as $url sets it. No input changes it.
 max=200
 pull=$(gh api "repos/$GH_REPO/pulls/$PR")
+title=$(jq -r .title <<<"$pull")
 # GitHub keeps the line ends that the browser sent, \r\n.
 body=$(jq -r '.body // ""' <<<"$pull")
 body=${body//$'\r'/}
@@ -75,6 +76,12 @@ one."
 elif [ "$t" = -1 ]; then
     finding title "The description opens with ${h_quotes[0]}, $at, a heading at level \
 ${h_levels[0]}, not 1."
+elif [ "${h_texts[0]}" = '{NAME}' ]; then
+    finding title "The heading ${h_quotes[0]}, $at of the description, is the template's: replace \
+\`{NAME}\` with the title, $(quote "$title")."
+elif [ "${h_texts[0]}" != "$title" ]; then
+    finding title "The heading ${h_quotes[0]}, $at of the description, differs from the title, \
+$(quote "$title")."
 fi
 
 rule problem 'A Problem section in prose does not follow the title' "$url" "Follow the title \
@@ -147,7 +154,6 @@ the description's last paragraph. Only an attribution line, such as \`🤖 Gener
 with [Claude Code](...)\`, may follow it. Where nothing breaks, drop both.
 
 $(template "$footer_md")"
-title=$(jq -r .title <<<"$pull")
 bang='^[[:alpha:]]+(\([^()]*\))?!:' token='^BREAKING[ -]CHANGE:[[:blank:]]+[^[:blank:]]'
 # The description's last line, above an attribution line, such as Claude Code's, that may end it.
 end=$(filled $((${#kinds[@]} - 1))) last=-1 footer=-1 by='^(🤖 )?Generated with '
