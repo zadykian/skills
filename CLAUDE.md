@@ -22,7 +22,8 @@ how to install and pin them, and what a version's parts mean.
   `check.sh`.
 - `actions/lib/`: what each `check.sh` sources. `report.sh` turns its findings into annotations,
   a job summary and one comment, and its header comment is its API. `glob.sh` gives
-  `excluded PATH`, the one reading of the `exclude` inputs.
+  `excluded PATH`, the one reading of the `exclude` inputs. `markdown.sh` reads a text of Markdown
+  into its lines and headings, as GitHub renders it.
 - `tests/run`: runs the cases of each `tests/NAME.sh`, against `tests/gh`, the fake gh: of an
   action, of `actions/lib/`, of a tool, or, in `rules.sh`, of the checks against their skills. Its
   header comment says how to write a case.
