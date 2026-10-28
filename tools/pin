@@ -16,7 +16,8 @@
 # No note says so, as one would come on each pin to such a release, and call for nothing.
 #
 # Each edit keeps its file's layout, and a second run changes nothing. Where a check fails, it
-# writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT. It needs git and jq.
+# writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT, and each template it
+# writes as PATH:1: vX.Y.Z:SOURCE, its source as git show names it. It needs git and jq.
 
 set -eu
 
@@ -32,12 +33,14 @@ die() {
     exit 1
 }
 
-# stage keeps $tmp/out, the new text of the file $1, for main to write, where the two differ.
+# stage keeps $tmp/out, the new text of the file $1, for main to write, where the two differ. It
+# then reports the line $2, where given, as a change.
 stage() {
     ! cmp -s "$tmp/out" "$1" || return 0
     mkdir -p "$tmp/new/${1%/*}"
     mv "$tmp/out" "$tmp/new/$1"
     printf '%s\n' "$1" >>"$tmp/staged"
+    [ $# = 1 ] || printf '%s\n' "$2" >>"$tmp/changes"
 }
 
 # workflows pins each step that uses an action of the toolkit, as NAME@REF unquoted, with a comment
@@ -149,7 +152,7 @@ marketplace() {
 templates() {
     while read -r source path; do
         git -C "$root" cat-file blob "$sha:$source" >"$tmp/out" 2>/dev/null || continue
-        stage "$path"
+        stage "$path" "$path:1: $version:$source"
     done <<'EOF'
 skills/atomic-commits/pull_request_template.md .github/pull_request_template.md
 skills/issue/change.yml .github/ISSUE_TEMPLATE/change.yml

@@ -180,6 +180,9 @@ start
 templates v1.3.0
 pin v1.3.0
 exits 0
+prints '.github/pull_request_template.md:1: v1.3.0:skills/atomic-commits/pull_request_template.md'
+prints '.github/ISSUE_TEMPLATE/change.yml:1: v1.3.0:skills/issue/change.yml'
+prints '.github/ISSUE_TEMPLATE/config.yml:1: v1.3.0:skills/issue/config.yml'
 copied
 
 setup writes-the-templates-once
@@ -205,6 +208,7 @@ templates v1.3.0
 echo '## Mine' >"$FAKE/app/.github/pull_request_template.md"
 pin v1.3.0
 exits 0
+prints '.github/pull_request_template.md:1: v1.3.0:skills/atomic-commits/pull_request_template.md'
 changes .github/pull_request_template.md <<'EOF'
 1c1
 < ## Mine
