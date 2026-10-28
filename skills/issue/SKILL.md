@@ -25,7 +25,8 @@ Reply with a plan and ask for approval:
 - the changes, with `file:line` references;
 - what to check: the repository's gates, CI's jobs and the tests;
 - open decisions, each with a recommendation;
-- the pull requests and their order, where the change takes several, and what each waits for.
+- the pull requests and their order, where the change takes several, and what each waits for;
+- the issues, where one body cannot hold the change, as section 3 splits it.
 
 "Approved, create the issue" means `gh issue create`, not code.
 
@@ -53,6 +54,16 @@ repository copies to `.github/ISSUE_TEMPLATE/`. Read the file before you write t
 - A field is optional unless its `validations` say `required: true`. An empty optional field is
   left out. A person's form writes `_No response_` there instead.
 - The whole body is 2000 characters at most, headings included, each line end counted as one.
+
+Where the body cannot hold the change in 2000 characters without losing a fact that matters, keep
+the fact and split the change:
+
+- into issues that each stand alone, where its parts share no goal;
+- or into an umbrella issue and its sub-issues, where they share one. The umbrella gives the goal
+  and the facts the parts share, and each sub-issue one part. GitHub lists the sub-issues on the
+  umbrella, so its body lists none.
+
+Each issue keeps to this section, its cap included.
 
 ```markdown
 ### Summary
@@ -85,4 +96,13 @@ gh issue create --title 'TITLE' --body-file /ABSOLUTE/PATH/BODY.md [--label LABE
 ```
 
 Labels: `feat` gets `enhancement`, `fix` gets `bug` and `docs` gets `documentation`. The other
-types get none. Reply with the issue's URL.
+types get none.
+
+An umbrella goes first. Each sub-issue then joins it by the sub-issue's id, not its number:
+
+```sh
+id=$(gh api repos/OWNER/REPO/issues/SUB --jq .id)
+gh api repos/OWNER/REPO/issues/UMBRELLA/sub_issues -F sub_issue_id="$id"
+```
+
+Reply with each issue's URL.

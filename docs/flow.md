@@ -32,8 +32,9 @@ generated code.
 Plans a change, then files it as a GitHub issue in a compact house style once the maintainer
 approves the plan. Its body holds the fields of [the skill's issue form][issue-form], in 2000
 characters at most: `### Summary`, `### Today` with `file:line` references at `main`'s SHA, and
-`### Proposal`. Claude uses it when asked to file an issue or plan one, or as
-`/flow:issue [topic]`. It needs `gh`, logged in.
+`### Proposal`. A change that one body cannot hold, with the facts that matter, becomes several
+issues, or an umbrella issue and its sub-issues. Claude uses it when asked to file an issue or plan
+one, or as `/flow:issue [topic]`. It needs `gh`, logged in.
 
 A repository copies the form and its `config.yml` to `.github/ISSUE_TEMPLATE/`. GitHub then
 offers the form for each new issue, and `config.yml` turns blank issues off.

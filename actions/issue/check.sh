@@ -119,7 +119,8 @@ done
 
 rule length "The body is over $max_body characters" "$url" "Cut the body to $max_body \
 characters, headings included, each line end counted as one. Keep to the crucial facts, and \
-leave out an empty optional field.
+leave out an empty optional field. Where that would lose a fact that matters, split the change, \
+as section 3 says: into issues that stand alone, or into an umbrella issue and its sub-issues.
 
 $skeleton"
 [ "${#body}" -le "$max_body" ] || finding length "The body holds ${#body} characters, headings \

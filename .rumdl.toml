@@ -4,8 +4,3 @@
 line-length = 100
 code-blocks = false
 tables = false
-
-# A pull request's template opens at `## Problem`, as atomic-commits §6 sets: GitHub shows the
-# title above the description, which takes no other heading.
-[per-file-ignores]
-"**/pull_request_template.md" = ["MD041"]

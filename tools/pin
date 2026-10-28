@@ -18,6 +18,14 @@
 # Each edit keeps its file's layout, and a second run changes nothing. Where a check fails, it
 # writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT, and each template it
 # writes as PATH:1: vX.Y.Z:SOURCE, its source as git show names it. It needs git and jq.
+#
+# Piped to sh, it needs no clone of the toolkit:
+#
+#   curl -fsSL https://raw.githubusercontent.com/zadykian/toolkit/main/tools/pin |
+#       sh -s -- vX.Y.Z DIR
+#
+# So run, it clones the tag vX.Y.Z of TOOLKIT_URL, https://github.com/zadykian/toolkit where unset,
+# into a directory it removes, and runs that release's own tools/pin on DIR.
 
 set -eu
 
@@ -160,10 +168,26 @@ skills/issue/config.yml .github/ISSUE_TEMPLATE/config.yml
 EOF
 }
 
+# fetch clones the tag $1 of the toolkit, and runs its tools/pin on the directory $2.
+fetch() {
+    url=${TOOLKIT_URL:-https://github.com/zadykian/toolkit}
+    clone=$(mktemp -d)
+    trap 'rm -rf "$clone"' EXIT
+    trap 'exit 1' HUP INT TERM
+    git clone -q -c advice.detachedHead=false --depth 1 --branch "$1" "$url" "$clone" ||
+        die "no tag $1 in $url"
+    sh "$clone/tools/pin" "$1" "$2"
+}
+
 main() {
     [ $# = 2 ] || die "usage: tools/pin vX.Y.Z DIR"
     version=$1
     printf '%s\n' "$version" | grep -Eqx "v$semver" || die "$version is not of the form vX.Y.Z"
+    # Piped to sh, the script is no file of a clone.
+    if [ "${0##*/}" != pin ] || [ ! -f "$0" ]; then
+        fetch "$@"
+        return
+    fi
     root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
     sha=$(git -C "$root" rev-parse -q --verify "refs/tags/$version^{commit}") ||
         die "no tag $version in $root: git fetch --tags, then run it again"
