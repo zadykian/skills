@@ -30,11 +30,15 @@ generated code.
 ## issue
 
 Plans a change, then files it as a GitHub issue in a compact house style once the maintainer
-approves the plan: a summary, `## Today` with `file:line` references at `main`'s SHA, and
-`## Proposal`. Claude uses it when asked to file an issue or plan one, or as
+approves the plan. Its body holds the fields of [the skill's issue form][issue-form], in 2000
+characters at most: `### Summary`, `### Today` with `file:line` references at `main`'s SHA, and
+`### Proposal`. Claude uses it when asked to file an issue or plan one, or as
 `/flow:issue [topic]`. It needs `gh`, logged in.
 
-The title's form, the sections and the word range hold in every repository. The repository's
+A repository copies the form and its `config.yml` to `.github/ISSUE_TEMPLATE/`. GitHub then
+offers the form for each new issue, and `config.yml` turns blank issues off.
+
+The title's form, the fields and the cap hold in every repository. The repository's
 CLAUDE.md names the checks that a title and a body pass before they go out, such as Vale or a
 confidentiality check.
 
@@ -67,4 +71,5 @@ steps and change none of them:
 [ac-action]: ../actions/atomic-commits
 [pd-action]: ../actions/pr-description
 [pr-template]: ../skills/atomic-commits/pull_request_template.md
+[issue-form]: ../skills/issue/change.yml
 [gh-stack]: https://github.com/github/gh-stack
