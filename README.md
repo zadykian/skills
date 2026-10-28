@@ -72,14 +72,15 @@ copies no hooks: the lint bundle's come with the plugin alone.
 | ---------------------------------------- | -------------- | -------------------------------------------------- |
 | [atomic-commits](actions/atomic-commits) | atomic-commits | Warns on a PR's commits, its size or its title     |
 | [pr-description](actions/pr-description) | atomic-commits | Warns on a description off Problem, then Changes   |
+| [issue](actions/issue)                   | issue          | Warns on an issue's title or body off its form     |
 | [banned-terms](actions/banned-terms)     | banned-terms   | Warns on vague names and fillers that a PR adds    |
 
-The checks warn and never block. Each annotates the pull request, writes a job summary and
-keeps one comment of its own up to date, and its job passes. A check reads the pull request
-through GitHub's API alone and checks out nothing, so it runs none of the pull request's code. No
+The checks warn and never block. Each annotates its run, writes a job summary and keeps one
+comment of its own up to date, and its job passes. A check reads the pull request or the issue
+through GitHub's API alone and checks out nothing, so it runs none of a pull request's code. No
 input changes a rule: each check holds its skill's own, and links each finding to the rule.
 
-The checks run in one workflow, `.github/workflows/rules.yml`, a step each:
+The checks of a pull request run in one workflow, `.github/workflows/rules.yml`, a step each:
 
 ```yaml
 name: rules
@@ -111,6 +112,9 @@ jobs:
 description again once they change, and `pull-requests: write` lets each check keep its comment.
 The `concurrency` group cancels a pull request's older run once a newer event starts one, as the
 two would race to create each comment.
+
+The issue check takes a workflow of its own, on `issues`, as no event of a pull request names an
+issue. [Its README](actions/issue/README.md#usage) shows it.
 
 Each action's README says what it checks, and its inputs.
 
