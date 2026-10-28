@@ -17,12 +17,12 @@ skill=$(file_url skills/issue/SKILL.md)
 url=$skill#3-write-it
 # The skill fixes these, and no input changes them: the labels of the issue form's fields, in its
 # order, and those it requires; the types and the form of a header, as atomic-commits sets a
-# commit's; and the most characters of a title.
+# commit's; and the most characters of a title and of a body.
 labels=('Summary' 'Today' 'Proposal' 'Pull requests' 'Waits' 'Open decisions')
 required=('Summary' 'Today' 'Proposal')
 types='feat fix refactor perf test docs style build ci chore revert'
 header_form="^(${types// /|})(\([a-z0-9._/-]+\))?!?: [^ ]"
-max_title=72
+max_title=72 max_body=2000
 # The body of section 3's example, which the fixes quote as a Markdown code block. Its backticks
 # are Markdown's, never a command.
 # shellcheck disable=SC2016
@@ -116,4 +116,12 @@ for label in "${required[@]}"; do
         finding required "$at holds \`_No response_\` alone, the form's empty answer."
     fi
 done
+
+rule length "The body is over $max_body characters" "$url" "Cut the body to $max_body \
+characters, headings included, each line end counted as one. Keep to the crucial facts, and \
+leave out an empty optional field.
+
+$skeleton"
+[ "${#body}" -le "$max_body" ] || finding length "The body holds ${#body} characters, headings \
+included: $((${#body} - max_body)) over $max_body."
 report_finish

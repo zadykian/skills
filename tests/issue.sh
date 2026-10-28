@@ -98,3 +98,12 @@ warnings 1
 issue warns-on-no-response-in-a-required-field "$summary"$'\n\n### Today'"$none$proposal"
 warns "::The field \`### Today\`, line 5 of the body, holds \`_No response_\` alone, the form's"
 warnings 1
+
+# 2000 characters with the browser's line ends, of two bytes each but those of $clean.
+edge="$clean"$'\n'"$(printf 'é%.0s' $(seq $((1999 - ${#clean}))))"
+issue passes-a-body-of-2000-characters "${edge//$'\n'/$'\r\n'}"
+warnings 0
+
+issue warns-on-a-body-of-2001-characters "${edge}é"
+warns "::The body holds 2001 characters, headings included: 1 over 2000."
+warnings 1

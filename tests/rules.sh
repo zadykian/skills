@@ -184,6 +184,10 @@ agree "$(values "$check_is" "'([^']+)'" '^required=\(')" "$(awk -v at="$form_is"
     /^ +label: / { sub(/^ +label: /, ""); label = $0 }
     /^ +required: true$/ { print at ":" NR "\t" label }' "$ROOT/$form_is")"
 
+setup holds-the-cap-of-an-issue
+agree "$(values "$check_is" ' max_body=([0-9]+)$')" \
+    "$(values "$skill_is" 'The whole body is ([0-9]+) characters at most')"
+
 # An issue's title is a header, as a commit's.
 setup holds-the-header-of-an-issue
 agree "$(values "$check_is" '([a-z]+)' "^types='")" \
