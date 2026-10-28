@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # The Markdown reader of a check.sh, which sources it: the lines and the headings of a text, such
-# as a pull request's description, as GitHub renders them. Sourcing it defines functions, and runs
-# nothing.
+# as a pull request's description or an issue's body, as GitHub renders them. Sourcing it defines
+# functions, and runs nothing.
 #
 #   markdown_read TEXT   reads the Markdown TEXT into the arrays below
 #   first LEVEL TEXT     prints the index of the first heading TEXT of the level LEVEL, or -1
