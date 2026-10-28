@@ -33,3 +33,21 @@ warns 'The body of #1 is empty.'
 issue passes-a-clean-issue "$clean"
 warnings 0
 summarizes 'This check warns and blocks nothing. No findings remain'
+
+issue warns-on-a-title-off-the-form "$clean" '{"title": "Check an issue"}'
+warns "::The title \`Check an issue\` is not \`type(scope)!: description\`."
+warnings 1
+
+title=$(sed -n 's/^title: "\(.*\)"$/\1/p' "$ROOT/skills/issue/change.yml")
+issue warns-on-the-title-of-the-form "$clean" "{\"title\": \"$title\"}"
+warns "::The title \`type(scope): description\` is not \`type(scope)!: description\`."
+warnings 1
+
+# 72 characters, of two bytes each but the type's.
+edge="feat: $(printf 'é%.0s' $(seq 66))"
+issue passes-a-title-of-72-characters "$clean" "{\"title\": \"$edge\"}"
+warnings 0
+
+issue warns-on-a-title-of-73-characters "$clean" "{\"title\": \"${edge}é\"}"
+warns 'é…` is 73 characters long: 1 over 72.'
+warnings 1
