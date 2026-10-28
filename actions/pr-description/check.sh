@@ -1,12 +1,14 @@
 #!/bin/bash
 # Warns where the description of pull request $PR of $GH_REPO strays from the form that
-# atomic-commits §6 sets. It reads the pull request with $GH_TOKEN, and lib/report.sh reports the
-# findings.
+# atomic-commits §6 sets. It reads the pull request with $GH_TOKEN, lib/markdown.sh its
+# description, and lib/report.sh reports the findings.
 
 set -euo pipefail
 
 # shellcheck source=actions/lib/report.sh
 . "$GITHUB_ACTION_PATH/../lib/report.sh"
+# shellcheck source=actions/lib/markdown.sh
+. "$GITHUB_ACTION_PATH/../lib/markdown.sh"
 report_start pr-description
 
 skill=$(file_url skills/atomic-commits/SKILL.md)
@@ -27,52 +29,10 @@ template() {
     printf '~~~markdown\n%s\n~~~' "$text"
 }
 
-# quote prints the text $1 as a Markdown code span, without its outer blanks, cut to 60 characters.
-quote() {
-    local text=$1
-    text=${text#"${text%%[![:blank:]]*}"} text=${text%"${text##*[![:blank:]]}"}
-    [ "${#text}" -le 60 ] || text="${text:0:59}…"
-    if [[ $text == *"\`"* ]]; then printf "\`\` %s \`\`" "$text"; else printf "\`%s\`" "$text"; fi
-}
-
 # words prints the count of words in the text $1: runs of characters between spaces, other than
 # those of ASCII punctuation alone, such as a bullet's - or a heading's ##.
 words() {
     { LC_ALL=C grep -o '[^[:space:]]*[^[:space:][:punct:]][^[:space:]]*' <<<"$1" || true; } | wc -l
-}
-
-# heading records a heading from the line $1 to the line $2, of the level $3 and the text $4, as
-# the Markdown $5 quotes it.
-heading() {
-    h_starts+=("$1") h_ends+=("$2") h_levels+=("$3") h_texts+=("${4%"${4##*[![:blank:]]}"}")
-    h_quotes+=("$5")
-}
-
-# first prints the index of the first heading `## $1`, or -1.
-first() {
-    local i
-    for i in "${!h_texts[@]}"; do
-        [ "${h_levels[i]} ${h_texts[i]}" != "2 $1" ] || { echo "$i" && return; }
-    done
-    echo -1
-}
-
-# filled prints the index of the last line, at or before the line $1, that holds something, or -1.
-filled() {
-    local i=$1
-    while ((i >= 0)) && [ "${kinds[i]}" != code ] && [ -z "${texts[i]//[[:blank:]]/}" ]; do
-        i=$((i - 1))
-    done
-    echo "$i"
-}
-
-# section prints the text lines of the heading $1's section, up to the next heading.
-section() {
-    local i end=${#kinds[@]}
-    [ "$1" = $((${#h_starts[@]} - 1)) ] || end=${h_starts[$1 + 1]}
-    for ((i = h_ends[$1] + 1; i < end; i++)); do
-        [ "${kinds[i]}" != text ] || printf '%s\n' "${texts[i]}"
-    done
 }
 
 rule empty 'The description is empty' "$url" "Describe the pull request in the form that section \
@@ -91,72 +51,14 @@ if [ -z "${body//[[:space:]]/}" ]; then
     report_finish
 fi
 
-# The description's lines from 0, as Markdown reads them: kinds[i] is text, code or heading, and
-# texts[i] the line without its HTML comments. A comment that opens a line hides the lines up to
-# its end, as an HTML block does; one within a line hides itself alone.
-kinds=() texts=() fence='' hidden=false para=-1
-# The headings by index: their first and last lines, levels, texts, and quotes of their source.
-h_starts=() h_ends=() h_levels=() h_texts=() h_quotes=()
-opener="^ {0,3}((\`{3,})[^\`]*|(~{3,}).*)\$" closer="^ {0,3}(\`{3,}|~{3,})[[:blank:]]*\$"
-atx='^ {0,3}(#{1,6})([[:blank:]]+(.*))?$'
-closing='^((.*[^[:blank:]])[[:blank:]]+)?#+[[:blank:]]*$'
-# A setext heading underlines a paragraph, but not a list item or a quote: there, a line of
-# dashes is a thematic break.
-setext='^ {0,3}(=+|-+)[[:blank:]]*$' item='^ {0,3}(>|([-*+]|[0-9]{1,9}[.)])([[:blank:]]|$))'
-while IFS= read -r line; do
-    if [ -n "$fence" ] || { ! $hidden && [[ $line =~ $opener ]]; }; then
-        if [ -z "$fence" ]; then
-            fence=${BASH_REMATCH[2]}${BASH_REMATCH[3]}
-        elif [[ $line =~ $closer && ${BASH_REMATCH[1]} == "$fence"* ]]; then
-            fence=''
-        fi
-        kinds+=(code) texts+=("$line") para=-1
-        continue
-    fi
-    visible='' rest=$line
-    while :; do
-        if $hidden; then
-            [[ $rest == *'-->'* ]] || break
-            rest=${rest#*'-->'} hidden=false
-        elif [[ $rest == *'<!--'*'-->'* ]]; then
-            visible+=${rest%%'<!--'*} rest=${rest#*'<!--'} rest=${rest#*'-->'}
-        else
-            if [[ $rest != *'<!--'* || "$visible${rest%%'<!--'*}" == *[![:blank:]]* ]]; then
-                visible+=$rest
-            else
-                hidden=true
-            fi
-            break
-        fi
-    done
-    texts+=("$visible") n=${#kinds[@]}
-    if [[ $visible =~ $atx ]]; then
-        # A closing run of #, as in `## Problem ##`, is no part of the text.
-        level=${#BASH_REMATCH[1]} text=${BASH_REMATCH[3]}
-        [[ ! $text =~ $closing ]] || text=${BASH_REMATCH[2]}
-        heading "$n" "$n" "$level" "$text" "$(quote "$visible")"
-        kinds+=(heading) para=-1
-    elif [ "$para" != -1 ] && [[ $visible =~ $setext && ! ${texts[para]} =~ $item ]]; then
-        level=1
-        [[ $visible != *-* ]] || level=2
-        text=$(printf '%s ' "${texts[@]:para:n-para}")
-        text=${text#"${text%%[![:blank:]]*}"}
-        heading "$para" "$n" "$level" "$text" "$(quote "$text") over $(quote "$visible")"
-        for ((i = para; i <= n; i++)); do kinds[i]=heading; done
-        para=-1
-    else
-        kinds+=(text)
-        # The first line of the paragraph that this line is in, or -1 for a blank line.
-        if [ -z "${visible//[[:blank:]]/}" ]; then para=-1; elif [ "$para" = -1 ]; then para=$n; fi
-    fi
-done <<<"$body"
+markdown_read "$body"
 
 rule problem 'The description does not open with a Problem section in prose' "$url" "Open the \
 description with \`## Problem\`: one to three sentences on what is wrong or missing today, and \
 why it matters. An HTML comment holds no prose.
 
 $(template "$problem_md")"
-p=$(first Problem)
+p=$(first 2 Problem)
 if [ "$p" = -1 ]; then
     finding problem "The description has no \`## Problem\` heading."
 else
@@ -176,7 +78,7 @@ rule changes 'The description has no Changes section of bullets after Problem' "
 by file.
 
 $(template "$changes_md")"
-c=$(first Changes)
+c=$(first 2 Changes)
 if [ "$c" = -1 ]; then
     finding changes "The description has no \`## Changes\` heading."
 else

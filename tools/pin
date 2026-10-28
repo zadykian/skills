@@ -1,5 +1,5 @@
 #!/bin/sh
-# Pins a repository's actions and marketplace to one release of the toolkit:
+# Pins a repository's actions, marketplace and templates to one release of the toolkit:
 #
 #   tools/pin vX.Y.Z DIR
 #
@@ -10,8 +10,14 @@
 # the tag as the ref of the marketplace of zadykian/toolkit, or of zadykian/skills before it.
 # Dependabot cannot edit settings.json, so this moves both pins at once.
 #
+# DIR gets each template that SHA holds, at the path the table in templates gives it. A file of
+# other text there is overwritten: the release's template is the rule, and no repository changes
+# it. A release without a template, as each before v5.1.0 is, writes none, and DIR's file stays.
+# No note says so, as one would come on each pin to such a release, and call for nothing.
+#
 # Each edit keeps its file's layout, and a second run changes nothing. Where a check fails, it
-# writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT. It needs git and jq.
+# writes nothing. Each line it changes goes to stdout, as PATH:LINE: TEXT, and each template it
+# writes as PATH:1: vX.Y.Z:SOURCE, its source as git show names it. It needs git and jq.
 
 set -eu
 
@@ -27,12 +33,14 @@ die() {
     exit 1
 }
 
-# stage keeps $tmp/out, the new text of the file $1, for main to write, where the two differ.
+# stage keeps $tmp/out, the new text of the file $1, for main to write, where the two differ. It
+# then reports the line $2, where given, as a change.
 stage() {
     ! cmp -s "$tmp/out" "$1" || return 0
     mkdir -p "$tmp/new/${1%/*}"
     mv "$tmp/out" "$tmp/new/$1"
     printf '%s\n' "$1" >>"$tmp/staged"
+    [ $# = 1 ] || printf '%s\n' "$2" >>"$tmp/changes"
 }
 
 # workflows pins each step that uses an action of the toolkit, as NAME@REF unquoted, with a comment
@@ -139,6 +147,19 @@ marketplace() {
     stage "$settings"
 }
 
+# templates stages each template that SHA holds, as git holds it, at its path in DIR. Each line of
+# its table is a template's source in SHA's tree, and its path.
+templates() {
+    while read -r source path; do
+        git -C "$root" cat-file blob "$sha:$source" >"$tmp/out" 2>/dev/null || continue
+        stage "$path" "$path:1: $version:$source"
+    done <<'EOF'
+skills/atomic-commits/pull_request_template.md .github/pull_request_template.md
+skills/issue/change.yml .github/ISSUE_TEMPLATE/change.yml
+skills/issue/config.yml .github/ISSUE_TEMPLATE/config.yml
+EOF
+}
+
 main() {
     [ $# = 2 ] || die "usage: tools/pin vX.Y.Z DIR"
     version=$1
@@ -156,7 +177,9 @@ main() {
     [ -s "$tmp/steps" ] || [ -f "$settings" ] ||
         die "$2 has no $settings, and no workflow that uses an action of the toolkit"
     marketplace
+    templates
     while IFS= read -r file; do
+        mkdir -p "${file%/*}"
         cat "$tmp/new/$file" >"$file"
     done <"$tmp/staged"
     [ -s "$tmp/changes" ] || printf '%s pins %s already\n' "$2" "$version" >"$tmp/changes"

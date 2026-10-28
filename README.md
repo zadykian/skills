@@ -72,14 +72,15 @@ copies no hooks: the lint bundle's come with the plugin alone.
 | ---------------------------------------- | -------------- | -------------------------------------------------- |
 | [atomic-commits](actions/atomic-commits) | atomic-commits | Warns on a PR's commits, its size or its title     |
 | [pr-description](actions/pr-description) | atomic-commits | Warns on a description off Problem, then Changes   |
+| [issue](actions/issue)                   | issue          | Warns on an issue's title or body off its form     |
 | [banned-terms](actions/banned-terms)     | banned-terms   | Warns on vague names and fillers that a PR adds    |
 
-The checks warn and never block. Each annotates the pull request, writes a job summary and
-keeps one comment of its own up to date, and its job passes. A check reads the pull request
-through GitHub's API alone and checks out nothing, so it runs none of the pull request's code. No
+The checks warn and never block. Each annotates its run, writes a job summary and keeps one
+comment of its own up to date, and its job passes. A check reads the pull request or the issue
+through GitHub's API alone and checks out nothing, so it runs none of a pull request's code. No
 input changes a rule: each check holds its skill's own, and links each finding to the rule.
 
-The checks run in one workflow, `.github/workflows/rules.yml`, a step each:
+The checks of a pull request run in one workflow, `.github/workflows/rules.yml`, a step each:
 
 ```yaml
 name: rules
@@ -112,7 +113,22 @@ description again once they change, and `pull-requests: write` lets each check k
 The `concurrency` group cancels a pull request's older run once a newer event starts one, as the
 two would race to create each comment.
 
+The issue check takes a workflow of its own, on `issues`, as no event of a pull request names an
+issue. [Its README](actions/issue/README.md#usage) shows it.
+
 Each action's README says what it checks, and its inputs.
+
+## The templates
+
+| Template                                                                   | Skill          | Path in a repository                |
+| -------------------------------------------------------------------------- | -------------- | ----------------------------------- |
+| [pull_request_template.md](skills/atomic-commits/pull_request_template.md) | atomic-commits | `.github/pull_request_template.md`  |
+| [change.yml](skills/issue/change.yml)                                      | issue          | `.github/ISSUE_TEMPLATE/change.yml` |
+| [config.yml](skills/issue/config.yml)                                      | issue          | `.github/ISSUE_TEMPLATE/config.yml` |
+
+A skill writes a text in its template's form. `tools/pin` writes each template of the release a
+repository pins to its path, as [Pin a release](#pin-a-release) says. There GitHub offers it to
+whoever opens a new pull request or issue. The issue form's `config.yml` turns blank issues off.
 
 ## The repository's rules
 
@@ -143,20 +159,23 @@ a breaking change goes its `BREAKING CHANGE:` footer, which says what a reposito
 
 ### Pin a release
 
-A repository pins the skills and the actions to the same release, so that its checks hold the
-rules its skills teach:
+A repository pins the skills, the actions and the templates to the same release, so that its
+checks hold the rules its skills teach:
 
 - the marketplace's `"ref"` in `.claude/settings.json` names the release's tag, as
   [Install](#install) shows;
 - each action's `uses:` names the full hash of the tag's commit, with the tag in a comment, as
-  `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. `git rev-parse vX.Y.Z^{commit}` prints the hash.
+  `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. `git rev-parse vX.Y.Z^{commit}` prints the hash;
+- the pull request template and the issue form in `.github/` come from the same tag, and
+  `tools/pin` writes them.
 
 A released tag is never moved or deleted, and no major tag, such as `v1`, follows the releases.
 
 Dependabot moves an action's hash and comment, but not the marketplace's `ref`, which it does not
 read. So a repository's `github-actions` update in `.github/dependabot.yml` ignores every action
 of the toolkit, `ignore: [{dependency-name: "zadykian/toolkit*"}]`, and `tools/pin` moves both to
-a release. Run it from a clone of this repository that has the tag:
+a release. It writes the release's templates too. Run it from a clone of this repository that has
+the tag:
 
 ```sh
 tools/pin vX.Y.Z DIR

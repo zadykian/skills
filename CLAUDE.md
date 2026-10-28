@@ -13,6 +13,8 @@ how to install and pin them, and what a version's parts mean.
 - `skills/NAME/SKILL.md`: a skill, which a bundle offers as `/BUNDLE:NAME`, and
   `gh skill install` copies as `/NAME`. Its directory holds `SKILL.md`, and the data files it
   reads, such as banned-terms' `terms.json`, as gh copies the whole directory into a repository.
+  It also holds the templates of what the skill writes, such as atomic-commits'
+  `pull_request_template.md`, and `.github/` holds the toolkit's own copy of each.
 - `hooks/`: the lint bundle's hooks, which Claude Code runs from its copy of the marketplace.
 - `docs/BUNDLE.md`: what each skill of a bundle does, and what facts a repository names for it.
 - `actions/NAME/`: an action, which a workflow uses as `zadykian/toolkit/actions/NAME@SHA`: its
@@ -20,7 +22,8 @@ how to install and pin them, and what a version's parts mean.
   `check.sh`.
 - `actions/lib/`: what each `check.sh` sources. `report.sh` turns its findings into annotations,
   a job summary and one comment, and its header comment is its API. `glob.sh` gives
-  `excluded PATH`, the one reading of the `exclude` inputs.
+  `excluded PATH`, the one reading of the `exclude` inputs. `markdown.sh` reads a text of Markdown
+  into its lines and headings, as GitHub renders it.
 - `tests/run`: runs the cases of each `tests/NAME.sh`, against `tests/gh`, the fake gh: of an
   action, of `actions/lib/`, of a tool, or, in `rules.sh`, of the checks against their skills. Its
   header comment says how to write a case.
@@ -64,7 +67,8 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
 - A new skill: its directory, its bundle's `skills` list, its row in the README's table, and its
   section in its bundle's page.
 - A new action: its directory, its `tests/NAME.sh`, and its row in the README's table. A new check
-  takes a step in `.github/workflows/rules.yml` too.
+  takes a step in `.github/workflows/rules.yml` too, or, where it checks an issue, in
+  `.github/workflows/issues.yml`.
 - The repository is public. No secret, employer's name, internal host or address goes into it.
 - Prose keeps to the [writing](skills/writing/SKILL.md#the-caps-and-vale) skill's caps, as Vale,
   rumdl and `tools/sizecheck` check them.
@@ -77,7 +81,8 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
   them, and each ends in one warning. A case of `tests/NAME.sh` fails where it exits non-zero.
 - A check reads the pull request through `gh api` alone, and checks out nothing, so it runs none of
   the pull request's code. It runs on `pull_request`, of the types `opened, edited, reopened,
-  synchronize`.
+  synchronize`. The issue check runs on `issues` instead, of the types `opened, edited`, and reads
+  the issue, whose number `action.yml` passes as `ISSUE`.
 - Every check takes the inputs `token` and `comment`, and none that changes a rule. `check.sh`
   holds its skill's values, or reads the skill's own file of them, as banned-terms reads
   `skills/banned-terms/terms.json`.

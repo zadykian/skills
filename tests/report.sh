@@ -149,6 +149,41 @@ probe <<<"finding a 'Found.'"
 warns "::warning::probe $refused accessible by integration (HTTP 403)"
 warnings 2
 
+# An issue's report, as the issues event sets ISSUE and leaves PR empty.
+updated=2026-10-28T09:00:00Z
+as_of="as of the issue's last update, \`$updated\`."
+# probe_issue runs probe on the issue #1, last updated at $updated.
+probe_issue() {
+    answer repos/o/r/issues/1 "{\"number\": 1, \"updated_at\": \"$updated\"}"
+    probe PR= ISSUE=1
+}
+
+setup comments-on-an-issue
+probe_issue <<<"finding a 'Found.'"
+wrote POST repos/o/r/issues/1/comments "$marker
+### probe
+
+This check warns and blocks nothing. It found 1 finding $as_of"
+writes 1
+! grep -qF pulls/1 "$FAKE/calls" || fail "read the pull request"
+
+setup edits-the-comment-on-an-issue-to-clean
+answer repos/o/r/issues/1/comments "$old"
+probe_issue </dev/null
+wrote PATCH repos/o/r/issues/comments/5 "warns and blocks nothing. No findings remain $as_of"
+writes 1
+warnings 0
+
+setup comments-nothing-on-a-clean-issue
+probe_issue </dev/null
+summarizes "No findings remain $as_of"
+writes 0
+
+setup warns-on-a-refused-comment-on-an-issue
+refuse POST repos/o/r/issues/1/comments
+probe_issue <<<"finding a 'Found.'"
+warns "::warning::probe $refused accessible by integration (HTTP 403)"
+
 setup cuts-a-long-comment
 probe <<'CHECK'
 pad=$(printf '%090d' 0)
@@ -180,9 +215,15 @@ probe <<<"cannot_check 'GitHub lists no commit.'"
 warns '::warning::probe could not check #1: GitHub lists no commit.'
 warnings 1
 
+setup warns-on-an-error-in-an-issue
+probe_issue <<<false
+warns '::warning::probe could not check #1: check.sh:7: false exited with 1'
+warnings 1
+
 setup warns-on-another-event
-probe PR= GITHUB_EVENT_NAME=push </dev/null
-warns '::warning::probe checks a pull request, and the push event has none: run it on pull_request.'
+probe PR= ISSUE= GITHUB_EVENT_NAME=push </dev/null
+warns '::warning::probe checks a pull request or an issue, and the push event has neither: run it'
+warns 'event has neither: run it on pull_request or issues.'
 warnings 1
 
 # The runner downloads OWNER/REPO/actions/NAME@REF into _actions/OWNER/REPO/REF/actions/NAME.

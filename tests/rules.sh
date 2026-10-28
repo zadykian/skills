@@ -6,7 +6,8 @@
 # shellcheck disable=SC2016
 
 check_ac=actions/atomic-commits/check.sh check_pd=actions/pr-description/check.sh
-skill_ac=skills/atomic-commits/SKILL.md
+skill_ac=skills/atomic-commits/SKILL.md template_ac=skills/atomic-commits/pull_request_template.md
+check_is=actions/issue/check.sh skill_is=skills/issue/SKILL.md form_is=skills/issue/change.yml
 
 # values prints each match of the regex $2 in the file $1: a line of FILE:LINE, a tab, and the
 # match's last group. With the regex $3, it reads the first line that $3 matches, past the match.
@@ -143,18 +144,62 @@ agree "$(values "$check_pd" '^max=([0-9]+)$')" \
 setup holds-the-sections-of-a-description
 sections=$(values "$skill_ac" '^- `## ([[:alpha:]]+)`')
 agree "$(values "$check_pd" '([[:alpha:]]+)[ )]' '^names=\(')" "$sections"
-agree "$(values "$check_pd" '=\$\(first ([[:alpha:]]+)\)')" "$sections"
+agree "$(values "$check_pd" '=\$\(first 2 ([[:alpha:]]+)\)')" "$sections"
 
 # The check's form of a description runs from problem_md to footer_md, each part quoted.
 setup quotes-the-form-of-a-description
 agree "$(values "$check_pd" "^([a-z]+_md=')?(.*[^'])'?\$" "^problem_md='" '^# ')" \
     "$(values "$skill_ac" '^(.+)$' '^```markdown$' '^```$')"
 
+setup heads-the-template-of-a-description-by-its-sections
+agree "$(values "$template_ac" '^## ([[:alpha:]]+)$')" "$sections"
+
+# The template's comments are the form's lines, in order. A bullet's drops its -, and the footer's
+# opens with when it goes in.
+setup guides-the-template-of-a-description-by-its-form
+agree "$(values "$template_ac" '^<!-- (Where the title has !, end with: )?(.+) -->$')" \
+    "$(values "$skill_ac" '^(- )?([^#].*)$' '^```markdown$' '^```$')"
+
+# Each template beside its skill, and the toolkit's own copy of it in .github/.
+setup copies-each-template-into-github
+while read -r source copy; do
+    cmp -s "$ROOT/$source" "$ROOT/$copy" || fail "$copy is not a copy of $source"
+done <<'EOF'
+skills/atomic-commits/pull_request_template.md .github/pull_request_template.md
+skills/issue/change.yml .github/ISSUE_TEMPLATE/change.yml
+skills/issue/config.yml .github/ISSUE_TEMPLATE/config.yml
+EOF
+
 # The check's pattern of an attribution line, (MARK )?TEXT, as TEXT or MARK TEXT, the skill's forms.
 setup holds-the-line-that-may-follow-a-footer
 agree "$(values "$check_pd" " by='\^(\(.+ \)\?[^']*[^' ]) '\$" |
     sed -E 's/\t\((.+) \)\?(.+)$/\t\2 or \1 \2/')" \
     "$(values "$skill_ac" 'that starts (`[^`]+` or `[^`]+`)' | tr -d '`')"
+
+# The form's labels in its order, and those that its validations require, each at the line of its
+# `required: true`.
+setup holds-the-fields-of-an-issue
+agree "$(values "$check_is" "'([^']+)'" '^labels=\(')" "$(values "$form_is" '^ +label: (.+)$')"
+agree "$(values "$check_is" "'([^']+)'" '^required=\(')" "$(awk -v at="$form_is" '
+    /^ +label: / { sub(/^ +label: /, ""); label = $0 }
+    /^ +required: true$/ { print at ":" NR "\t" label }' "$ROOT/$form_is")"
+
+setup holds-the-cap-of-an-issue
+agree "$(values "$check_is" ' max_body=([0-9]+)$')" \
+    "$(values "$skill_is" 'The whole body is ([0-9]+) characters at most')"
+
+# An issue's title is a header, as a commit's.
+setup holds-the-header-of-an-issue
+agree "$(values "$check_is" '([a-z]+)' "^types='")" \
+    "$(values "$skill_ac" '`([a-z]+)`' '^- `type`, lowercase\. ' '^- ')"
+agree "$(values "$check_is" '^header_form="\^\(\$\{types// /\|\}\)(.*)"$')" \
+    "$(values "$skill_ac" 'grep -vE "\^\(\$types\)(.*)"$')"
+agree "$(values "$check_is" '^max_title=([0-9]+)')" \
+    "$(values "$skill_ac" '^\*\*Header\*\* \(required, ≤ ([0-9]+) characters in total\)')"
+
+setup quotes-the-form-of-an-issue
+agree "$(values "$check_is" "^(form_md=')?(.*[^'])'?\$" "^form_md='" '^skeleton=')" \
+    "$(values "$skill_is" '^(.+)$' '^```markdown$' '^```$')"
 
 setup gates-hold-the-caps-of-writing
 writing=skills/writing/SKILL.md

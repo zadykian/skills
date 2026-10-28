@@ -43,6 +43,29 @@ $1
 EOF
 }
 
+# templates gives toolkit the templates, each of a text of its own, in a commit tagged $1.
+templates() {
+    mkdir -p "$FAKE/toolkit/skills/atomic-commits" "$FAKE/toolkit/skills/issue"
+    echo '## Problem' >"$FAKE/toolkit/skills/atomic-commits/pull_request_template.md"
+    echo 'name: Change' >"$FAKE/toolkit/skills/issue/change.yml"
+    echo 'blank_issues_enabled: false' >"$FAKE/toolkit/skills/issue/config.yml"
+    git -C "$FAKE/toolkit" add skills
+    git -C "$FAKE/toolkit" commit -q -m 'feat: add the templates'
+    git -C "$FAKE/toolkit" tag "$1"
+}
+
+# copied checks that app holds each template at its path, as toolkit's tree holds it.
+copied() {
+    local source path
+    while read -r source path; do
+        cmp -s "$FAKE/toolkit/$source" "$FAKE/app/$path" || fail "$path is not toolkit's $source"
+    done <<'EOF'
+skills/atomic-commits/pull_request_template.md .github/pull_request_template.md
+skills/issue/change.yml .github/ISSUE_TEMPLATE/change.yml
+skills/issue/config.yml .github/ISSUE_TEMPLATE/config.yml
+EOF
+}
+
 # pin runs toolkit's tools/pin at the version $1 on app, and keeps app in old on the first run.
 pin() {
     [ -d "$FAKE/old" ] || cp -R "$FAKE/app" "$FAKE/old"
@@ -151,3 +174,62 @@ pin v1.3.0
 exits 0
 pinned "$SHA" v1.3.0
 sourced v1.3.0
+
+setup writes-the-templates-of-a-tag
+start
+templates v1.3.0
+pin v1.3.0
+exits 0
+prints '.github/pull_request_template.md:1: v1.3.0:skills/atomic-commits/pull_request_template.md'
+prints '.github/ISSUE_TEMPLATE/change.yml:1: v1.3.0:skills/issue/change.yml'
+prints '.github/ISSUE_TEMPLATE/config.yml:1: v1.3.0:skills/issue/config.yml'
+copied
+
+setup writes-the-templates-once
+start
+templates v1.3.0
+pin v1.3.0
+pin v1.3.0
+exits 0
+prints "$FAKE/app pins v1.3.0 already"
+copied
+
+setup writes-no-template-that-the-tag-lacks
+start
+echo '## Mine' >"$FAKE/app/.github/pull_request_template.md"
+pin v1.2.3
+exits 0
+changes .github/pull_request_template.md </dev/null
+[ ! -e "$FAKE/app/.github/ISSUE_TEMPLATE" ] || fail 'it wrote .github/ISSUE_TEMPLATE'
+
+setup overwrites-a-template-of-other-text
+start
+templates v1.3.0
+echo '## Mine' >"$FAKE/app/.github/pull_request_template.md"
+pin v1.3.0
+exits 0
+prints '.github/pull_request_template.md:1: v1.3.0:skills/atomic-commits/pull_request_template.md'
+changes .github/pull_request_template.md <<'EOF'
+1c1
+< ## Mine
+---
+> ## Problem
+EOF
+
+setup writes-no-template-where-a-check-fails
+start
+git -C "$FAKE/toolkit" rm -rq actions/y
+templates v2.0.0
+pin v2.0.0
+exits 1
+prints 'v2.0.0 has no action y'
+diff -r "$FAKE/old" "$FAKE/app" || fail 'it wrote a file'
+
+setup creates-the-directories-of-the-templates
+start
+rm -r "$FAKE/app/.github"
+settings '      "source": { "source": "github", "repo": "zadykian/toolkit" },'
+templates v1.3.0
+pin v1.3.0
+exits 0
+copied
