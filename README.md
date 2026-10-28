@@ -174,14 +174,16 @@ A released tag is never moved or deleted, and no major tag, such as `v1`, follow
 Dependabot moves an action's hash and comment, but not the marketplace's `ref`, which it does not
 read. So a repository's `github-actions` update in `.github/dependabot.yml` ignores every action
 of the toolkit, `ignore: [{dependency-name: "zadykian/toolkit*"}]`, and `tools/pin` moves both to
-a release. It writes the release's templates too. Run it from a clone of this repository that has
-the tag:
+a release. It writes the release's templates too. Run it in the repository's work tree, with no
+clone of this one:
 
 ```sh
-tools/pin vX.Y.Z DIR
+curl -fsSL https://raw.githubusercontent.com/zadykian/toolkit/main/tools/pin | sh -s -- vX.Y.Z .
 ```
 
-It pins the repository whose work tree is `DIR`. Its header comment says what it changes.
+It clones the tag, and runs that release's own `tools/pin`. From a clone of this repository that
+has the tag, `tools/pin vX.Y.Z DIR` pins the repository whose work tree is `DIR`. Its header
+comment says what it changes.
 
 ## License
 
