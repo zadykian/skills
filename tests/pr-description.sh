@@ -90,6 +90,11 @@ warns "\`## Problem\`, line 1 of the description, holds no prose."
 warns "\`## Changes\`, line 5 of the description, holds no bullet."
 warnings 2
 
+describe warns-on-the-shipped-template "$(<"$ROOT/skills/atomic-commits/pull_request_template.md")"
+warns 'pr-description%3A The description does not open with a Problem section in prose::'
+warns 'pr-description%3A The description has no Changes section of bullets after Problem::'
+warnings 2
+
 describe warns-on-another-heading "$clean"$'\n\n### Testing\n\nRan it.'
 warns "The heading \`### Testing\`, line 9 of the description, is neither \`## Problem\` nor"
 warnings 1

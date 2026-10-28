@@ -6,7 +6,7 @@
 # shellcheck disable=SC2016
 
 check_ac=actions/atomic-commits/check.sh check_pd=actions/pr-description/check.sh
-skill_ac=skills/atomic-commits/SKILL.md
+skill_ac=skills/atomic-commits/SKILL.md template_ac=skills/atomic-commits/pull_request_template.md
 
 # values prints each match of the regex $2 in the file $1: a line of FILE:LINE, a tab, and the
 # match's last group. With the regex $3, it reads the first line that $3 matches, past the match.
@@ -149,6 +149,23 @@ agree "$(values "$check_pd" '=\$\(first ([[:alpha:]]+)\)')" "$sections"
 setup quotes-the-form-of-a-description
 agree "$(values "$check_pd" "^([a-z]+_md=')?(.*[^'])'?\$" "^problem_md='" '^# ')" \
     "$(values "$skill_ac" '^(.+)$' '^```markdown$' '^```$')"
+
+setup heads-the-template-of-a-description-by-its-sections
+agree "$(values "$template_ac" '^## ([[:alpha:]]+)$')" "$sections"
+
+# The template's comments are the form's lines, in order. A bullet's drops its -, and the footer's
+# opens with when it goes in.
+setup guides-the-template-of-a-description-by-its-form
+agree "$(values "$template_ac" '^<!-- (Where the title has !, end with: )?(.+) -->$')" \
+    "$(values "$skill_ac" '^(- )?([^#].*)$' '^```markdown$' '^```$')"
+
+# Each template beside its skill, and the toolkit's own copy of it in .github/.
+setup copies-each-template-into-github
+while read -r source copy; do
+    cmp -s "$ROOT/$source" "$ROOT/$copy" || fail "$copy is not a copy of $source"
+done <<'EOF'
+skills/atomic-commits/pull_request_template.md .github/pull_request_template.md
+EOF
 
 # The check's pattern of an attribution line, (MARK )?TEXT, as TEXT or MARK TEXT, the skill's forms.
 setup holds-the-line-that-may-follow-a-footer

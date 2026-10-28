@@ -202,7 +202,9 @@ into the commit on `main`. A PR containing a breaking commit has `!` in its titl
 `BREAKING CHANGE:` footer at the end of its description. Only an attribution line may follow it,
 one that starts `Generated with` or `🤖 Generated with`.
 
-PR description:
+PR description, whose skeleton is [the template](pull_request_template.md) beside this file.
+GitHub offers it for a new pull request where a repository copies it to
+`.github/pull_request_template.md`. Filled in, a description reads:
 
 ```markdown
 ## Problem
