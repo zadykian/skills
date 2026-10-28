@@ -68,6 +68,11 @@ SUMMARY. Line references are to main SHA.
 - Do Y.
 ```
 
+In CI, the toolkit's [`issue`][is-action] action warns on an issue that strays from this section.
+It only warns, and blocks nothing.
+
+[is-action]: https://github.com/zadykian/toolkit/tree/main/actions/issue
+
 ## 4. File it
 
 Write the body to `BODY.md` in the session's scratchpad, or another directory outside the

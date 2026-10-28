@@ -38,6 +38,9 @@ characters at most: `### Summary`, `### Today` with `file:line` references at `m
 A repository copies the form and its `config.yml` to `.github/ISSUE_TEMPLATE/`. GitHub then
 offers the form for each new issue, and `config.yml` turns blank issues off.
 
+In CI, the toolkit's [`issue` action][is-action] warns on an issue whose title or body strays from
+the skill's form. It runs on `issues`, in a workflow of its own, and only warns: it blocks nothing.
+
 The title's form, the fields and the cap hold in every repository. The repository's
 CLAUDE.md names the checks that a title and a body pass before they go out, such as Vale or a
 confidentiality check.
@@ -70,6 +73,7 @@ steps and change none of them:
 [cc]: https://www.conventionalcommits.org/en/v1.0.0/
 [ac-action]: ../actions/atomic-commits
 [pd-action]: ../actions/pr-description
+[is-action]: ../actions/issue
 [pr-template]: ../skills/atomic-commits/pull_request_template.md
 [issue-form]: ../skills/issue/change.yml
 [gh-stack]: https://github.com/github/gh-stack
