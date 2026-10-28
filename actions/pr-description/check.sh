@@ -52,6 +52,11 @@ if [ -z "${body//[[:space:]]/}" ]; then
 fi
 
 markdown_read "$body"
+# The description's first line that holds something, past blank lines and HTML comments. The
+# heading that opens there, the first, is the title's, t, where it is an ATX one at level 1.
+open=0 t=-1
+while ((open < ${#kinds[@]})) && (($(filled "$open") < 0)); do open=$((open + 1)); done
+[ "${h_starts[0]--1} ${h_ends[0]-} ${h_levels[0]-}" != "$open $open 1" ] || t=0
 
 rule problem 'The description does not open with a Problem section in prose' "$url" "Open the \
 description with \`## Problem\`: one to three sentences on what is wrong or missing today, and \
@@ -63,8 +68,9 @@ if [ "$p" = -1 ]; then
     finding problem "The description has no \`## Problem\` heading."
 else
     at="\`## Problem\`, line $((h_starts[p] + 1)) of the description,"
-    before=''
-    for ((i = 0; i < h_starts[p]; i++)); do
+    before='' from=0
+    [ "$t" = -1 ] || from=$((h_ends[t] + 1))
+    for ((i = from; i < h_starts[p]; i++)); do
         if [ "${kinds[i]}" = code ] || (($(words "${texts[i]}"))); then
             before=$(quote "${texts[i]}") && break
         fi
@@ -102,6 +108,7 @@ in a code block is no heading.
 $(template "$problem_md" "$changes_md")"
 names=(Problem Changes) last=-1
 for i in "${!h_texts[@]}"; do
+    [ "$i" != "$t" ] || continue
     at="The heading ${h_quotes[i]}, line $((h_starts[i] + 1)) of the description,"
     k=-1
     for j in "${!names[@]}"; do [ "${h_levels[i]} ${h_texts[i]}" != "2 ${names[j]}" ] || k=$j; done

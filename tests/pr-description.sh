@@ -28,8 +28,10 @@ warns 'The description of #1 is empty.'
 describe warns-on-no-description '' '{"body": null}'
 warns 'The description of #1 is empty.'
 
-clean=$'## Problem\n\nA check is missing.\n\n## Changes\n\n- Add it.'
+# A description of the default title, feat: add a check, and its parts.
+head=$'# feat: add a check\n\n' problem=$'## Problem\n\nA check is missing.'
 changes=$'\n\n## Changes\n\n- Add it.'
+clean=$head$problem$changes
 
 describe passes-a-clean-description "$clean"
 warnings 0
@@ -38,56 +40,58 @@ summarizes 'No findings remain'
 describe passes-line-ends-of-a-browser "${clean//$'\n'/$'\r\n'}"
 warnings 0
 
-describe passes-a-closing-run $'## Problem ##\n\nA `<!--` within a line hides nothing.'"$changes"
+run=$'# feat: add a check ##\n\n## Problem ##\n\nA `<!--` within a line hides nothing.'
+describe passes-a-closing-run "$run$changes"
 warnings 0
 
-describe warns-on-no-problem "${changes:2}"
+describe warns-on-no-problem "$head${changes:2}"
 warns "The description has no \`## Problem\` heading."
 warnings 1
 
-describe ignores-headings-in-code $'```md\n## Problem\n```\n~~~~\n## Problem\n~~~\n~~~~'"$changes"
+describe ignores-headings-in-code \
+    "$head"$'```md\n## Problem\n```\n~~~~\n## Problem\n~~~\n~~~~'"$changes"
 warns "The description has no \`## Problem\` heading."
 warnings 1
 
-describe ignores-headings-in-comments $'<!--\n## Problem\n-->\n<!-- ## Problem -->'"$changes"
+describe ignores-headings-in-comments "$head"$'<!--\n## Problem\n-->\n<!-- ## Problem -->'"$changes"
 warns "The description has no \`## Problem\` heading."
 warnings 1
 
-describe warns-on-text-before-problem $'Adds a check.\n\n'"$clean"
-warns "\`## Problem\`, line 3 of the description, is not its first section: \`Adds a check.\` comes"
+describe warns-on-text-before-problem "$head"$'Adds a check.\n\n'"$problem$changes"
+warns "\`## Problem\`, line 5 of the description, is not its first section: \`Adds a check.\` comes"
 warnings 1
 
-describe warns-on-a-heading-before-problem $'# Add a check\n'"$clean"
-warns "\`## Problem\`, line 2 of the description, is not its first section: \`# Add a check\` comes"
+describe warns-on-a-heading-before-problem $'# feat: add a check\n# Add a check\n'"$problem$changes"
+warns "\`## Problem\`, line 3 of the description, is not its first section: \`# Add a check\` comes"
+warns "The heading \`# Add a check\`, line 2 of the description, is neither \`## Problem\` nor"
+warnings 2
 
-describe warns-on-a-template-of-comments $'## Problem\n\n<!-- What is wrong? -->'"$changes"
-warns "\`## Problem\`, line 1 of the description, holds no prose."
+describe warns-on-a-template-of-comments "$head"$'## Problem\n\n<!-- What is wrong? -->'"$changes"
+warns "\`## Problem\`, line 3 of the description, holds no prose."
 warnings 1
 
-describe warns-on-code-alone $'## Problem\n\n~~~\n# log\n~~~~'"$changes"
-warns "\`## Problem\`, line 1 of the description, holds no prose."
+describe warns-on-code-alone "$head"$'## Problem\n\n~~~\n# log\n~~~~'"$changes"
+warns "\`## Problem\`, line 3 of the description, holds no prose."
 warnings 1
 
-problem=$'## Problem\n\nA check is missing.'
-
-describe passes-bullets-of-each-marker "$problem"$'\n\n## Changes\n\n* A check.\n+ Its cases.'
+describe passes-bullets-of-each-marker "$head$problem"$'\n\n## Changes\n\n* A check.\n+ Its cases.'
 warnings 0
 
-describe warns-on-no-changes "$problem"
+describe warns-on-no-changes "$head$problem"
 warns "The description has no \`## Changes\` heading."
 warnings 1
 
-describe warns-on-changes-before-problem "${changes:2}"$'\n\n'"$problem"
-warns "\`## Changes\`, line 1 of the description, comes before \`## Problem\`, line 5."
+describe warns-on-changes-before-problem "$head${changes:2}"$'\n\n'"$problem"
+warns "\`## Changes\`, line 3 of the description, comes before \`## Problem\`, line 7."
 
-describe warns-on-changes-without-bullets "$problem"$'\n\n## Changes\n\nAdds it.\n\n- - -'
-warns "\`## Changes\`, line 5 of the description, holds no bullet: it opens \`Adds it.\`"
+describe warns-on-changes-without-bullets "$head$problem"$'\n\n## Changes\n\nAdds it.\n\n- - -'
+warns "\`## Changes\`, line 7 of the description, holds no bullet: it opens \`Adds it.\`"
 warnings 1
 
 template=$'## Problem\n\n<!-- What is wrong? -->\n\n## Changes\n\n<!--\n- A change.\n-->'
-describe warns-on-a-template-left-alone "$template"
-warns "\`## Problem\`, line 1 of the description, holds no prose."
-warns "\`## Changes\`, line 5 of the description, holds no bullet."
+describe warns-on-a-template-left-alone "$head$template"
+warns "\`## Problem\`, line 3 of the description, holds no prose."
+warns "\`## Changes\`, line 7 of the description, holds no bullet."
 warnings 2
 
 describe warns-on-the-shipped-template "$(<"$ROOT/skills/atomic-commits/pull_request_template.md")"
@@ -96,24 +100,24 @@ warns 'pr-description%3A The description has no Changes section of bullets after
 warnings 2
 
 describe warns-on-another-heading "$clean"$'\n\n### Testing\n\nRan it.'
-warns "The heading \`### Testing\`, line 9 of the description, is neither \`## Problem\` nor"
+warns "The heading \`### Testing\`, line 11 of the description, is neither \`## Problem\` nor"
 warnings 1
 
-describe warns-on-a-setext-title $'Add a check\n===\n\n'"$clean"
+describe warns-on-a-setext-title $'Add a check\n===\n\n'"$problem$changes"
 warns "The heading \`Add a check\` over \`===\`, line 1 of the description, is neither"
 warns "is not its first section: \`Add a check\` comes before it."
 warnings 2
 
 describe warns-on-a-setext-heading "$clean"$'\n---\n\nA note\n---'
-warns "The heading \`A note\` over \`---\`, line 10 of the description, is neither"
+warns "The heading \`A note\` over \`---\`, line 12 of the description, is neither"
 warnings 1
 
-describe warns-on-sections-out-of-order "${changes:2}"$'\n\n'"$problem"
-warns "The heading \`## Problem\`, line 5 of the description, comes after \`## Changes\`: they go"
+describe warns-on-sections-out-of-order "$head${changes:2}"$'\n\n'"$problem"
+warns "The heading \`## Problem\`, line 7 of the description, comes after \`## Changes\`: they go"
 warnings 3
 
 describe warns-on-a-repeated-section "$clean$changes"
-warns "The heading \`## Changes\`, line 9 of the description, comes after \`## Changes\`"
+warns "The heading \`## Changes\`, line 11 of the description, comes after \`## Changes\`"
 warnings 1
 
 describe ignores-headings-in-fences "$clean"$'\n\n```sh\n# Notes\n```\n\n~~~\nNotes\n---\n~~~'
@@ -122,7 +126,7 @@ warnings 0
 # A pull request of a stack takes no Stack section either, as GitHub's stack shows its place.
 stack=$'\n\n## Stack\n\nPR 2 of 2. Base: #41.'
 describe warns-on-a-stack-section "$clean$stack" '{"base": {"ref": "feat-1"}}'
-warns "The heading \`## Stack\`, line 9 of the description, is neither \`## Problem\` nor"
+warns "The heading \`## Stack\`, line 11 of the description, is neither \`## Problem\` nor"
 warnings 1
 
 footer=$'\n\nBREAKING CHANGE: the v1 inputs are gone.'
@@ -146,11 +150,12 @@ warns "does not end in a \`BREAKING CHANGE:\` footer: it ends in \`Thanks!\`"
 warnings 1
 
 describe warns-on-a-footer-without-a-bang "$clean$footer"
-warns "The description has a \`BREAKING CHANGE:\` footer, line 9, but the title"
+warns "The description has a \`BREAKING CHANGE:\` footer, line 11, but the title"
 warnings 1
 
-pad=$(printf ' word%.0s' $(seq 192))
-edge=$'## Problem\n\nA check is missing.'"$pad"$'\n\n```\nnone of these count\n```\n<!-- nor -->'
+# The title's heading holds 4 words, the rest of $edge and $changes 8, and $pad the other 188.
+pad=$(printf ' word%.0s' $(seq 188))
+edge=$head$problem$pad$'\n\n```\nnone of these count\n```\n<!-- nor -->'
 describe passes-200-words "$edge$changes"
 warnings 0
 
