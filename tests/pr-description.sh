@@ -134,7 +134,7 @@ warnings 2
 describe warns-on-the-shipped-template "$(<"$ROOT/skills/atomic-commits/pull_request_template.md")"
 warns 'pr-description%3A A Problem section in prose does not follow the title::'
 warns 'pr-description%3A The description has no Changes section of bullets after Problem::'
-warns "The description opens with \`## Problem\`, line 2, a heading at level 2, not 1."
+warns "The heading \`# {NAME}\`, line 1 of the description, is the template's"
 warnings 3
 
 describe warns-on-another-heading "$clean"$'\n\n### Testing\n\nRan it.'

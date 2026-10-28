@@ -1,4 +1,5 @@
-<!-- rumdl-disable-file MD041 -- a description opens at ## Problem, as atomic-commits §6 sets -->
+# {NAME}
+
 ## Problem
 
 <!-- What is wrong or missing today, and why it matters: one to three sentences. Closes #12. -->
