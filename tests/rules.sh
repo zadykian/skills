@@ -7,7 +7,7 @@
 
 check_ac=actions/atomic-commits/check.sh check_pd=actions/pr-description/check.sh
 skill_ac=skills/atomic-commits/SKILL.md template_ac=skills/atomic-commits/pull_request_template.md
-check_is=actions/issue/check.sh
+check_is=actions/issue/check.sh skill_is=skills/issue/SKILL.md form_is=skills/issue/change.yml
 
 # values prints each match of the regex $2 in the file $1: a line of FILE:LINE, a tab, and the
 # match's last group. With the regex $3, it reads the first line that $3 matches, past the match.
@@ -176,6 +176,9 @@ agree "$(values "$check_pd" " by='\^(\(.+ \)\?[^']*[^' ]) '\$" |
     sed -E 's/\t\((.+) \)\?(.+)$/\t\2 or \1 \2/')" \
     "$(values "$skill_ac" 'that starts (`[^`]+` or `[^`]+`)' | tr -d '`')"
 
+setup holds-the-fields-of-an-issue
+agree "$(values "$check_is" "'([^']+)'" '^labels=\(')" "$(values "$form_is" '^ +label: (.+)$')"
+
 # An issue's title is a header, as a commit's.
 setup holds-the-header-of-an-issue
 agree "$(values "$check_is" '([a-z]+)' "^types='")" \
@@ -184,6 +187,10 @@ agree "$(values "$check_is" '^header_form="\^\(\$\{types// /\|\}\)(.*)"$')" \
     "$(values "$skill_ac" 'grep -vE "\^\(\$types\)(.*)"$')"
 agree "$(values "$check_is" '^max_title=([0-9]+)')" \
     "$(values "$skill_ac" '^\*\*Header\*\* \(required, ≤ ([0-9]+) characters in total\)')"
+
+setup quotes-the-form-of-an-issue
+agree "$(values "$check_is" "^(form_md=')?(.*[^'])'?\$" "^form_md='" '^skeleton=')" \
+    "$(values "$skill_is" '^(.+)$' '^```markdown$' '^```$')"
 
 setup gates-hold-the-caps-of-writing
 writing=skills/writing/SKILL.md

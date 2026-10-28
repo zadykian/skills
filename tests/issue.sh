@@ -22,6 +22,7 @@ clean=$summary$today$proposal
 issue warns-on-an-empty-body ''
 warns '::warning title=issue%3A The body is empty::The body of #1 is empty.'
 summarizes "The rule: $url"
+summarizes $'~~~markdown\n### Summary\n\nSUMMARY. Line references are to main SHA.'
 warnings 1
 
 issue warns-on-a-blank-body $' \r\n\t\n'
@@ -33,6 +34,10 @@ warns 'The body of #1 is empty.'
 issue passes-a-clean-issue "$clean"
 warnings 0
 summarizes 'This check warns and blocks nothing. No findings remain'
+
+issue passes-each-field "$clean"$'\n\n### Pull requests\n\n- [ ] feat: check it\n\n### Waits\n\nA \
+release.\n\n### Open decisions\n\n- **Name:** check, as the skill.'
+warnings 0
 
 issue warns-on-a-title-off-the-form "$clean" '{"title": "Check an issue"}'
 warns "::The title \`Check an issue\` is not \`type(scope)!: description\`."
@@ -51,3 +56,23 @@ warnings 0
 issue warns-on-a-title-of-73-characters "$clean" "{\"title\": \"${edge}é\"}"
 warns 'é…` is 73 characters long: 1 over 72.'
 warnings 1
+
+issue warns-on-another-heading "$clean"$'\n\n#### Testing\n\nRan it.'
+warns "::The heading \`#### Testing\`, line 13 of the body, is none of the form's fields."
+warnings 1
+
+issue warns-on-a-field-of-another-level "${clean/"### Today"/"## Today"}"
+warns "::The heading \`## Today\`, line 5 of the body, is of level 2: write it \`### Today\`."
+warnings 1
+
+issue warns-on-fields-out-of-order "${today:2}"$'\n\n'"$summary$proposal"
+warns "::The heading \`### Summary\`, line 5 of the body, comes after \`### Today\`: the fields go"
+warnings 1
+
+issue warns-on-a-repeated-field "$clean$proposal"
+warns "::The heading \`### Proposal\`, line 13 of the body, comes after \`### Proposal\`"
+warnings 1
+
+issue ignores-headings-in-code-and-comments \
+    "$clean"$'\n\n```md\n# Notes\n```\n\n<!--\nNotes\n---\n-->'
+warnings 0
