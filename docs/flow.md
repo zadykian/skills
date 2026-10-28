@@ -12,11 +12,12 @@ which leaves `main` green. Claude uses it as it commits in a git repository, or 
 `/flow:atomic-commits`. To link a stack on GitHub, it needs `gh`, logged in, with the
 `github/gh-stack` extension.
 
-A pull request's description opens with `## Problem`, one to three sentences, then `## Changes`,
-bullets by behavior. A `BREAKING CHANGE:` footer ends it where the title has `!`. It runs to 200
-words at most. A repository copies [the skill's template][pr-template] to
+A pull request's description opens with its title, word for word, in its one level-1 heading,
+`# {NAME}`. Then come `## Problem`, one to three sentences, and `## Changes`, bullets by behavior.
+A `BREAKING CHANGE:` footer ends it where the title has `!`. It runs to 200 words at most, the
+title's among them. A repository copies [the skill's template][pr-template] to
 `.github/pull_request_template.md`, and GitHub then fills each new pull request's description
-with that form.
+with that form, where the author puts the title in place of `{NAME}`.
 
 In CI, the toolkit's [`atomic-commits` action][ac-action] warns on a pull request whose commits,
 size or title break the skill's rules, and the [`pr-description` action][pd-action] on its
