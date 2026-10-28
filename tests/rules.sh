@@ -143,7 +143,7 @@ agree "$(values "$check_pd" '^max=([0-9]+)$')" \
 setup holds-the-sections-of-a-description
 sections=$(values "$skill_ac" '^- `## ([[:alpha:]]+)`')
 agree "$(values "$check_pd" '([[:alpha:]]+)[ )]' '^names=\(')" "$sections"
-agree "$(values "$check_pd" '=\$\(first ([[:alpha:]]+)\)')" "$sections"
+agree "$(values "$check_pd" '=\$\(first 2 ([[:alpha:]]+)\)')" "$sections"
 
 # The check's form of a description runs from problem_md to footer_md, each part quoted.
 setup quotes-the-form-of-a-description

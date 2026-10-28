@@ -4,7 +4,7 @@
 # nothing.
 #
 #   markdown_read TEXT   reads the Markdown TEXT into the arrays below
-#   first TEXT           prints the index of the first heading `## TEXT`, or -1
+#   first LEVEL TEXT     prints the index of the first heading TEXT of the level LEVEL, or -1
 #   section I            prints the text lines of the heading I's section, up to the next heading
 #   filled LINE          prints the index of the last line, at or before LINE, that holds something
 #   quote TEXT           prints TEXT as a Markdown code span, cut to 60 characters
@@ -22,18 +22,18 @@ quote() {
     if [[ $text == *"\`"* ]]; then printf "\`\` %s \`\`" "$text"; else printf "\`%s\`" "$text"; fi
 }
 
-# heading records a heading from the line $1 to the line $2, of the level $3 and the text $4, as
-# the Markdown $5 quotes it.
-heading() {
+# markdown_heading records a heading from the line $1 to the line $2, of the level $3 and the
+# text $4, as the Markdown $5 quotes it.
+markdown_heading() {
     h_starts+=("$1") h_ends+=("$2") h_levels+=("$3") h_texts+=("${4%"${4##*[![:blank:]]}"}")
     h_quotes+=("$5")
 }
 
-# first prints the index of the first heading `## $1`, or -1.
+# first prints the index of the first heading of the level $1 and the text $2, or -1.
 first() {
     local i
     for i in "${!h_texts[@]}"; do
-        [ "${h_levels[i]} ${h_texts[i]}" != "2 $1" ] || { echo "$i" && return; }
+        [ "${h_levels[i]} ${h_texts[i]}" != "$1 $2" ] || { echo "$i" && return; }
     done
     echo -1
 }
@@ -59,9 +59,9 @@ section() {
 # markdown_read reads the Markdown $1 into the lines and the headings below.
 markdown_read() {
     local fence hidden para opener closer atx closing setext item line visible rest n level text i
-    # The description's lines from 0, as Markdown reads them: kinds[i] is text, code or heading, and
-    # texts[i] the line without its HTML comments. A comment that opens a line hides the lines up to
-    # its end, as an HTML block does; one within a line hides itself alone.
+    # The text's lines from 0, as Markdown reads them: kinds[i] is text, code or heading, and
+    # texts[i] the line without its HTML comments. A comment that opens a line hides the lines up
+    # to its end, as an HTML block does; one within a line hides itself alone.
     kinds=() texts=() fence='' hidden=false para=-1
     # The headings by index: their first and last lines, levels, texts, and quotes of their source.
     h_starts=() h_ends=() h_levels=() h_texts=() h_quotes=()
@@ -102,20 +102,21 @@ markdown_read() {
             # A closing run of #, as in `## Problem ##`, is no part of the text.
             level=${#BASH_REMATCH[1]} text=${BASH_REMATCH[3]}
             [[ ! $text =~ $closing ]] || text=${BASH_REMATCH[2]}
-            heading "$n" "$n" "$level" "$text" "$(quote "$visible")"
+            markdown_heading "$n" "$n" "$level" "$text" "$(quote "$visible")"
             kinds+=(heading) para=-1
         elif [ "$para" != -1 ] && [[ $visible =~ $setext && ! ${texts[para]} =~ $item ]]; then
             level=1
             [[ $visible != *-* ]] || level=2
             text=$(printf '%s ' "${texts[@]:para:n-para}")
             text=${text#"${text%%[![:blank:]]*}"}
-            heading "$para" "$n" "$level" "$text" "$(quote "$text") over $(quote "$visible")"
+            markdown_heading "$para" "$n" "$level" "$text" \
+                "$(quote "$text") over $(quote "$visible")"
             for ((i = para; i <= n; i++)); do kinds[i]=heading; done
             para=-1
         else
             kinds+=(text)
             # The first line of the paragraph that this line is in, or -1 for a blank line.
-            if [ -z "${visible//[[:blank:]]/}" ]; then para=-1; elif [ "$para" = -1 ]; then para=$n; fi
+            if [ -z "${visible//[[:blank:]]/}" ]; then para=-1; elif ((para < 0)); then para=$n; fi
         fi
     done <<<"$1"
 }

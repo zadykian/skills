@@ -1,7 +1,7 @@
 #!/bin/bash
 # Warns where the description of pull request $PR of $GH_REPO strays from the form that
-# atomic-commits §6 sets. It reads the pull request with $GH_TOKEN, and lib/report.sh reports the
-# findings.
+# atomic-commits §6 sets. It reads the pull request with $GH_TOKEN, lib/markdown.sh its
+# description, and lib/report.sh reports the findings.
 
 set -euo pipefail
 
@@ -58,7 +58,7 @@ description with \`## Problem\`: one to three sentences on what is wrong or miss
 why it matters. An HTML comment holds no prose.
 
 $(template "$problem_md")"
-p=$(first Problem)
+p=$(first 2 Problem)
 if [ "$p" = -1 ]; then
     finding problem "The description has no \`## Problem\` heading."
 else
@@ -78,7 +78,7 @@ rule changes 'The description has no Changes section of bullets after Problem' "
 by file.
 
 $(template "$changes_md")"
-c=$(first Changes)
+c=$(first 2 Changes)
 if [ "$c" = -1 ]; then
     finding changes "The description has no \`## Changes\` heading."
 else
