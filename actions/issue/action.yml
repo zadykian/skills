@@ -1,0 +1,30 @@
+name: Issue
+description: >-
+  Warns on an issue that strays from the form of the issue skill's section 3: a title that is a
+  Conventional Commits header, and a body of the issue form's fields. It never blocks anything.
+author: zadykian
+branding:
+  icon: alert-circle
+  color: blue
+
+# A job of the issues event runs it, of the types opened and edited: edited checks the issue again
+# once it changes.
+inputs:
+  token:
+    description: The token that reads the issue and comments on it.
+    default: ${{ github.token }}
+  comment:
+    description: true keeps one comment of the report on the issue, false the summary alone.
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Check the issue
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        GH_REPO: ${{ github.repository }}
+        ISSUE: ${{ github.event.issue.number }}
+        COMMENT: ${{ inputs.comment }}
+      run: '"$GITHUB_ACTION_PATH/check.sh"'
