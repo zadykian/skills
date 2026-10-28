@@ -55,12 +55,13 @@
 report_keys=() report_titles=() report_urls=() report_fixes=()
 # The findings by index: their rules' indices, messages, files and lines.
 report_rules=() report_messages=() report_files=() report_lines=()
-report_name='' report_error=''
+# The action's name, the number of the pull request it reports on, and the error that ends it.
+report_name='' report_number='' report_error=''
 
 # report_start starts the report of the action $1, on the pull request $PR.
 report_start() {
-    report_name=$1
-    if [ -z "${PR-}" ]; then
+    report_name=$1 report_number=${PR-}
+    if [ -z "$report_number" ]; then
         echo "::warning::$1 checks a pull request, and the ${GITHUB_EVENT_NAME-} event has none:" \
             "run it on pull_request."
         exit 0
@@ -72,7 +73,8 @@ report_start() {
 
 # cannot_check warns that the check could not run, for the reason $1, and exits 0.
 cannot_check() {
-    printf '::warning::%s could not check #%s: %s\n' "$report_name" "${PR-}" "$(report_escape "$1")"
+    printf '::warning::%s could not check #%s: %s\n' "$report_name" "$report_number" \
+        "$(report_escape "$1")"
     exit 0
 }
 
@@ -148,15 +150,15 @@ report_annotate() {
     done
 }
 
-# report_text prints the report in Markdown, as of the head commit $1.
+# report_text prints the report in Markdown, which says that the check warns and $1, as of $2.
 report_text() {
     local count=${#report_messages[@]} i j at found
-    printf '### %s\n\nThis check warns and does not block the merge. ' "$report_name"
+    printf '### %s\n\nThis check warns and %s. ' "$report_name" "$1"
     if [ "$count" = 0 ]; then
-        printf "No findings remain as of \`%s\`.\n" "$1"
+        printf 'No findings remain as of %s.\n' "$2"
         return
     fi
-    printf "It found %s as of \`%s\`.\n" "$(report_plural "$count" finding)" "$1"
+    printf 'It found %s as of %s.\n' "$(report_plural "$count" finding)" "$2"
     for i in "${!report_keys[@]}"; do
         found=''
         for j in "${!report_messages[@]}"; do
@@ -169,17 +171,17 @@ report_text() {
     done
 }
 
-# report_marked prints the ids of the pull request's comments that the marker $1 starts, the
-# oldest first, as GitHub lists them by ascending id.
+# report_marked prints the ids of the comments that the marker $1 starts, the oldest first, as
+# GitHub lists them by ascending id.
 report_marked() {
-    gh api --paginate "repos/$GH_REPO/issues/$PR/comments?per_page=100" \
+    gh api --paginate "repos/$GH_REPO/issues/$report_number/comments?per_page=100" \
         --jq ".[] | select(.body | startswith(\"$1\")) | .id"
 }
 
-# report_comment keeps the action's comment on the pull request to the report $1: it edits the one
-# that its marker starts, or creates one where $2, the count of findings, is not 0. Runs that race
-# may each create one, so it then moves the report to the oldest and deletes the others: the run
-# that ends last leaves one. It fails as gh fails, but on a comment that another run deleted first.
+# report_comment keeps the action's comment to the report $1: it edits the one that its marker
+# starts, or creates one where $2, the count of findings, is not 0. Runs that race may each create
+# one, so it then moves the report to the oldest and deletes the others: the run that ends last
+# leaves one. It fails as gh fails, but on a comment that another run deleted first.
 report_comment() {
     # The comments made so far start with this marker, so it keeps the old name, zadykian/actions.
     local marker="<!-- zadykian/actions:$report_name -->" ids id body run note first other error
@@ -194,7 +196,8 @@ report_comment() {
     if [ -n "$id" ]; then
         gh api -X PATCH "repos/$GH_REPO/issues/comments/$id" --input - <<<"$body" >/dev/null
     else
-        id=$(gh api -X POST "repos/$GH_REPO/issues/$PR/comments" --input - --jq .id <<<"$body")
+        id=$(gh api -X POST "repos/$GH_REPO/issues/$report_number/comments" --input - --jq .id \
+            <<<"$body")
     fi || return
     ids=$(report_marked "$marker") || return
     first=${ids%%$'\n'*}
@@ -212,12 +215,13 @@ report_comment() {
 report_finish() {
     local head report error limit=10
     head=$(gh api "repos/$GH_REPO/pulls/$PR" --jq .head.sha)
-    report=$(report_text "${head:0:7}")
+    report=$(report_text 'does not block the merge' "\`${head:0:7}\`")
     printf '%s\n' "$report" >>"${GITHUB_STEP_SUMMARY:-/dev/stdout}"
     if [ "${COMMENT:-true}" = true ] &&
         ! error=$({ report_comment "$report" "${#report_messages[@]}" >/dev/null; } 2>&1); then
         error=${error##*$'\n'}
-        error="could not comment on #$PR, so the job summary alone holds the report: ${error#gh: }"
+        error="could not comment on #$report_number, so the job summary alone holds the report: \
+${error#gh: }"
         echo "::warning::$report_name $(report_escape "$error")"
         limit=9
     fi
