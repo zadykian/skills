@@ -17,7 +17,9 @@ setup warns-on-an-empty-description
 check pr-description
 warns '::warning title=pr-description%3A The description is empty::The description of #1 is empty.'
 summarizes "The rule: $skill#6-stack-mechanics-git--238"
-summarizes '## Problem
+summarizes '# {NAME}
+
+## Problem
 
 What is wrong or missing today'
 warnings 1
@@ -43,6 +45,25 @@ warnings 0
 run=$'# feat: add a check ##\n\n## Problem ##\n\nA `<!--` within a line hides nothing.'
 describe passes-a-closing-run "$run$changes"
 warnings 0
+
+describe passes-a-title-past-comments $'\n<!-- A note. -->\n\n'"$clean"
+warnings 0
+
+describe warns-on-no-title $'Adds a check.\n\n'"$problem$changes"
+warns "The description opens with no heading: line 1 holds \`Adds a check.\`"
+warnings 2
+
+describe warns-on-comments-alone '<!-- A note. -->'
+warns "The description opens with no heading."
+warnings 3
+
+describe warns-on-a-description-of-the-old-form "$problem$changes"
+warns "The description opens with \`## Problem\`, line 1, a heading at level 2, not 1."
+warnings 1
+
+describe warns-on-a-setext-title $'feat: add a check\n===\n\n'"$problem$changes"
+warns "The description opens with \`feat: add a check\` over \`===\`, line 1, a setext heading,"
+warnings 1
 
 describe warns-on-no-problem "$head${changes:2}"
 warns "The description has no \`## Problem\` heading."
@@ -95,18 +116,14 @@ warns "\`## Changes\`, line 7 of the description, holds no bullet."
 warnings 2
 
 describe warns-on-the-shipped-template "$(<"$ROOT/skills/atomic-commits/pull_request_template.md")"
-warns 'pr-description%3A The description does not open with a Problem section in prose::'
+warns 'pr-description%3A A Problem section in prose does not follow the title::'
 warns 'pr-description%3A The description has no Changes section of bullets after Problem::'
-warnings 2
+warns "The description opens with \`## Problem\`, line 2, a heading at level 2, not 1."
+warnings 3
 
 describe warns-on-another-heading "$clean"$'\n\n### Testing\n\nRan it.'
 warns "The heading \`### Testing\`, line 11 of the description, is neither \`## Problem\` nor"
 warnings 1
-
-describe warns-on-a-setext-title $'Add a check\n===\n\n'"$problem$changes"
-warns "The heading \`Add a check\` over \`===\`, line 1 of the description, is neither"
-warns "is not its first section: \`Add a check\` comes before it."
-warnings 2
 
 describe warns-on-a-setext-heading "$clean"$'\n---\n\nA note\n---'
 warns "The heading \`A note\` over \`---\`, line 12 of the description, is neither"

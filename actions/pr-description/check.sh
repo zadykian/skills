@@ -14,6 +14,7 @@ report_start pr-description
 skill=$(file_url skills/atomic-commits/SKILL.md)
 url=$skill#6-stack-mechanics-git--238
 # The form of a description, as section 6 shows it, in the parts that the fixes quote.
+title_md='# {NAME}'
 problem_md='## Problem
 
 What is wrong or missing today, and why it matters: one to three sentences. Closes #12.'
@@ -38,7 +39,7 @@ words() {
 rule empty 'The description is empty' "$url" "Describe the pull request in the form that section \
 6 sets, and end it in the footer where the title has \`!\`.
 
-$(template "$problem_md" "$changes_md" "$footer_md")"
+$(template "$title_md" "$problem_md" "$changes_md" "$footer_md")"
 
 # The most words of a description, as $url sets it. No input changes it.
 max=200
@@ -52,17 +53,35 @@ if [ -z "${body//[[:space:]]/}" ]; then
 fi
 
 markdown_read "$body"
+
+rule title 'The description does not open with its title, as a heading at level 1' "$url" "Open \
+the description with \`# \` and the pull request's title, word for word: the description's one \
+heading at level 1. A title underlined with \`===\`, a setext heading, will not do.
+
+$(template "$title_md" "$problem_md")"
 # The description's first line that holds something, past blank lines and HTML comments. The
-# heading that opens there, the first, is the title's, t, where it is an ATX one at level 1.
+# heading that opens there, the first, is the title's, t, where it is at level 1.
 open=0 t=-1
 while ((open < ${#kinds[@]})) && (($(filled "$open") < 0)); do open=$((open + 1)); done
-[ "${h_starts[0]--1} ${h_ends[0]-} ${h_levels[0]-}" != "$open $open 1" ] || t=0
+[ "${h_starts[0]--1} ${h_levels[0]-}" != "$open 1" ] || t=0
+at="line $((open + 1))"
+if [ "${h_starts[0]--1}" != "$open" ]; then
+    opens=''
+    ((open == ${#kinds[@]})) || opens=": $at holds $(quote "${texts[open]}")"
+    finding title "The description opens with no heading$opens."
+elif ((h_starts[0] != h_ends[0])); then
+    finding title "The description opens with ${h_quotes[0]}, $at, a setext heading, not an ATX \
+one."
+elif [ "$t" = -1 ]; then
+    finding title "The description opens with ${h_quotes[0]}, $at, a heading at level \
+${h_levels[0]}, not 1."
+fi
 
-rule problem 'The description does not open with a Problem section in prose' "$url" "Open the \
-description with \`## Problem\`: one to three sentences on what is wrong or missing today, and \
-why it matters. An HTML comment holds no prose.
+rule problem 'A Problem section in prose does not follow the title' "$url" "Follow the title \
+with \`## Problem\`: one to three sentences on what is wrong or missing today, and why it \
+matters. An HTML comment holds no prose.
 
-$(template "$problem_md")"
+$(template "$title_md" "$problem_md")"
 p=$(first 2 Problem)
 if [ "$p" = -1 ]; then
     finding problem "The description has no \`## Problem\` heading."
@@ -101,11 +120,11 @@ else
     [ "$bullets" != 0 ] || finding changes "$at holds no bullet${opening:+: it opens $opening}."
 fi
 
-rule sections 'The description has a heading other than the two, or out of order' "$url" "Keep \
-to these headings, at level 2 and in this order, each once: fold any other into them. A heading \
-in a code block is no heading.
+rule sections 'The description has a heading off its form, or out of order' "$url" "Keep to \
+these headings, in this order, each once: the title's at level 1, on the first line, then the two \
+at level 2. Fold any other into them. A heading in a code block is no heading.
 
-$(template "$problem_md" "$changes_md")"
+$(template "$title_md" "$problem_md" "$changes_md")"
 names=(Problem Changes) last=-1
 for i in "${!h_texts[@]}"; do
     [ "$i" != "$t" ] || continue
