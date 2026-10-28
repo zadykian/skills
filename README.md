@@ -126,9 +126,9 @@ Each action's README says what it checks, and its inputs.
 | [change.yml](skills/issue/change.yml)                                      | issue          | `.github/ISSUE_TEMPLATE/change.yml` |
 | [config.yml](skills/issue/config.yml)                                      | issue          | `.github/ISSUE_TEMPLATE/config.yml` |
 
-A skill writes a text in its template's form. A repository copies each template, of the release
-it pins, to its path, where GitHub offers it to whoever opens a new pull request or issue. The
-issue form's `config.yml` turns blank issues off.
+A skill writes a text in its template's form. `tools/pin` writes each template of the release a
+repository pins to its path, as [Pin a release](#pin-a-release) says. There GitHub offers it to
+whoever opens a new pull request or issue. The issue form's `config.yml` turns blank issues off.
 
 ## The repository's rules
 
@@ -159,20 +159,23 @@ a breaking change goes its `BREAKING CHANGE:` footer, which says what a reposito
 
 ### Pin a release
 
-A repository pins the skills and the actions to the same release, so that its checks hold the
-rules its skills teach:
+A repository pins the skills, the actions and the templates to the same release, so that its
+checks hold the rules its skills teach:
 
 - the marketplace's `"ref"` in `.claude/settings.json` names the release's tag, as
   [Install](#install) shows;
 - each action's `uses:` names the full hash of the tag's commit, with the tag in a comment, as
-  `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. `git rev-parse vX.Y.Z^{commit}` prints the hash.
+  `zadykian/toolkit/actions/NAME@SHA # vX.Y.Z`. `git rev-parse vX.Y.Z^{commit}` prints the hash;
+- the pull request template and the issue form in `.github/` come from the same tag, and
+  `tools/pin` writes them.
 
 A released tag is never moved or deleted, and no major tag, such as `v1`, follows the releases.
 
 Dependabot moves an action's hash and comment, but not the marketplace's `ref`, which it does not
 read. So a repository's `github-actions` update in `.github/dependabot.yml` ignores every action
 of the toolkit, `ignore: [{dependency-name: "zadykian/toolkit*"}]`, and `tools/pin` moves both to
-a release. Run it from a clone of this repository that has the tag:
+a release. It writes the release's templates too. Run it from a clone of this repository that has
+the tag:
 
 ```sh
 tools/pin vX.Y.Z DIR
