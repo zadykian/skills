@@ -154,10 +154,10 @@ agree "$(values "$check_pd" "^([a-z]+_md=')?(.*[^'])'?\$" "^problem_md='" '^# ')
 setup heads-the-template-of-a-description-by-its-sections
 agree "$(values "$template_ac" '^## ([[:alpha:]]+)$')" "$sections"
 
-# The template's comments are the form's lines, in order. A bullet's drops its -, and the footer's
-# opens with when it goes in.
+# The template's comments that open with a capital are the form's lines, in order, past rumdl's
+# directive. A bullet's drops its -, and the footer's opens with when it goes in.
 setup guides-the-template-of-a-description-by-its-form
-agree "$(values "$template_ac" '^<!-- (Where the title has !, end with: )?(.+) -->$')" \
+agree "$(values "$template_ac" '^<!-- (Where the title has !, end with: )?([A-Z].+) -->$')" \
     "$(values "$skill_ac" '^(- )?([^#].*)$' '^```markdown$' '^```$')"
 
 # Each template beside its skill, and the toolkit's own copy of it in .github/.
