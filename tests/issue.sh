@@ -39,6 +39,12 @@ issue passes-each-field "$clean"$'\n\n### Pull requests\n\n- [ ] feat: check it\
 release.\n\n### Open decisions\n\n- **Name:** check, as the skill.'
 warnings 0
 
+# A person's form writes _No response_ in an empty optional field, with the browser's line ends.
+none=$'\n\n_No response_'
+form="$clean"$'\n\n### Pull requests'"$none"$'\n\n### Waits'"$none"$'\n\n### Open decisions'"$none"
+issue passes-the-form-of-a-person "${form//$'\n'/$'\r\n'}"
+warnings 0
+
 issue warns-on-a-title-off-the-form "$clean" '{"title": "Check an issue"}'
 warns "::The title \`Check an issue\` is not \`type(scope)!: description\`."
 warnings 1
@@ -76,3 +82,19 @@ warnings 1
 issue ignores-headings-in-code-and-comments \
     "$clean"$'\n\n```md\n# Notes\n```\n\n<!--\nNotes\n---\n-->'
 warnings 0
+
+issue warns-on-a-missing-field "$summary$proposal"
+warns "::The body has no \`### Today\` field."
+warnings 1
+
+issue warns-on-a-field-of-no-prose "$summary"$'\n\n### Today\n\n<!-- x -->\n```\nx\n```'"$proposal"
+warns "::The field \`### Today\`, line 5 of the body, holds no prose."
+warnings 1
+
+issue warns-on-a-field-left-blank "$summary$today"$'\n\n### Proposal\n\n'
+warns "::The field \`### Proposal\`, line 9 of the body, holds no prose."
+warnings 1
+
+issue warns-on-no-response-in-a-required-field "$summary"$'\n\n### Today'"$none$proposal"
+warns "::The field \`### Today\`, line 5 of the body, holds \`_No response_\` alone, the form's"
+warnings 1

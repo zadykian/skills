@@ -176,8 +176,13 @@ agree "$(values "$check_pd" " by='\^(\(.+ \)\?[^']*[^' ]) '\$" |
     sed -E 's/\t\((.+) \)\?(.+)$/\t\2 or \1 \2/')" \
     "$(values "$skill_ac" 'that starts (`[^`]+` or `[^`]+`)' | tr -d '`')"
 
+# The form's labels in its order, and those that its validations require, each at the line of its
+# `required: true`.
 setup holds-the-fields-of-an-issue
 agree "$(values "$check_is" "'([^']+)'" '^labels=\(')" "$(values "$form_is" '^ +label: (.+)$')"
+agree "$(values "$check_is" "'([^']+)'" '^required=\(')" "$(awk -v at="$form_is" '
+    /^ +label: / { sub(/^ +label: /, ""); label = $0 }
+    /^ +required: true$/ { print at ":" NR "\t" label }' "$ROOT/$form_is")"
 
 # An issue's title is a header, as a commit's.
 setup holds-the-header-of-an-issue

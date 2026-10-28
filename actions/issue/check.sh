@@ -16,9 +16,10 @@ report_start issue
 skill=$(file_url skills/issue/SKILL.md)
 url=$skill#3-write-it
 # The skill fixes these, and no input changes them: the labels of the issue form's fields, in its
-# order; the types and the form of a header, as atomic-commits sets a commit's; and the most
-# characters of a title.
+# order, and those it requires; the types and the form of a header, as atomic-commits sets a
+# commit's; and the most characters of a title.
 labels=('Summary' 'Today' 'Proposal' 'Pull requests' 'Waits' 'Open decisions')
+required=('Summary' 'Today' 'Proposal')
 types='feat fix refactor perf test docs style build ci chore revert'
 header_form="^(${types// /|})(\([a-z0-9._/-]+\))?!?: [^ ]"
 max_title=72
@@ -37,8 +38,9 @@ SUMMARY. Line references are to main SHA.
 
 - Do Y.'
 skeleton=$(printf '~~~markdown\n%s\n~~~' "$form_md")
-# The labels joined by commas, as a fix lists them.
+# The labels, and those required, joined by commas, as the fixes list them.
 printf -v listed '%s, ' "${labels[@]}" && listed=${listed%, }
+printf -v needed '%s, ' "${required[@]}" && needed=${needed%, }
 
 issue=$(gh api "repos/$GH_REPO/issues/$ISSUE")
 title=$(jq -r .title <<<"$issue")
@@ -56,7 +58,8 @@ at most: \`type(scope)!: description\`, its type one of \`$types\` and its scope
 characters long: $((${#title} - max_title)) over $max_title."
 
 rule empty 'The body is empty' "$url" "Write the body as section 3 sets it: the issue form's \
-fields, in its order, each a \`### LABEL\` and its text.
+fields, in its order, each a \`### LABEL\` and its text. $needed are required, and an \
+empty optional field is left out.
 
 $skeleton"
 if [ -z "${body//[[:space:]]/}" ]; then
@@ -71,6 +74,8 @@ rule sections "The body has a heading other than the form's fields, or out of or
 Fold any other heading into them. A heading in a code block or an HTML comment is none.
 
 $skeleton"
+# The first heading of each field, at any level, by its label.
+declare -A fields=()
 last=-1
 for i in "${!h_texts[@]}"; do
     at="The heading ${h_quotes[i]}, line $((h_starts[i] + 1)) of the body,"
@@ -80,6 +85,7 @@ for i in "${!h_texts[@]}"; do
         finding sections "$at is none of the form's fields."
         continue
     fi
+    [ -n "${fields[${labels[k]}]-}" ] || fields[${labels[k]}]=$i
     [ "${h_levels[i]}" = 3 ] ||
         finding sections "$at is of level ${h_levels[i]}: write it \`### ${labels[k]}\`."
     if [ "$k" -le "$last" ]; then
@@ -87,6 +93,27 @@ for i in "${!h_texts[@]}"; do
 order, each once."
     else
         last=$k
+    fi
+done
+
+rule required 'A required field is missing, or holds no prose' "$url" "Fill in each of $needed \
+with prose, under its \`### LABEL\`. Neither \`_No response_\`, the form's empty answer, nor an \
+HTML comment or a code block is prose.
+
+$skeleton"
+for label in "${required[@]}"; do
+    i=${fields[$label]--1}
+    if [ "$i" = -1 ]; then
+        finding required "The body has no \`### $label\` field."
+        continue
+    fi
+    at="The field ${h_quotes[i]}, line $((h_starts[i] + 1)) of the body,"
+    text=$(section "$i")
+    text=${text#"${text%%[![:space:]]*}"} text=${text%"${text##*[![:space:]]}"}
+    if [ -z "$text" ]; then
+        finding required "$at holds no prose."
+    elif [ "$text" = '_No response_' ]; then
+        finding required "$at holds \`_No response_\` alone, the form's empty answer."
     fi
 done
 report_finish
