@@ -42,28 +42,28 @@ pull request in flight by its number, as an issue that builds on its head does.
 
 ## 3. Write it
 
-- **Title:** a Conventional Commits header, as `atomic-commits` sets a commit's.
-- **Summary:** two to four sentences: what is missing or wrong today, and what the issue adds. It
-  ends "Line references are to main SHA." Name the versions of any other source cited.
-- **`## Today`:** bullets with `file:line` references, the crucial facts only. Group them under a
-  short label where they cover several subjects.
-- **`## Proposal`:** bullets saying what changes. A decision leads with its name in bold, and a
-  rejected option says why: "**Not X:** ...".
-- **`## Pull requests`:** only where the change takes several, a checkbox per pull request with
-  its title, in landing order.
-- **`## Waits`:** only where something outside the issue must happen first.
-- **`## Open decisions`:** only when something is undecided, each with options and a
-  recommendation.
-- 150 to 350 words in all. A design that rests on probes runs longer.
+The title is a Conventional Commits header, as `atomic-commits` sets a commit's.
+
+The body's fields are in [change.yml](change.yml), beside this file: the issue form that a
+repository copies to `.github/ISSUE_TEMPLATE/`. Read the file before you write the body.
+
+- The body holds the form's fields, in its order, each as GitHub renders it: `### LABEL`, then
+  its text.
+- Each field's rule is its `description`.
+- A field is optional unless its `validations` say `required: true`. An empty optional field is
+  left out. A person's form writes `_No response_` there instead.
+- The whole body is 2000 characters at most, headings included, each line end counted as one.
 
 ```markdown
+### Summary
+
 SUMMARY. Line references are to main SHA.
 
-## Today
+### Today
 
 - `path/file:12-30` does X.
 
-## Proposal
+### Proposal
 
 - Do Y.
 ```
