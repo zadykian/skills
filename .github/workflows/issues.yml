@@ -1,0 +1,32 @@
+name: issues
+
+# Checks each issue against section 3 of the issue skill, by the issue check of actions/ as the
+# default branch has it: the issues event runs the workflows of that branch's last commit. It warns
+# and never blocks, as no ruleset requires the job.
+
+on:
+  issues:
+    types: [opened, edited]
+
+# Two runs of an issue race to create the check's comment, so a newer event's run cancels the
+# older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    # zizmor asks for $/ over ./, but actionlint 1.7.12 refuses $/ as a uses ref. So the checkout
+    # gives the job the check's code, and the ./ step ignores the audit.
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./actions/issue # zizmor: ignore[self-repository]

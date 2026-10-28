@@ -67,7 +67,8 @@ online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make p
 - A new skill: its directory, its bundle's `skills` list, its row in the README's table, and its
   section in its bundle's page.
 - A new action: its directory, its `tests/NAME.sh`, and its row in the README's table. A new check
-  takes a step in `.github/workflows/rules.yml` too.
+  takes a step in `.github/workflows/rules.yml` too, or, where it checks an issue, in
+  `.github/workflows/issues.yml`.
 - The repository is public. No secret, employer's name, internal host or address goes into it.
 - Prose keeps to the [writing](skills/writing/SKILL.md#the-caps-and-vale) skill's caps, as Vale,
   rumdl and `tools/sizecheck` check them.
