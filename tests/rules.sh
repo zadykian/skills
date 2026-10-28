@@ -165,6 +165,8 @@ while read -r source copy; do
     cmp -s "$ROOT/$source" "$ROOT/$copy" || fail "$copy is not a copy of $source"
 done <<'EOF'
 skills/atomic-commits/pull_request_template.md .github/pull_request_template.md
+skills/issue/change.yml .github/ISSUE_TEMPLATE/change.yml
+skills/issue/config.yml .github/ISSUE_TEMPLATE/config.yml
 EOF
 
 # The check's pattern of an attribution line, (MARK )?TEXT, as TEXT or MARK TEXT, the skill's forms.
