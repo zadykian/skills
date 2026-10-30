@@ -8,6 +8,10 @@ FILES =
 LOG_OPTS =
 # The claude that validates the marketplace and the skills. CI's is the one .github/claude pins.
 CLAUDE = claude
+# The paths whose change the plugins gate checks: the bundles, and the directories at the root
+# whose components every bundle loads, which tools/layoutcheck finds.
+BUNDLED = skills/% hooks/% .claude-plugin/% tools/layoutcheck agents/% commands/% \
+	output-styles/% workflows/% monitors/% bin/%
 
 .PHONY: lint lint-file lint-tree shell sizecheck vale lychee rumdl actionlint zizmor gitleaks \
 	versions hooks plugins test
@@ -21,7 +25,7 @@ lint-file:
 	@$(MAKE) --no-print-directory shell sizecheck vale lychee rumdl FILES='$(FILES)' \
 		$(if $(filter .github/workflows/%,$(FILES)),actionlint) \
 		$(if $(filter .github/workflows/% .github/dependabot.yml %/action.yml,$(FILES)),zizmor) \
-		$(if $(filter skills/% hooks/% .claude-plugin/%,$(FILES)),versions plugins) \
+		$(if $(filter $(BUNDLED),$(FILES)),versions plugins) \
 		$(if $(filter hooks/% tools/hookcheck,$(FILES)),hooks)
 lint-tree: lint
 
@@ -76,13 +80,15 @@ hooks:
 
 # claude's own checks, its warnings counted as errors: of the marketplace, and of the skills. A
 # check of the marketplace opens no skill of a bundle sourced from ./, so a copy of skills/ takes
-# a check of its own, as a plugin without a manifest.
+# a check of its own, as a plugin without a manifest. Then tools/layoutcheck: the root holds no
+# component that every bundle loads.
 plugins:
 	@set -e; [ ! -f .claude-plugin/marketplace.json ] || $(CLAUDE) plugin validate . --strict; \
 		[ -d skills ] || exit 0; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
 		mkdir "$$tmp/skills" && cp -R skills README.md LICENSE "$$tmp/skills"; \
 		$(CLAUDE) plugin validate "$$tmp/skills" --strict
+	tools/layoutcheck
 
-# The actions' cases, of each tests/NAME.sh, against tests/gh, the fake gh. They need git and jq.
+# The cases of each tests/NAME.sh, against tests/gh, the fake gh. They need git and jq.
 test:
 	tests/run

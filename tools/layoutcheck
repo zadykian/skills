@@ -1,0 +1,51 @@
+#!/bin/sh
+# Checks that each bundle of the marketplace in DIR, the work tree by default, loads its own
+# skills and agents alone, as CLAUDE.md's Layout says:
+#
+#   tools/layoutcheck [DIR]
+#
+# The bundles share one root, and Claude Code gives each of them what a default directory there
+# holds: agents/, commands/, output-styles/, workflows/, monitors/ and bin/, and hooks/hooks.json.
+# So the root holds none.
+#
+# Each finding goes to stdout, and any fails the check. Without a marketplace, there is nothing to
+# check.
+
+set -eu
+
+marketplace=.claude-plugin/marketplace.json
+
+# die prints a message of the script's and exits with status 1.
+die() {
+    printf 'tools/layoutcheck: %s\n' "$*" >&2
+    exit 1
+}
+
+# finding prints a finding and marks the check failed.
+finding() {
+    printf '%s\n' "$*"
+    status=1
+}
+
+# rooted finds each default directory of a component at the root.
+rooted() {
+    for path in agents commands output-styles workflows monitors bin; do
+        [ ! -e "$dir/$path" ] || finding "$path: every bundle loads it from the root;" \
+            "move it under its bundle's own path, as BUNDLE/$path, listed on its entry"
+    done
+    [ ! -e "$dir/hooks/hooks.json" ] || finding 'hooks/hooks.json: it runs for every bundle;' \
+        "write each bundle's hooks inline in its entry"
+}
+
+main() {
+    dir=$(CDPATH='' cd -- "${1:-.}" && pwd) || die "no directory ${1:-.}"
+    [ -f "$dir/$marketplace" ] || return 0
+    status=0
+    rooted
+    return "$status"
+}
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 1' HUP INT TERM
+main "$@"
