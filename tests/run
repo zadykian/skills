@@ -29,8 +29,9 @@
 # reads no config of the user's, and commits as test.
 #
 # gh answers repos/o/r/pulls/1 with `pull`, from feat into main, its head $HEAD_SHA, and
-# repos/o/r/issues/1/comments with none. A PATH is what the check passes to gh api, without
-# per_page and page. A write answers {}, or the answer for `METHOD PATH`, as `POST PATH`.
+# repos/o/r/issues/1/comments and repos/o/r/commits/$HEAD_SHA/check-runs with none. A PATH is
+# what the check passes to gh api, without per_page and page. A write answers {}, or the answer
+# for `METHOD PATH`, as `POST PATH`.
 
 # The case files call the functions below, which ShellCheck does not see, as it reads no case.
 # shellcheck disable=SC2329
@@ -69,6 +70,7 @@ setup() {
     : >"$FAKE/refusals"
     answer repos/o/r/pulls/1 "$(pull)"
     answer repos/o/r/issues/1/comments '[]'
+    answer "repos/o/r/commits/$HEAD_SHA/check-runs" '{"check_runs": []}'
 }
 
 # answer leaves the JSON $2, and each after it, as gh api's pages for the path $1.

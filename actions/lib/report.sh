@@ -40,7 +40,11 @@
 #   then keeps the oldest, with its report, and deletes the others. A report over GitHub's limit
 #   is cut, with a note. A refusal, as of a fork's read-only token, is one warning;
 # - prints a ::warning for each of the first findings, 10 at most, as GitHub shows 10 a step. The
-#   last says how many more the summary holds.
+#   last says how many more the summary holds. On a pull request, it leaves out each warning that
+#   another workflow run's check run on the head shows already, as Files changed shows those of
+#   every run on the head: of an edit to the title, and of a run that a newer one cancelled. Where
+#   gh cannot list them, as where a private repository's job grants no checks: read, it leaves
+#   out none.
 #
 # A check.sh, for one rule:
 #
@@ -138,10 +142,31 @@ report_escape() {
     printf '%s' "$text"
 }
 
-# report_annotate prints a ::warning for each of the first $1 findings. The last says how many
-# more there are.
+# report_shown prints the warnings that the check runs on the commit $1 show, a line each, as
+# report_annotate prints them. It skips this workflow run's, as GitHub shows its last attempt
+# alone. It prints each warning three times: with its file and line, with its file alone, and
+# with neither, as GitHub stores one of no line at line 1, and one of no file at .github.
+report_shown() {
+    local own="/actions/runs/${GITHUB_RUN_ID-}/" runs run
+    runs=$(gh api --paginate "repos/$GH_REPO/commits/$1/check-runs?per_page=100" --jq "
+        .check_runs[] | select(.output.annotations_count > 0)
+        | select(.details_url // \"\" | contains(\"$own\") | not) | .id") || return
+    for run in $runs; do
+        gh api --paginate "repos/$GH_REPO/check-runs/$run/annotations?per_page=100" | jq -r '
+            def text: gsub("%"; "%25") | gsub("\r"; "%0D") | gsub("\n"; "%0A");
+            def property: text | gsub(":"; "%3A") | gsub(","; "%2C");
+            .[] | select(.annotation_level == "warning")
+            | "::warning title=\(.title // "" | property)" as $title
+            | (.message | text) as $text
+            | "\($title)::\($text)", "\($title),file=\(.path | property)::\($text)",
+                "\($title),file=\(.path | property),line=\(.start_line)::\($text)"' || return
+    done
+}
+
+# report_annotate prints a ::warning for each of the first $1 findings, but those that a line of
+# $2 shows already. The last says how many more there are.
 report_annotate() {
-    local count=${#report_messages[@]} i rule message properties
+    local count=${#report_messages[@]} i rule message properties warning shown=$'\n'${2-}$'\n'
     for ((i = 0; i < count && i < $1; i++)); do
         rule=${report_rules[i]}
         message="${report_messages[i]}"$'\n'"The rule: ${report_urls[rule]}"
@@ -153,7 +178,8 @@ report_annotate() {
             properties+=",file=$(report_escape "${report_files[i]}" property)"
             [ -z "${report_lines[i]}" ] || properties+=",line=${report_lines[i]}"
         fi
-        printf '::warning %s::%s\n' "$properties" "$(report_escape "$message")"
+        warning="::warning $properties::$(report_escape "$message")"
+        [[ $shown == *$'\n'"$warning"$'\n'* ]] || printf '%s\n' "$warning"
     done
 }
 
@@ -220,10 +246,11 @@ report_comment() {
 # report_finish reports the findings, and exits 0. A comment's refusal takes one of the 10
 # warnings.
 report_finish() {
-    local head updated report error limit=10
+    local head updated report error shown='' limit=10
     if [ -n "${PR-}" ]; then
         head=$(gh api "repos/$GH_REPO/pulls/$PR" --jq .head.sha)
         report=$(report_text 'does not block the merge' "\`${head:0:7}\`")
+        shown=$(report_shown "$head") || shown=''
     else
         updated=$(gh api "repos/$GH_REPO/issues/$ISSUE" --jq .updated_at)
         report=$(report_text 'blocks nothing' "the issue's last update, \`$updated\`")
@@ -237,6 +264,6 @@ ${error#gh: }"
         echo "::warning::$report_name $(report_escape "$error")"
         limit=9
     fi
-    report_annotate "$limit"
+    report_annotate "$limit" "$shown"
     exit 0
 }
