@@ -33,17 +33,21 @@ repository adds.
 
 ## Install
 
-In a session, for yourself, on Claude Code 2.1.275 or later, which adds the marketplace too:
+Each bundle, for yourself, from a shell with claude, jq and git:
 
-```text
-/plugin install flow --marketplace zadykian/toolkit
-/plugin install docs --marketplace zadykian/toolkit
-/plugin install lint --marketplace zadykian/toolkit
-/plugin install lean --marketplace zadykian/toolkit
+```sh
+curl -fsSL https://raw.githubusercontent.com/zadykian/toolkit/main/tools/install | sh
 ```
 
+[`tools/install`](tools/install) installs each bundle that the marketplace lists and you lack, and
+adds the marketplace at its last release where Claude Code lacks it. Run it again for a bundle that
+a release adds. `sh -s -- --scope project` in place of `sh` installs them for the repository of
+the current directory alone. In a session, one bundle, on Claude Code 2.1.275 or later:
+`/plugin install flow --marketplace zadykian/toolkit`.
+
 For everyone who works in a repository, in its `.claude/settings.json`. Claude Code reads it once
-the folder is trusted, fetches the marketplace, and loads the bundles enabled there:
+the folder is trusted, and fetches the marketplace. It installs no bundle: each person runs
+`tools/install` once, as above, and the bundles enabled there load:
 
 ```json
 {

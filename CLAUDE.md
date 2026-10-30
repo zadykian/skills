@@ -39,7 +39,8 @@ how to install and pin them, and what a version's parts mean.
   alone.
 - `tools/`, the release: `lastrelease` finds the last release's tag, `versioncheck` checks the
   bundles and the version against it, and `releasenotes` writes the notes of the commits since.
-  `pin` moves a repository's marketplace ref and action hashes to one release.
+  `pin` moves a repository's marketplace ref and action hashes to one release, and `install`
+  installs the marketplace's bundles for a user or a repository.
 
 ## Commands
 
