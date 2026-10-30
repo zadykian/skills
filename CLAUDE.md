@@ -19,7 +19,8 @@ how to install and pin them, and what a version's parts mean.
   reads, such as banned-terms' `terms.json`, as gh copies the whole directory into a repository.
   It also holds the templates of what the skill writes, such as atomic-commits'
   `pull_request_template.md`, and `.github/` holds the toolkit's own copy of each.
-- `hooks/`: the lint bundle's hooks, which Claude Code runs from its copy of the marketplace.
+- `hooks/`: the hooks of the lint and lean bundles, which Claude Code runs from its copy of the
+  marketplace.
 - `docs/BUNDLE.md`: what each skill of a bundle does, and what facts a repository names for it.
 - `actions/NAME/`: an action, which a workflow uses as `zadykian/toolkit/actions/NAME@SHA`: its
   `action.yml`, its scripts, and a README of what it does and its inputs. A check's script is

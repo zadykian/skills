@@ -91,3 +91,28 @@ hand off work, to which `lean` agent, how to brief it, and how to read the resul
   an 8-core one. The total has no cap.
 - **A queue kept by hand.** Past `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, 20 by default, the Agent
   tool refuses a spawn and queues none. The skill starts the next agent as one ends.
+
+## fan-out
+
+Claude uses the `fan-out` skill as it writes a Workflow script, or plans a review with several
+agents. It sizes review by risk, sends findings to a checker 5-10 at a time, fixes once, and tells
+a script to tier its agents and keep its results small. Half of all workflow agents verified
+something, and no script named a model, so each ran the top model.
+
+Its hook, [lean-fanout.sh](../hooks/lean-fanout.sh), runs before the Workflow tool, and denies a
+script with an `agent()` call whose options name none of `agentType`, `model` and `effort`. The
+reason names the accepted forms: a role's agent, as `agentType: 'lean:checker'`, or `model` with
+`effort`. The hook is POSIX sh, and needs `jq`. It reads the tool's `script`, or the file at
+`scriptPath`, and passes a saved workflow, by `name`, as it has no script to read. It allows where
+`jq` is missing, its input does not parse, or the file is unreadable.
+
+Its parse is heuristic. It reads each call up to its closing parenthesis, and leaves out strings
+and comments. It allows a call whose options are a variable, or an object literal with a spread,
+as they may hold the keys. So it denies a call wrongly where a key is quoted, as
+`'model': 'haiku'`, which counts as a string.
+
+It misses a call where:
+
+- a key is named and set to nothing, as `model: undefined`;
+- the script builds `agent(` in a string, or calls the function by another name;
+- a `${}` of a template literal holds a quote, which can skew the rest of the script.
