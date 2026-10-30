@@ -118,7 +118,7 @@
       "license": "MIT",
       "category": "productivity",
       "keywords": ["cost", "tokens", "subagents", "workflows"],
-      "skills": ["./skills/cost", "./skills/delegate", "./skills/fan-out", "./skills/context"],
+      "skills": ["./skills/cost", "./skills/delegate", "./skills/fan-out", "./skills/context", "./skills/wait"],
       "agents": [
         "./lean/agents/scout.md",
         "./lean/agents/runner.md",
