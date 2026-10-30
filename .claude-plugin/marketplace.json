@@ -123,7 +123,8 @@
         "./lean/agents/scout.md",
         "./lean/agents/runner.md",
         "./lean/agents/checker.md",
-        "./lean/agents/implementer.md"
+        "./lean/agents/implementer.md",
+        "./lean/agents/expert.md"
       ]
     }
   ]
