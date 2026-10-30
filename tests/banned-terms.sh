@@ -68,6 +68,15 @@ matches 'getHTTPResponse, XMLHttpHelpers and HTTP2Util' helpers util
 matches 'Etc. and SIMPLY' etc simply
 matches 'utilize, helpful and etcd'
 matches 'utils2, Thingy and miscount'
+# A path from the root is the system's, as the files that /etc holds.
+matches 'cp /etc/hosts "/usr/share/misc" PATH=/opt/misc:/etc/utils'
+matches 'Read /etc/hosts, etc.' etc
+matches 'cp ./etc/x ~/misc https://example.test/utils' etc misc utils
+
+start skips-a-path-from-the-root-in-a-line
+files "$(changed mac.yml $'@@ -1 +1 @@\n+  ~/Library/LaunchAgents/a.plist /etc/ws-tunnel \\')"
+check banned-terms
+warnings 0
 
 start reports-a-group-as-its-rule
 titled 'feat: add a string helper and its helper test'

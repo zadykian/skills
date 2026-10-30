@@ -53,8 +53,13 @@ A term matches a whole word, in any case. A text splits into words at each chara
 letter or a digit, and again at each hump of camelCase and PascalCase. So `HTTPHelper` gives
 `http` and `helper`.
 
+A path from the root names the system's files, not yours, so no term matches in it. It starts at
+a `/` with no letter, digit, `.`, `_`, `-`, `~` or `/` before it.
+
 - `StringHelper`, `str_utils.py` and `MiscStuff` match.
 - `utilize`, `helpful` and `etcd` don't, as none of their words is a term.
+- `/etc/hosts` and `/usr/share/misc` don't, as each is a path from the root. `./etc` and `~/misc`
+  match.
 
 ## What to write instead
 
