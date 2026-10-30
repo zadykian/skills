@@ -34,7 +34,8 @@ how to install and pin them, and what a version's parts mean.
 - `tools/`, the gates: `run` downloads the lint tools at the versions and SHA-256 sums it pins,
   into `.cache/tools`. `files` lists the files of a kind that a gate checks, `sizecheck` caps
   their lines, and `hookcheck` runs the hooks against throwaway repositories. `layoutcheck`
-  fails where the root holds a component that every bundle loads.
+  installs each bundle into a throwaway config, and checks that it loads its own skills and agents
+  alone.
 - `tools/`, the release: `lastrelease` finds the last release's tag, `versioncheck` checks the
   bundles and the version against it, and `releasenotes` writes the notes of the commits since.
   `pin` moves a repository's marketplace ref and action hashes to one release.
@@ -52,9 +53,9 @@ claude --plugin-dir .              # a session with the work tree's skills
 ```
 
 `make lint` needs `jq` and `claude` on the `PATH`, and curl the first time. It runs zizmor's
-online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make plugins` runs
-`claude plugin validate` on the marketplace and on the skills, its warnings counted as errors, and
-`tools/layoutcheck`.
+online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`, and `claude` for
+`tests/layoutcheck.sh`. `make plugins` runs `claude plugin validate` on the marketplace and on the
+skills, its warnings counted as errors, and `tools/layoutcheck`.
 
 ## A change to a skill, a hook or an action
 

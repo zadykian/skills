@@ -80,15 +80,16 @@ hooks:
 
 # claude's own checks, its warnings counted as errors: of the marketplace, and of the skills. A
 # check of the marketplace opens no skill of a bundle sourced from ./, so a copy of skills/ takes
-# a check of its own, as a plugin without a manifest. Then tools/layoutcheck: the root holds no
-# component that every bundle loads.
+# a check of its own, as a plugin without a manifest. Then tools/layoutcheck: each bundle loads its
+# own skills and agents alone.
 plugins:
 	@set -e; [ ! -f .claude-plugin/marketplace.json ] || $(CLAUDE) plugin validate . --strict; \
 		[ -d skills ] || exit 0; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
 		mkdir "$$tmp/skills" && cp -R skills README.md LICENSE "$$tmp/skills"; \
 		$(CLAUDE) plugin validate "$$tmp/skills" --strict
-	tools/layoutcheck
+	CLAUDE='$(CLAUDE)' tools/layoutcheck
 
-# The cases of each tests/NAME.sh, against tests/gh, the fake gh. They need git and jq.
+# The cases of each tests/NAME.sh, against tests/gh, the fake gh. They need git and jq, and
+# tools/layoutcheck's need claude.
 test:
-	tests/run
+	CLAUDE='$(CLAUDE)' tests/run
