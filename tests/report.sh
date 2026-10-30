@@ -39,7 +39,7 @@ warns "::Finding 10.%0A$rule_a%0AThe job summary holds 2 more findings."
 
 # runs answers the check runs on the head, of the workflow runs given, a check run each, whose id
 # is its workflow run's. shows answers the annotations of the check run $1, each argument after it
-# one of Rule A's, {m, path, line, level}: m its finding.
+# one of Rule A's, {m, path, line, level, after}: m its finding, and after what its message ends in.
 runs() {
     answer "repos/o/r/commits/$HEAD_SHA/check-runs" "$(jq -nc '{check_runs: [$ARGS.positional[]
         | {id: tonumber, details_url: "https://github.com/o/r/actions/runs/\(.)/job/1",
@@ -49,7 +49,7 @@ shows() {
     answer "repos/o/r/check-runs/$1/annotations" "$(jq -nc --arg rule "$rule_a" '[
         $ARGS.positional[] | fromjson | {annotation_level: (.level // "warning"),
             path: (.path // ".github"), start_line: (.line // 1), title: "probe: Rule A",
-            message: "\(.m)\n\($rule)"}]' --args "${@:2}")"
+            message: "\(.m)\n\($rule)\(.after // "")"}]' --args "${@:2}")"
 }
 
 # A cancelled run, 5, warned on two findings, and a run of an edit, 6, on the third. A notice is
@@ -67,6 +67,17 @@ warns "::warning title=probe%3A Rule A,file=a.go::Found."
 warns "::warning title=probe%3A Rule A,file=b.go::Found."
 warnings 3
 summarizes "- \`src/x.go:12\`: Found."
+
+setup counts-ten-of-those-left
+runs 5
+shows 5 '{"m": "Finding 1."}' \
+    '{"m": "Finding 2.", "after": "\nThe job summary holds 2 more findings."}'
+probe <<'CHECK'
+for i in $(seq 13); do finding a "Finding $i."; done
+CHECK
+warnings 10
+warns "::Finding 3.%0A$rule_a"
+warns "::Finding 12.%0A$rule_a%0AThe job summary holds 1 more finding."
 
 setup annotates-all-where-it-cannot-list-the-runs
 refuse GET "repos/o/r/commits/$HEAD_SHA/check-runs"

@@ -145,7 +145,8 @@ report_escape() {
 # report_shown prints the warnings that the check runs on the commit $1 show, a line each, as
 # report_annotate prints them. It skips this workflow run's, as GitHub shows its last attempt
 # alone. It prints each warning three times: with its file and line, with its file alone, and
-# with neither, as GitHub stores one of no line at line 1, and one of no file at .github.
+# with neither, as GitHub stores one of no line at line 1, and one of no file at .github. It drops
+# the note on more findings.
 report_shown() {
     local own="/actions/runs/${GITHUB_RUN_ID-}/" runs run
     runs=$(gh api --paginate "repos/$GH_REPO/commits/$1/check-runs?per_page=100" --jq "
@@ -157,29 +158,35 @@ report_shown() {
             def property: text | gsub(":"; "%3A") | gsub(","; "%2C");
             .[] | select(.annotation_level == "warning")
             | "::warning title=\(.title // "" | property)" as $title
-            | (.message | text) as $text
+            | (.message | sub("\nThe job summary holds [0-9]+ more findings?\\.$"; "") | text)
+            as $text
             | "\($title)::\($text)", "\($title),file=\(.path | property)::\($text)",
                 "\($title),file=\(.path | property),line=\(.start_line)::\($text)"' || return
     done
 }
 
-# report_annotate prints a ::warning for each of the first $1 findings, but those that a line of
-# $2 shows already. The last says how many more there are.
+# report_annotate prints a ::warning for each of the first $1 findings that no line of $2 shows
+# already. The last says how many more there are.
 report_annotate() {
-    local count=${#report_messages[@]} i rule message properties warning shown=$'\n'${2-}$'\n'
-    for ((i = 0; i < count && i < $1; i++)); do
+    local i rule message properties more shown=$'\n'${2-}$'\n' left=() left_messages=()
+    for i in "${!report_messages[@]}"; do
         rule=${report_rules[i]}
         message="${report_messages[i]}"$'\n'"The rule: ${report_urls[rule]}"
-        if [ $((i + 1)) = "$1" ] && [ "$count" -gt "$1" ]; then
-            message+=$'\n'"The job summary holds $(report_plural $((count - $1)) 'more finding')."
-        fi
         properties="title=$(report_escape "$report_name: ${report_titles[rule]}" property)"
         if [ -n "${report_files[i]}" ]; then
             properties+=",file=$(report_escape "${report_files[i]}" property)"
             [ -z "${report_lines[i]}" ] || properties+=",line=${report_lines[i]}"
         fi
-        warning="::warning $properties::$(report_escape "$message")"
-        [[ $shown == *$'\n'"$warning"$'\n'* ]] || printf '%s\n' "$warning"
+        [[ $shown != *$'\n'"::warning $properties::$(report_escape "$message")"$'\n'* ]] || continue
+        left+=("$properties") left_messages+=("$message")
+    done
+    more=$((${#left[@]} - $1))
+    for ((i = 0; i < ${#left[@]} && i < $1; i++)); do
+        message=${left_messages[i]}
+        if [ $((i + 1)) = "$1" ] && [ "$more" -gt 0 ]; then
+            message+=$'\n'"The job summary holds $(report_plural "$more" 'more finding')."
+        fi
+        printf '::warning %s::%s\n' "${left[i]}" "$(report_escape "$message")"
     done
 }
 
