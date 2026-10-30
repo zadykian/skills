@@ -6,10 +6,11 @@
 # The bundles load in each repository of the user's. A bundle installed at user scope stays as it
 # is.
 #
-# The bundles are those that the marketplace lists now: it updates Claude Code's copy of it first.
-# A failed install leaves the other bundles to go on, and exits 1 once they are done. Each bundle
-# it installs goes to stdout, a line each, and where it installs none, a note says so. It needs
-# claude, or the one CLAUDE names, and jq.
+# The bundles are those that the marketplace lists now. Where Claude Code has the marketplace, it
+# updates it first. Where it lacks it, it adds it for the user, at the last release: the highest
+# tag vX.Y.Z of the toolkit's repository. A failed install leaves the other bundles to go on, and
+# exits 1 once they are done. Each bundle it installs goes to stdout, a line each, and where it
+# installs none, a note says so. It needs claude, or the one CLAUDE names, jq and git.
 #
 # Piped to sh, it needs no clone of the toolkit:
 #
@@ -20,6 +21,7 @@ set -eu
 claude=${CLAUDE:-claude}
 name=zadykian
 repo=zadykian/toolkit
+semver='v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
 
 # die prints a message of the script's and exits with status 1.
 die() {
@@ -35,13 +37,20 @@ place() {
 }
 
 [ $# = 0 ] || die "usage: tools/install"
-for tool in "$claude" jq; do
+for tool in "$claude" jq git; do
     command -v "$tool" >/dev/null || die "no $tool"
 done
 
 dir=$(place)
-[ -n "$dir" ] || die "Claude Code lacks the marketplace: claude plugin marketplace add $repo"
-"$claude" plugin marketplace update "$name" >/dev/null || die "cannot update the marketplace"
+if [ -n "$dir" ]; then
+    "$claude" plugin marketplace update "$name" >/dev/null || die "cannot update the marketplace"
+else
+    tag=$(git ls-remote --tags --refs "https://github.com/$repo" 2>/dev/null |
+        sed 's|.*refs/tags/||' | grep -Ex "$semver" | sort -V | tail -n 1) || :
+    [ -n "$tag" ] || die "no release of $repo found: check the network"
+    "$claude" plugin marketplace add "$repo@$tag" >/dev/null || die "cannot add $repo@$tag"
+    dir=$(place)
+fi
 bundles=$(jq -r '.plugins[].name' "$dir/.claude-plugin/marketplace.json") ||
     die "cannot read the bundles of $dir"
 
