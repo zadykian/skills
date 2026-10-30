@@ -1,10 +1,12 @@
 #!/bin/sh
-# Installs each bundle of the marketplace zadykian that the user lacks:
+# Installs each bundle of the marketplace zadykian that the scope lacks:
 #
-#   tools/install
+#   tools/install [--scope user|project]
 #
-# The bundles load in each repository of the user's. A bundle installed at user scope stays as it
-# is.
+# At user scope, the default, the bundles load in each repository of the user's. At project scope,
+# they load in the repository of the current directory, whose .claude/settings.json then enables
+# them; claude writes that file anew, its keys in an order of its own. A bundle installed at the
+# scope stays as it is: at project scope, one installed for this directory.
 #
 # The bundles are those that the marketplace lists now. Where Claude Code has the marketplace, it
 # updates it first. Where it lacks it, it adds it for the user, at the last release: the highest
@@ -15,6 +17,8 @@
 # Piped to sh, it needs no clone of the toolkit:
 #
 #   curl -fsSL https://raw.githubusercontent.com/zadykian/toolkit/main/tools/install | sh
+#   curl -fsSL https://raw.githubusercontent.com/zadykian/toolkit/main/tools/install |
+#       sh -s -- --scope project
 
 set -eu
 
@@ -36,7 +40,25 @@ place() {
     printf '%s' "$list" | jq -r --arg name "$name" '.[] | select(.name == $name) | .installLocation'
 }
 
-[ $# = 0 ] || die "usage: tools/install"
+scope=user
+while [ $# -gt 0 ]; do
+    case $1 in
+    --scope)
+        [ $# -gt 1 ] || die "--scope needs user or project"
+        scope=$2
+        shift 2
+        ;;
+    --scope=*)
+        scope=${1#--scope=}
+        shift
+        ;;
+    *) die "usage: tools/install [--scope user|project]" ;;
+    esac
+done
+case $scope in
+user | project) ;;
+*) die "the scope is user or project, not $scope" ;;
+esac
 for tool in "$claude" jq git; do
     command -v "$tool" >/dev/null || die "no $tool"
 done
@@ -55,13 +77,15 @@ bundles=$(jq -r '.plugins[].name' "$dir/.claude-plugin/marketplace.json") ||
     die "cannot read the bundles of $dir"
 
 list=$("$claude" plugin list --json) || die "claude plugin list failed"
-installed=$(printf '%s' "$list" | jq -r '.[] | select(.scope == "user") | .id')
+# installed lists the plugins installed at the scope: at project scope, for this directory.
+installed=$(printf '%s' "$list" | jq -r --arg scope "$scope" --arg root "$(pwd -P)" \
+    '.[] | select(.scope == $scope and ($scope == "user" or .projectPath == $root)) | .id')
 
 added=0 failed=0
 for bundle in $bundles; do
     id=$bundle@$name
     ! printf '%s\n' "$installed" | grep -qxF -- "$id" || continue
-    if result=$("$claude" plugin install "$id" --scope user --json 2>/dev/null); then
+    if result=$("$claude" plugin install "$id" --scope "$scope" --json 2>/dev/null); then
         printf '%s\n' "$id"
         added=$((added + 1))
     else
@@ -71,5 +95,6 @@ for bundle in $bundles; do
     fi
 done
 [ "$added" != 0 ] || [ "$failed" != 0 ] ||
-    printf 'tools/install: each bundle of %s is installed at user scope already\n' "$name" >&2
+    printf 'tools/install: each bundle of %s is installed at %s scope already\n' "$name" \
+        "$scope" >&2
 exit "$failed"

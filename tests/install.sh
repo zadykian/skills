@@ -67,11 +67,21 @@ called 'plugin marketplace update zadykian' 'plugin install b@zadykian --scope u
     'plugin install c@zadykian --scope user --json'
 prints 'b@zadykian'
 
+setup installs-at-project-scope-each-bundle-this-directory-lacks
+start
+jq -n --arg here "$(pwd -P)" '[{id: "a@zadykian", scope: "user"},
+    {id: "b@zadykian", scope: "project", projectPath: $here},
+    {id: "c@zadykian", scope: "project", projectPath: "/elsewhere"}]' >"$FAKE/plugins"
+install --scope project
+exits 0
+called 'plugin install a@zadykian --scope project --json' \
+    'plugin install c@zadykian --scope project --json'
+
 setup adds-the-marketplace-at-the-last-release
 start
 rm "$FAKE/added"
 printf '%s\trefs/tags/%s\n' 1 v1.2.0 2 v1.10.0 3 v2.0.0-rc.1 4 x >"$FAKE/tags"
-install
+install --scope=user
 exits 0
 called 'plugin marketplace add zadykian/toolkit@v1.10.0' \
     'plugin install a@zadykian --scope user --json' \
@@ -106,9 +116,21 @@ called 'plugin install a@zadykian --scope user --json' \
     'plugin install b@zadykian --scope user --json' \
     'plugin install c@zadykian --scope user --json'
 
-setup refuses-an-argument
+setup refuses-a-scope-it-does-not-know
 start
-install --scope user
+install --scope local
 exits 1
-prints 'usage: tools/install'
+prints 'the scope is user or project, not local'
+install --scope
+exits 1
+prints '--scope needs user or project'
 called
+
+setup runs-piped-to-sh
+start
+step CLAUDE="$FAKE/claude" PATH="$FAKE/bin:$PATH" \
+    sh -c "sh -s -- --scope project <'$ROOT/tools/install'"
+exits 0
+called 'plugin install a@zadykian --scope project --json' \
+    'plugin install b@zadykian --scope project --json' \
+    'plugin install c@zadykian --scope project --json'
