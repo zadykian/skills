@@ -22,6 +22,7 @@ marketplace, `zadykian`, of four bundles. They and the actions release at one ve
 | lean   | delegate       | by Claude as it spawns a subagent    | When to hand off, to whom, the brief  |
 | lean   | fan-out        | by Claude as it writes a workflow    | Sizes review by risk, tiers agents    |
 | lean   | its hook       | before the Workflow tool             | Denies an agent with no tier          |
+| lean   | context        | by Claude in a long session          | Reads by range, checkpoints, compacts |
 
 Claude Code names a bundle's skill after the bundle, as `/flow:land`. Claude also uses a skill
 unasked where its description fits the task, unless it runs by hand only. [flow](docs/flow.md),

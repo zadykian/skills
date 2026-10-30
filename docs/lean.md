@@ -116,3 +116,71 @@ It misses a call where:
 - a key is named and set to nothing, as `model: undefined`;
 - the script builds `agent(` in a string, or calls the function by another name;
 - a `${}` of a template literal holds a quote, which can skew the rest of the script.
+
+## context
+
+Rules for a long session, which Claude applies unasked: read a range, bound output, write a
+checkpoint at each phase's end and compact, and keep a report short. Calls above 200k tokens of
+context made 45% of cost, 28 of 39 main sessions never compacted, and tool output held 22%.
+
+### Settings
+
+A plugin sets no `env`, effort or compaction, so the user sets them in `~/.claude/settings.json`,
+or a repository in its `.claude/settings.json`:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet",
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "4",
+    "CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS": "4"
+  },
+  "autoCompactWindow": 300000,
+  "bashOutputMaxChars": 12000,
+  "outputStyle": "Concise",
+  "cleanupPeriodDays": 90
+}
+```
+
+- `CLAUDE_CODE_SUBAGENT_MODEL`: an agent with no model of its own runs Sonnet, not the main model.
+- `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`: the Agent tool's subagents at once, 20 by default. Past
+  the cap the tool refuses a spawn and queues none. A session with `ultracode` on skips the cap.
+- `CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS`: a workflow run's agents at once, 16 by default. The
+  runtime queues the rest.
+- The two pools are separate, so a session that runs both runs up to their sum. Each is half of
+  `nproc`, shown as 4 for 8 cores, as each agent runs builds and tests on the same machine.
+- `autoCompactWindow`: a 1M-window model compacts near 967k. The 27 compactions in the logs started
+  from 328k at the median, and 18 were by hand. Main sessions ran 252k at the median and 481k at
+  the 90th percentile, so 300k does what users did by hand, a little sooner. A lower value
+  compacts more often, and the 25 calls after each re-read about 22k tokens of files.
+- `bashOutputMaxChars`: the default is 30,000, in a range of 4,000–128,000. Bash results ran 1.4k
+  chars at the median and 8.2k at the 90th percentile. So 12k keeps 9 results in 10 whole, and the
+  rest go to a file that Claude reads by range. Results of 20k chars or more held 17% of result
+  chars.
+- `outputStyle`: the built-in Concise leads with the result, a small gain at 15% of cost.
+- `cleanupPeriodDays`: the default of 30 deleted part of the baseline. 90 days hold a 4-week
+  baseline, a 2-week trial and a re-run, at about 5 GB of transcripts for two repositories.
+- Effort: set the main session to `xhigh` once with `/effort xhigh`, and each agent keeps its own.
+  Leave `CLAUDE_CODE_EFFORT_LEVEL` unset, as it overrides each agent's effort.
+
+### Compact instructions
+
+A repository adds this section to its CLAUDE.md, and compaction follows it:
+
+```markdown
+# Compact instructions
+
+Keep the decisions and their reasons, `file:line` pointers, the open questions and the next step.
+Drop file contents and command output.
+```
+
+### Why each rule
+
+- **A lookup of 3 calls inline.** Three calls of a main session at its 252k median read about 38k
+  units at the cache price, and a spawn's first call writes about 50k.
+- **A final report of 1,500 chars, a plan of 400 words.** One repository's final messages ran about
+  1k chars at the median, and its plans ran to 8–10k chars.
+- **At most 2 memory files.** Sessions opened 3–6 as they started, 12–38k chars, mostly unrelated
+  to the task.
+- **A checkpoint before a wait past the cache.** A call after 5 minutes of idle turns a cache read
+  into a write, so the checkpoint lets the session compact in place of a re-read of files.
