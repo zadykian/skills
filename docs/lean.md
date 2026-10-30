@@ -75,3 +75,19 @@ of its own in its CLAUDE.md, for the brief to pass on. Three rules then hold:
   proves an index exists, not a daemon alone. In the logs, a mandated explorer found no index in 3
   runs of 3, and the parent grepped anyway;
 - no tip added to each tool call, as each later call carries it again.
+
+## delegate
+
+Used by Claude as it spawns a subagent, and unasked where its description fits. It sets when to
+hand off work, to which `lean` agent, how to brief it, and how to read the result.
+
+- **A lookup of 3 calls inline.** Three calls of a main session at its 252k median read about 38k
+  units at the cache price. A spawn's first call writes 36–43k tokens of prefix, about 50k units.
+- **5–10 findings to a `checker`.** They share its 36–43k prefix. Past 10, it nears its 200k
+  compaction.
+- **A report of 300 words.** Hand-backs ran 10k chars at the median, and each later call of the
+  parent carries them. 300 words is a fifth of that.
+- **Half the cores at once.** Each agent runs builds and tests on the same machine, so 4 agents on
+  an 8-core one. The total has no cap.
+- **A queue kept by hand.** Past `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, 20 by default, the Agent
+  tool refuses a spawn and queues none. The skill starts the next agent as one ends.

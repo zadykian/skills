@@ -19,6 +19,7 @@ marketplace, `zadykian`, of four bundles. They and the actions release at one ve
 | lint   | banned-terms   | by Claude as it writes code or prose | Keeps vague names and fillers out     |
 | lint   | its hooks      | after each edit, and as Claude stops | Run the repository's own lint gates   |
 | lean   | cost           | `/lean:cost [SESSION...]`, by hand   | Reports what sessions cost, and why   |
+| lean   | delegate       | by Claude as it spawns a subagent    | When to hand off, to whom, the brief  |
 
 Claude Code names a bundle's skill after the bundle, as `/flow:land`. Claude also uses a skill
 unasked where its description fits the task, unless it runs by hand only. [flow](docs/flow.md),
