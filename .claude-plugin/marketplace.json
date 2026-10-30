@@ -125,7 +125,23 @@
         "./lean/agents/checker.md",
         "./lean/agents/implementer.md",
         "./lean/agents/expert.md"
-      ]
+      ],
+      "hooks": {
+        "PreToolUse": [
+          {
+            "matcher": "Workflow",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/hooks/lean-fanout.sh",
+                "args": [],
+                "timeout": 10,
+                "statusMessage": "Checking the workflow's agents"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
