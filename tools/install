@@ -1,0 +1,69 @@
+#!/bin/sh
+# Installs the bundles that .claude/settings.json enables, as its SessionStart hook runs it:
+#
+#   tools/install
+#
+# Settings enable a plugin but do not install it, so a session loads no bundle in a directory
+# that lacks an install of it, as a new clone or worktree does. Each plugin that settings.json
+# enables, and settings.local.json leaves on, gets `claude plugin install ID --scope project`,
+# unless an install at user scope or for this directory has it.
+#
+# It tells the user, as the hook's systemMessage, what it installed, which /reload-plugins loads,
+# and what it could not. It exits 0, so that a session starts whatever fails. It runs in
+# CLAUDE_PROJECT_DIR, which the hook sets, or else in the current one. It needs jq, and claude, or
+# the one CLAUDE names.
+
+set -u
+
+cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
+
+claude=${CLAUDE:-claude}
+settings=.claude/settings.json
+own=.claude/settings.local.json
+
+# notice shows the user the text $1 in the hook's JSON output, and exits 0.
+notice() {
+    jq -cn --arg text "tools/install: $1" '{systemMessage: $text}'
+    exit 0
+}
+
+command -v jq >/dev/null || {
+    printf '{"systemMessage": "tools/install: no jq, so no bundle is installed"}\n'
+    exit 0
+}
+[ -f "$settings" ] || exit 0
+[ -f "$own" ] || own=/dev/null
+# The plugins that settings.json enables, as NAME@MARKETPLACE, but those that settings.local.json,
+# which takes precedence, turns off.
+enabled=$(jq -rn --slurpfile project "$settings" --slurpfile own "$own" '
+    ($own[0].enabledPlugins // {}) as $off | $project[0].enabledPlugins // {} | to_entries[] |
+    select(.value == true and $off[.key] != false) | .key |
+    select(test("^[A-Za-z0-9._-]+@[A-Za-z0-9._-]+$"))' \
+    2>/dev/null) || notice "$settings or $own is not valid JSON, so no bundle is installed"
+[ -n "$enabled" ] || exit 0
+command -v "$claude" >/dev/null || notice "no $claude, so no bundle is installed"
+
+root=$(pwd -P)
+# installed lists the plugins that load here: those installed at user scope, or for this
+# directory.
+list=$("$claude" plugin list --json 2>/dev/null) ||
+    notice "claude plugin list failed, so no bundle is installed"
+installed=$(printf '%s' "$list" | jq -r --arg root "$root" \
+    '.[] | select(.scope == "user" or .projectPath == $root) | .id' 2>/dev/null) ||
+    notice "claude plugin list printed no list, so no bundle is installed"
+
+added='' failed=''
+for id in $enabled; do
+    ! printf '%s\n' "$installed" | grep -qxF -- "$id" || continue
+    if result=$("$claude" plugin install "$id" --scope project --json 2>/dev/null); then
+        added="$added $id"
+    else
+        reason=$(printf '%s\n' "$result" | tail -n 1 | jq -r '.message // empty' 2>/dev/null)
+        failed="$failed $id (${reason:-no reason given})"
+    fi
+done
+
+text=
+[ -z "$added" ] || text="installed$added at project scope: run /reload-plugins to load them."
+[ -z "$failed" ] || text="$text${text:+ }could not install$failed."
+[ -z "$text" ] || notice "$text"
