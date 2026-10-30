@@ -1,22 +1,25 @@
 # shellcheck shell=bash
 # The cases of tools/install, in work, a repository whose settings enable bundles of the
-# marketplace m. claude is the fake in $FAKE/claude: it answers plugin list with the JSON of
-# $FAKE/plugins, logs each install to $FAKE/installs, and fails one whose ID is in $FAKE/refused.
+# marketplace m. claude is the fake in $FAKE/claude: it answers plugin list and plugin marketplace
+# list with the JSON of $FAKE/plugins and $FAKE/marketplaces, logs each install to $FAKE/installs,
+# and fails one whose ID is in $FAKE/refused.
 
 # start makes work, whose settings.json enables a@m, b@m and c@m, and turns d@m off, and the fake
-# claude, which has no plugin installed.
+# claude, which knows m and has no plugin installed.
 start() {
     mkdir -p "$FAKE/work/.claude"
     cd "$FAKE/work" || return
     jq -n '{enabledPlugins: {"a@m": true, "b@m": true, "c@m": true, "d@m": false}}' \
         >.claude/settings.json
     echo '[]' >"$FAKE/plugins"
+    echo '[{"name": "m"}]' >"$FAKE/marketplaces"
     : >"$FAKE/installs"
     : >"$FAKE/refused"
     cat >"$FAKE/claude" <<'FAKE'
 #!/bin/sh
 case "$*" in
 'plugin list --json') cat "$FAKE/plugins" ;;
+'plugin marketplace list --json') cat "$FAKE/marketplaces" ;;
 "plugin install $3 --scope project --json")
     echo "$3" >>"$FAKE/installs"
     ! grep -qxF "$3" "$FAKE/refused" || { echo '{"message": "no such plugin"}'; exit 1; }
@@ -67,6 +70,13 @@ jq -n '{enabledPlugins: {"b@m": false}}' >.claude/settings.local.json
 install
 installs a@m c@m
 prints 'installed a@m c@m at project scope'
+
+setup waits-for-a-marketplace-not-fetched
+start
+echo '[]' >"$FAKE/marketplaces"
+install
+installs
+prints 'a@m b@m c@m: their marketplace is not fetched yet, so the next session installs them.'
 
 setup reports-a-failed-install-and-goes-on
 start

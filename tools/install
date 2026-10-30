@@ -6,7 +6,9 @@
 # Settings enable a plugin but do not install it, so a session loads no bundle in a directory
 # that lacks an install of it, as a new clone or worktree does. Each plugin that settings.json
 # enables, and settings.local.json leaves on, gets `claude plugin install ID --scope project`,
-# unless an install at user scope or for this directory has it.
+# unless an install at user scope or for this directory has it. A plugin whose marketplace Claude
+# Code has not fetched waits for the next session: Claude Code fetches it as this one starts, and
+# each way to add it here rewrites settings.json or drops its autoUpdate.
 #
 # It tells the user, as the hook's systemMessage, what it installed, which /reload-plugins loads,
 # and what it could not. It exits 0, so that a session starts whatever fails. It runs in
@@ -51,11 +53,17 @@ list=$("$claude" plugin list --json 2>/dev/null) ||
 installed=$(printf '%s' "$list" | jq -r --arg root "$root" \
     '.[] | select(.scope == "user" or .projectPath == $root) | .id' 2>/dev/null) ||
     notice "claude plugin list printed no list, so no bundle is installed"
+list=$("$claude" plugin marketplace list --json 2>/dev/null) ||
+    notice "claude plugin marketplace list failed, so no bundle is installed"
+fetched=$(printf '%s' "$list" | jq -r '.[].name' 2>/dev/null) ||
+    notice "claude plugin marketplace list printed no list, so no bundle is installed"
 
-added='' failed=''
+added='' waiting='' failed=''
 for id in $enabled; do
     ! printf '%s\n' "$installed" | grep -qxF -- "$id" || continue
-    if result=$("$claude" plugin install "$id" --scope project --json 2>/dev/null); then
+    if ! printf '%s\n' "$fetched" | grep -qxF -- "${id#*@}"; then
+        waiting="$waiting $id"
+    elif result=$("$claude" plugin install "$id" --scope project --json 2>/dev/null); then
         added="$added $id"
     else
         reason=$(printf '%s\n' "$result" | tail -n 1 | jq -r '.message // empty' 2>/dev/null)
@@ -65,5 +73,7 @@ done
 
 text=
 [ -z "$added" ] || text="installed$added at project scope: run /reload-plugins to load them."
+[ -z "$waiting" ] || text="$text${text:+ }${waiting# }: their marketplace is not fetched yet, so the \
+next session installs them."
 [ -z "$failed" ] || text="$text${text:+ }could not install$failed."
 [ -z "$text" ] || notice "$text"
