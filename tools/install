@@ -10,6 +10,9 @@
 # Code has not fetched waits for the next session: Claude Code fetches it as this one starts, and
 # each way to add it here rewrites settings.json or drops its autoUpdate.
 #
+# The install writes settings.json anew, its keys in an order of its own. Where its JSON is the
+# same, this puts back the file's own text, so that the tree stays clean.
+#
 # It tells the user, as the hook's systemMessage, what it installed, which /reload-plugins loads,
 # and what it could not. It exits 0, so that a session starts whatever fails. It runs in
 # CLAUDE_PROJECT_DIR, which the hook sets, or else in the current one. It needs jq, and claude, or
@@ -58,6 +61,10 @@ list=$("$claude" plugin marketplace list --json 2>/dev/null) ||
 fetched=$(printf '%s' "$list" | jq -r '.[].name' 2>/dev/null) ||
     notice "claude plugin marketplace list printed no list, so no bundle is installed"
 
+saved=
+trap '[ -z "$saved" ] || rm -f "$saved"' EXIT
+saved=$(mktemp) || notice "mktemp failed, so no bundle is installed"
+cp "$settings" "$saved" || notice "cannot copy $settings, so no bundle is installed"
 added='' waiting='' failed=''
 for id in $enabled; do
     ! printf '%s\n' "$installed" | grep -qxF -- "$id" || continue
@@ -72,7 +79,16 @@ for id in $enabled; do
 done
 
 text=
-[ -z "$added" ] || text="installed$added at project scope: run /reload-plugins to load them."
+# A settings.json whose JSON differs from the saved one holds an edit of another's, which stays.
+if cmp -s "$saved" "$settings"; then
+    :
+elif [ "$(jq -S . "$saved")" = "$(jq -S . "$settings" 2>/dev/null)" ]; then
+    cat "$saved" >"$settings"
+else
+    text="$settings changed as it installed, so its text is not put back."
+fi
+[ -z "$added" ] ||
+    text="$text${text:+ }installed$added at project scope: run /reload-plugins to load them."
 [ -z "$waiting" ] || text="$text${text:+ }${waiting# }: their marketplace is not fetched yet, so the \
 next session installs them."
 [ -z "$failed" ] || text="$text${text:+ }could not install$failed."

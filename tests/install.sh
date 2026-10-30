@@ -1,8 +1,10 @@
 # shellcheck shell=bash
 # The cases of tools/install, in work, a repository whose settings enable bundles of the
 # marketplace m. claude is the fake in $FAKE/claude: it answers plugin list and plugin marketplace
-# list with the JSON of $FAKE/plugins and $FAKE/marketplaces, logs each install to $FAKE/installs,
-# and fails one whose ID is in $FAKE/refused.
+# list with the JSON of $FAKE/plugins and $FAKE/marketplaces, and logs each install to
+# $FAKE/installs. An install writes settings.json anew, its keys sorted, as claude does, and the
+# JSON of $FAKE/edit over it where that file is not empty. It fails one whose ID is in
+# $FAKE/refused.
 
 # start makes work, whose settings.json enables a@m, b@m and c@m, and turns d@m off, and the fake
 # claude, which knows m and has no plugin installed.
@@ -15,6 +17,7 @@ start() {
     echo '[{"name": "m"}]' >"$FAKE/marketplaces"
     : >"$FAKE/installs"
     : >"$FAKE/refused"
+    echo '{}' >"$FAKE/edit"
     cat >"$FAKE/claude" <<'FAKE'
 #!/bin/sh
 case "$*" in
@@ -22,6 +25,8 @@ case "$*" in
 'plugin marketplace list --json') cat "$FAKE/marketplaces" ;;
 "plugin install $3 --scope project --json")
     echo "$3" >>"$FAKE/installs"
+    jq -S --slurpfile edit "$FAKE/edit" '. * $edit[0]' .claude/settings.json >"$FAKE/rewritten"
+    mv "$FAKE/rewritten" .claude/settings.json
     ! grep -qxF "$3" "$FAKE/refused" || { echo '{"message": "no such plugin"}'; exit 1; }
     echo '{"outcome": "ok"}' ;;
 *) exit 2 ;;
@@ -52,9 +57,19 @@ start
 jq -n --arg here "$(pwd -P)" '[{id: "a@m", scope: "project", projectPath: "/elsewhere"},
     {id: "b@m", scope: "user"}, {id: "c@m", scope: "project", projectPath: $here}]' \
     >"$FAKE/plugins"
+cp .claude/settings.json "$FAKE/before"
 install
 installs a@m
 prints '{"systemMessage":"tools/install: installed a@m at project scope: run /reload-plugins'
+cmp -s "$FAKE/before" .claude/settings.json || fail "settings.json is not put back"
+
+setup keeps-an-edit-of-the-settings-made-as-it-installs
+start
+echo '{"model": "x"}' >"$FAKE/edit"
+install
+installs a@m b@m c@m
+prints '.claude/settings.json changed as it installed, so its text is not put back.'
+[ "$(jq -r .model .claude/settings.json)" = x ] || fail "the edit of settings.json is lost"
 
 setup prints-nothing-where-each-bundle-loads
 start
