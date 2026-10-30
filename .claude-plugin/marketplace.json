@@ -121,7 +121,9 @@
       "skills": ["./skills/cost"],
       "agents": [
         "./lean/agents/scout.md",
-        "./lean/agents/runner.md"
+        "./lean/agents/runner.md",
+        "./lean/agents/checker.md",
+        "./lean/agents/implementer.md"
       ]
     }
   ]
