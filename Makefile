@@ -10,7 +10,7 @@ LOG_OPTS =
 CLAUDE = claude
 # The paths whose change the plugins gate checks: the bundles, and the directories at the root
 # whose components every bundle loads, which tools/layoutcheck finds.
-BUNDLED = skills/% hooks/% .claude-plugin/% tools/layoutcheck agents/% commands/% \
+BUNDLED = skills/% hooks/% lean/% .claude-plugin/% tools/layoutcheck agents/% commands/% \
 	output-styles/% workflows/% monitors/% bin/%
 
 .PHONY: lint lint-file lint-tree shell sizecheck vale lychee rumdl actionlint zizmor gitleaks \

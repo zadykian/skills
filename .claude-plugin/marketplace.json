@@ -108,7 +108,7 @@
       "source": "./",
       "strict": false,
       "version": "6.0.0",
-      "description": "Cuts the tokens and time of long sessions that fan out subagents and workflows, starting with a report of what a session costs, by tier, model and cause.",
+      "description": "Cuts the tokens and time of long sessions that fan out subagents and workflows: agents at a fixed model and effort, and a report of what a session costs, by tier, model and cause.",
       "author": {
         "name": "Aleksandr Zadykian",
         "url": "https://github.com/zadykian"
@@ -118,7 +118,11 @@
       "license": "MIT",
       "category": "productivity",
       "keywords": ["cost", "tokens", "subagents", "workflows"],
-      "skills": ["./skills/cost"]
+      "skills": ["./skills/cost"],
+      "agents": [
+        "./lean/agents/scout.md",
+        "./lean/agents/runner.md"
+      ]
     }
   ]
 }
