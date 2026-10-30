@@ -184,3 +184,22 @@ Drop file contents and command output.
   to the task.
 - **A checkpoint before a wait past the cache.** A call after 5 minutes of idle turns a cache read
   into a write, so the checkpoint lets the session compact in place of a re-read of files.
+
+## wait
+
+Claude uses the `wait` skill as it starts a build, a test run or a CI run, or is about to poll. It
+runs work in the background, watches CI with a `Monitor` that prints on a change of state, and
+bounds a foreground wait with `timeout 240`, inside the 5-minute cache. It sets a wake-up within
+270 s or after 1,200 s, and tells a subagent to wait 4 minutes at most. 1,567 foreground polls
+waited 1,594 minutes, and cost about 7% with their reads.
+
+Its hook, [lean-wait.sh](../hooks/lean-wait.sh), runs before the Bash tool. It denies a foreground
+command that holds an `until` or `while` loop with `sleep`, a `watch`, `gh run watch` or a
+`--watch` flag. A bound lets it pass: a `timeout N` of 240 s or less in the command, or a
+`timeout` input of 240,000 ms or less. The reason names the accepted forms:
+`run_in_background`, a `Monitor` that prints on a change of state, or `timeout 240`. The hook is
+POSIX sh, and needs `jq`. It allows where `jq` is missing or its input does not parse.
+
+The `cost` report tests a poll the same way, so its count of polls and the hook agree. Both read a
+line break as a semicolon. The test is a pattern on the command, so a poll in a script file, or
+one built by another command, passes the hook.
