@@ -15,6 +15,7 @@ def table($title; $count; $total): "", ([$title, $count, "M units", "share"] | r
 # their units.
 def by(f; $labels): group_by(f) | map((.[0] | f) as $key | [$labels[$key] // $key, length,
   (map(.units) | add)]);
+def gap: if .gap == null then 0 elif .gap < 300 then 1 elif .gap < 3600 then 2 else 3 end;
 def size: .prompt | if . < 1e5 then 0 elif . < 2e5 then 1 elif . < 5e5 then 2 else 3 end;
 
 (map(select(.k == "call")) | group_by(.id) | map(max_by(.out) | .prompt = .in + .w5 + .w1 + .cr
@@ -27,4 +28,9 @@ def size: .prompt | if . < 1e5 then 0 elif . < 2e5 then 1 elif . < 5e5 then 2 el
 ($calls | by(.model // "?"; null) | sort_by(-.[2])
   | table("By model"; "calls"; $total)),
 ($calls | by(size; ["under 100k", "100k to 200k", "200k to 500k", "500k or more"])
-  | table("By context size"; "calls"; $total))
+  | table("By context size"; "calls"; $total)),
+($calls | group_by(.thread) | map(sort_by(.ts) | . as $t | [range(length) | $t[.] +
+  {gap: (if . == 0 then null else $t[.].ts - $t[. - 1].ts end)}]) | add // []
+  | map(.units = (1.25 * .w5 + 2 * .w1) * .factor)
+  | by(gap; ["first call of a thread", "under 5 min", "5 min to 1 h", "1 h or more"])
+  | table("Cache writes, by the idle gap before"; "calls"; $total))
