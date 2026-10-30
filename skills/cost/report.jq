@@ -22,6 +22,8 @@ def size: .prompt | if . < 1e5 then 0 elif . < 2e5 then 1 elif . < 5e5 then 2 el
   | .factor = factor | .units = (.in + 1.25 * .w5 + 2 * .w1 + 0.05 * .cr + 5 * .out) * .factor))
   as $calls |
 ($calls | map(.units) | add // 0) as $total |
+(map(select(.k == "result")) | INDEX(.id)) as $results |
+(map(select(.k == "use")) | INDEX(.id)) as $uses |
 "Sessions: \($sessions). Responses: \($calls | length). Cost: \($total | mega) M units.",
 ($calls | by(.tier; {main: "main", subagent: "subagents", workflow: "workflow agents"})
   | table("By tier"; "calls"; $total)),
@@ -33,4 +35,8 @@ def size: .prompt | if . < 1e5 then 0 elif . < 2e5 then 1 elif . < 5e5 then 2 el
   {gap: (if . == 0 then null else $t[.].ts - $t[. - 1].ts end)}]) | add // []
   | map(.units = (1.25 * .w5 + 2 * .w1) * .factor)
   | by(gap; ["first call of a thread", "under 5 min", "5 min to 1 h", "1 h or more"])
-  | table("Cache writes, by the idle gap before"; "calls"; $total))
+  | table("Cache writes, by the idle gap before"; "calls"; $total)),
+"", "Largest tool results, in chars",
+($results | map(.) | sort_by(-.chars) | .[:10][] | ($uses[.id] // {}) as $u |
+  "\(.chars | right(9))  \($u.name // "?" | .[:12] | left(12))  \(.thread | left(40))  " +
+  "\($u.what // "")")
