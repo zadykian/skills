@@ -1,8 +1,8 @@
 # toolkit
 
 Claude Code skills and hooks, and GitHub Actions that check each pull request against the same
-rules, at one version. The skills and hooks are a plugin marketplace, `zadykian`, of three
-bundles, `flow`, `docs` and `lint`. [README.md](README.md) says what each skill and action does,
+rules, at one version. The skills and hooks are a plugin marketplace, `zadykian`, of four
+bundles, `flow`, `docs`, `lint` and `lean`. [README.md](README.md) says what each skill and action does,
 how to install and pin them, and what a version's parts mean.
 
 ## Layout
@@ -10,12 +10,17 @@ how to install and pin them, and what a version's parts mean.
 - `.claude-plugin/marketplace.json`: the catalog. Each bundle takes its skills from the root,
   `"source": "./"` with `"strict": false`, lists them, and gives the version. `lint`'s hooks are
   inline in its entry.
+- A bundle's other components, such as its agents, live under its own path, as `BUNDLE/agents/`,
+  and its entry lists them. Its hooks sit inline. Claude Code gives every bundle what the root's
+  `agents/`, `commands/`, `output-styles/`, `workflows/`, `monitors/`, `bin/` or
+  `hooks/hooks.json` holds, so the root holds none of them.
 - `skills/NAME/SKILL.md`: a skill, which a bundle offers as `/BUNDLE:NAME`, and
   `gh skill install` copies as `/NAME`. Its directory holds `SKILL.md`, and the data files it
   reads, such as banned-terms' `terms.json`, as gh copies the whole directory into a repository.
   It also holds the templates of what the skill writes, such as atomic-commits'
   `pull_request_template.md`, and `.github/` holds the toolkit's own copy of each.
-- `hooks/`: the lint bundle's hooks, which Claude Code runs from its copy of the marketplace.
+- `hooks/`: the hooks of the lint and lean bundles, which Claude Code runs from its copy of the
+  marketplace.
 - `docs/BUNDLE.md`: what each skill of a bundle does, and what facts a repository names for it.
 - `actions/NAME/`: an action, which a workflow uses as `zadykian/toolkit/actions/NAME@SHA`: its
   `action.yml`, its scripts, and a README of what it does and its inputs. A check's script is
@@ -29,7 +34,9 @@ how to install and pin them, and what a version's parts mean.
   header comment says how to write a case.
 - `tools/`, the gates: `run` downloads the lint tools at the versions and SHA-256 sums it pins,
   into `.cache/tools`. `files` lists the files of a kind that a gate checks, `sizecheck` caps
-  their lines, and `hookcheck` runs the hooks against throwaway repositories.
+  their lines, and `hookcheck` runs the hooks against throwaway repositories. `layoutcheck`
+  installs each bundle into a throwaway config, and checks that it loads its own skills and agents
+  alone.
 - `tools/`, the release: `lastrelease` finds the last release's tag, `versioncheck` checks the
   bundles and the version against it, and `releasenotes` writes the notes of the commits since.
   `pin` moves a repository's marketplace ref and action hashes to one release.
@@ -47,8 +54,9 @@ claude --plugin-dir .              # a session with the work tree's skills
 ```
 
 `make lint` needs `jq` and `claude` on the `PATH`, and curl the first time. It runs zizmor's
-online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`. `make plugins` runs
-`claude plugin validate` on the marketplace and on the skills, its warnings counted as errors.
+online audits where `GH_TOKEN` is set. `make test` needs `git` and `jq`, and `claude` for
+`tests/layoutcheck.sh`. `make plugins` runs `claude plugin validate` on the marketplace and on the
+skills, its warnings counted as errors, and `tools/layoutcheck`.
 
 ## A change to a skill, a hook or an action
 

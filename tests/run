@@ -1,6 +1,7 @@
 #!/bin/bash
 # Runs the cases of each tests/NAME.sh, or of those named, `tests/run [NAME...]`, and fails where
-# any case fails. tests/gh, the fake gh, answers each case's canned JSON. It needs git and jq.
+# any case fails. tests/gh, the fake gh, answers each case's canned JSON. It needs git and jq, and
+# tests/layoutcheck.sh needs claude, or the one CLAUDE names.
 #
 # A case file is bash, which tests/run sources under set -euo pipefail: a command that fails stops
 # the run. Its cases call these functions, each case setup first:
@@ -37,6 +38,11 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# A relative CLAUDE names claude from here, as each case runs in a directory of its own.
+case ${CLAUDE:-} in
+/* | '') ;;
+*/*) export CLAUDE="$PWD/$CLAUDE" ;;
+esac
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 HEAD_SHA=0123456789abcdef0123456789abcdef01234567

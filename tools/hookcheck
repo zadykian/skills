@@ -44,11 +44,12 @@ lib() {
     status=$?
 }
 # hook pipes the JSON $2 into the hook $1 from the project's tree, as Claude Code runs it, with
-# $data as CLAUDE_PLUGIN_DATA where set: $status, $tmp/out, $tmp/err.
+# $data as CLAUDE_PLUGIN_DATA where set, and $bare as the PATH: $status, $tmp/out, $tmp/err.
 hook() {
     printf '%s\n' "$2" | (
         cd -- "$project" && export CLAUDE_PROJECT_DIR="$project" || exit 1
         [ -z "$data" ] || export CLAUDE_PLUGIN_DATA="$data"
+        [ -z "${bare:-}" ] || export PATH="$bare"
         exec "$root/hooks/$1"
     ) >"$tmp/out" 2>"$tmp/err"
     status=$?
@@ -87,6 +88,13 @@ logs() {
     want=$(printf '%s\n' "$@") got=$(cat "$HOOKCHECK_LOG")
     [ "$got" = "$want" ] || say "the log holds [$got], not [$want]"
 }
+# tool pipes PreToolUse's JSON for the tool $1, with the tool_input $2, into the hook $3.
+tool() {
+    hook "$3" "{\"session_id\": \"$session\", \"hook_event_name\": \"PreToolUse\", \"tool_name\": \
+\"$1\", \"tool_input\": $2}"
+}
+# denies checks that the last run exited 0 and denied the tool call, its reason holding each text.
+denies() { exits 0 && holds err && holds out '"permissionDecision": "deny"' "$@"; }
 # begin starts the case that the line $1 names, in a project directory of its own.
 begin() {
     n=$((n + 1)) name=$1 project=$tmp/r$n HOOKCHECK_LOG=$tmp/log$n data=$tmp/data$n session=s$n
@@ -221,5 +229,59 @@ begin "Stop lints the project's tree, changed through Bash since SessionStart, o
 verdict
 begin "Stop skips the project's tree unchanged since SessionStart" && repo && put b.txt 1 &&
     commit -c commit.gpgSign=true && started && stop && quiet && logs
+verdict
+while IFS='|' read -r line script cause; do
+    { begin "lean-fanout: $line" && repo && tool Workflow "{\"script\": \"$script\"}" \
+        lean-fanout.sh && if [ -n "$cause" ]; then denies "$cause"; else quiet; fi; } </dev/null
+    verdict
+done <<'EOF'
+an agent type|await agent('a', {agentType: 'lean:checker'})|
+a model with an effort|await agent('a', {model: 'haiku', effort: 'low'})|
+a call inside a call|xs.map(x => agent(fmt('a (b'), {effort: 'low'}))|
+options from a variable|await agent('a', opts)|
+options with a spread|await agent('a', {...base, schema})|
+an object literal with no key|await agent('a', {schema})|at line 1 of
+none of the three|await agent('check the model')|at line 1 of
+the second call alone|agent('a', {model: 'haiku'})\nagent(`b`, {schema: s})|at line 2 of
+two on a line, the second bare|agent('a', {model: 'x'}); agent('b')|agentType: 'lean:checker'
+a key in a comment|agent('a') // agentType|model with effort
+no agent call|const n = subagent(1)|
+EOF
+begin 'lean-fanout: a name alone, no input, or input not parsed: allowed' && repo &&
+    tool Workflow '{"name": "review"}' lean-fanout.sh && quiet &&
+    tool Workflow '{}' lean-fanout.sh && quiet && hook lean-fanout.sh '{"tool_input": ' && quiet
+verdict
+begin 'lean-fanout: scriptPath read, else allowed' && repo && put w.js "agent('a')" &&
+    tool Workflow "{\"scriptPath\": \"$project/w.js\"}" lean-fanout.sh && denies 'at line 1 of' &&
+    tool Workflow '{"scriptPath": "/no/w.js"}' lean-fanout.sh && quiet
+verdict
+begin 'lean-fanout: no jq: allowed' && repo && bare=$tmp/nojq &&
+    tool Workflow '{"script": "agent(1)"}' lean-fanout.sh && bare= && quiet
+verdict
+while IFS='~' read -r line input cause; do
+    { begin "lean-wait: $line" && repo && tool Bash "$input" lean-wait.sh &&
+        if [ -n "$cause" ]; then denies "$cause"; else quiet; fi; } </dev/null
+    verdict
+done <<'EOF'
+an until loop with sleep~{"command": "until gh pr view 1; do sleep 5; done"}~run_in_background: true
+a while loop over lines~{"command": "while true\ndo\n  sleep 5\ndone"}~`Monitor`
+gh run watch~{"command": "gh run watch 123 --exit-status"}~`timeout 240`
+a watch command~{"command": "make && watch -n 5 ls"}~run_in_background
+a --watch flag~{"command": "npm test --watch"}~`timeout 240`
+a timeout of 240 s~{"command": "timeout 240 sh -c 'until ok; do sleep 5; done'"}~
+a timeout of 600 s~{"command": "timeout 600 gh run watch 123"}~`timeout 240`
+a timeout input of 200000 ms~{"command": "gh run watch 123", "timeout": 200000}~
+a timeout input of 300000 ms~{"command": "gh run watch 123", "timeout": 300000}~`Monitor`
+run_in_background true~{"command": "gh run watch 123", "run_in_background": true}~
+run_in_background false~{"command": "gh run watch 123", "run_in_background": false}~run_in_background
+a sleep with no loop~{"command": "sleep 5 && ls"}~
+a loop with no sleep~{"command": "for f in a b; do echo $f; done"}~
+no command~{"description": "x"}~
+EOF
+begin 'lean-wait: input not parsed: allowed' && repo && hook lean-wait.sh '{"tool_input": ' &&
+    quiet
+verdict
+begin 'lean-wait: no jq: allowed' && repo && bare=$tmp/nojq &&
+    tool Bash '{"command": "gh run watch 1"}' lean-wait.sh && bare= && quiet
 verdict
 exit "$failed"

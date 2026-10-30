@@ -1,0 +1,110 @@
+#!/bin/sh
+# Checks that each bundle of the marketplace in DIR, the work tree by default, loads its own
+# skills and agents alone, as CLAUDE.md's Layout says:
+#
+#   tools/layoutcheck [DIR]
+#
+# The bundles share one root, and Claude Code gives each of them what a default directory there
+# holds: agents/, commands/, output-styles/, workflows/, monitors/ and bin/, and hooks/hooks.json.
+# So the root holds none. claude then installs every bundle into a throwaway config, and the init
+# message of a session, which comes before any model call, names what each loads: its skills,
+# agents and commands, as BUNDLE:NAME. They must be the ones its entry lists. claude runs with no
+# credentials, and its API at a closed port, so no request leaves the machine.
+#
+# Each finding goes to stdout, and any fails the check. Without a marketplace, there is nothing to
+# check. It needs jq, timeout and claude, or the claude that CLAUDE names.
+
+set -eu
+
+marketplace=.claude-plugin/marketplace.json
+claude=${CLAUDE:-claude}
+# A relative path names claude from the caller's directory, as claude runs in its own.
+case $claude in
+/*) ;;
+*/*) claude=$PWD/$claude ;;
+esac
+
+# die prints a message of the script's and exits with status 1.
+die() {
+    printf 'tools/layoutcheck: %s\n' "$*" >&2
+    exit 1
+}
+
+# finding prints a finding and marks the check failed.
+finding() {
+    printf '%s\n' "$*"
+    status=1
+}
+
+# rooted finds each default directory of a component at the root.
+rooted() {
+    for path in agents commands output-styles workflows monitors bin; do
+        [ ! -e "$dir/$path" ] || finding "$path: every bundle loads it from the root;" \
+            "move it under its bundle's own path, as BUNDLE/$path, listed on its entry"
+    done
+    [ ! -e "$dir/hooks/hooks.json" ] || finding 'hooks/hooks.json: it runs for every bundle;' \
+        "write each bundle's hooks inline in its entry"
+}
+
+# expected prints what each entry lists, a line each: KIND BUNDLE:NAME.
+expected() {
+    jq -r '.plugins[] | .name as $b | ([.skills // empty] | flatten[] | "skill \($b):" +
+        (sub("/$"; "") | sub(".*/"; ""))), ([.agents // empty] | flatten[] | "agent \($b):" +
+        (sub(".*/"; "") | sub("\\.md$"; ""))), ([.commands // empty] | flatten[] |
+        "command \($b):" + (sub(".*/"; "") | sub("\\.md$"; "")))' "$dir/$marketplace" |
+        LC_ALL=C sort
+}
+
+# loaded installs each bundle, and prints what the init message names in the bundles' own
+# namespaces, a line each: KIND BUNDLE:NAME. A slash command that is a skill is the skill's.
+loaded() {
+    name=$(jq -r .name "$dir/$marketplace")
+    "$claude" plugin marketplace add "$dir" >"$tmp/log" 2>&1 || die "$(cat "$tmp/log")"
+    for bundle in $(jq -r '.plugins[].name' "$dir/$marketplace"); do
+        "$claude" plugin install "$bundle@$name" >"$tmp/log" 2>&1 ||
+            finding "$bundle: claude cannot install it: $(tail -n 3 "$tmp/log")"
+    done
+    # A directory of its own, as a repository's settings may add a marketplace of the same name.
+    mkdir "$tmp/run"
+    (cd "$tmp/run" && ANTHROPIC_BASE_URL=http://127.0.0.1:9 timeout 20 "$claude" -p \
+        --output-format stream-json --verbose layout </dev/null >"$tmp/stream" 2>"$tmp/err") ||
+        true
+    jq -r --argjson bundles "$(jq -c '[.plugins[].name]' "$dir/$marketplace")" '
+        select(.type == "system" and .subtype == "init") | (.skills // []) as $skills |
+        (.skills[]? | "skill " + .), (.agents[]? | "agent " + .),
+        (.slash_commands[]? | select(IN($skills[]) | not) | "command " + .) |
+        select(split(" ")[1] | split(":") | length > 1 and IN(.[0]; $bundles[]))' \
+        "$tmp/stream" | LC_ALL=C sort
+}
+
+main() {
+    command -v jq >/dev/null || die "no jq"
+    dir=$(CDPATH='' cd -- "${1:-.}" && pwd) || die "no directory ${1:-.}"
+    [ -f "$dir/$marketplace" ] || return 0
+    status=0
+    rooted
+    # The session's own config, with no credentials and no traffic but the API's.
+    unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN CLAUDE_CODE_OAUTH_TOKEN \
+        CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
+    export CLAUDE_CONFIG_DIR="$tmp/config" DISABLE_AUTOUPDATER=1 \
+        CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    mkdir "$CLAUDE_CONFIG_DIR"
+    expected >"$tmp/expected"
+    loaded >"$tmp/loaded"
+    grep -q '"subtype": *"init"' "$tmp/stream" ||
+        finding "claude printed no init message: $(tail -n 3 "$tmp/err")"
+    LC_ALL=C comm -23 "$tmp/loaded" "$tmp/expected" | while read -r kind name; do
+        printf '%s: loads the %s %s, which its entry does not list\n' "${name%%:*}" "$kind" "$name"
+    done >"$tmp/extra"
+    LC_ALL=C comm -13 "$tmp/loaded" "$tmp/expected" | while read -r kind name; do
+        printf '%s: lists the %s %s, which it does not load\n' "${name%%:*}" "$kind" "$name"
+    done >"$tmp/missing"
+    [ ! -s "$tmp/extra" ] || finding "$(cat "$tmp/extra")"
+    [ ! -s "$tmp/missing" ] || finding "$(cat "$tmp/missing")"
+    return "$status"
+}
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+trap 'exit 1' HUP INT TERM
+main "$@"

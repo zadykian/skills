@@ -42,7 +42,8 @@ jobs:
           # zizmor's online audits, which look the actions up on GitHub, need a token.
           GH_TOKEN: ${{ github.token }}
 
-  # make test: the cases of each tests/NAME.sh, against the fake gh.
+  # make test: the cases of each tests/NAME.sh, against the fake gh. tools/layoutcheck's run the
+  # claude of the lint job, with no credentials.
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -54,4 +55,10 @@ jobs:
           # The pull request's own head, as in the lint job, since its tree is the tree that lands.
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - run: make test
+      # As in the lint job.
+      - name: Install claude
+        run: |
+          npm ci --prefix .github/claude --ignore-scripts --no-fund --no-audit
+          node .github/claude/node_modules/@anthropic-ai/claude-code/install.cjs
+          .github/claude/node_modules/.bin/claude --version
+      - run: make test CLAUDE=.github/claude/node_modules/.bin/claude

@@ -1,19 +1,19 @@
 {
   "name": "zadykian",
-  "description": "Skills and hooks for work in a GitHub repository: plan a change, commit it in small steps, land it by GitHub's merge, keep prose and files short, and lint as Claude edits.",
+  "description": "Skills and hooks for work in a GitHub repository: plan a change, commit it in small steps, land it by GitHub's merge, keep prose and files short, lint as Claude edits, and keep long sessions lean.",
   "owner": {
     "name": "Aleksandr Zadykian",
     "url": "https://github.com/zadykian"
   },
   "metadata": {
-    "version": "6.0.0"
+    "version": "6.1.0"
   },
   "plugins": [
     {
       "name": "flow",
       "source": "./",
       "strict": false,
-      "version": "6.0.0",
+      "version": "6.1.0",
       "description": "From issue to main: plan a change as an issue, commit it in small Conventional Commits and stacked pull requests, and land the stack by GitHub's merge.",
       "author": {
         "name": "Aleksandr Zadykian",
@@ -30,7 +30,7 @@
       "name": "docs",
       "source": "./",
       "strict": false,
-      "version": "6.0.0",
+      "version": "6.1.0",
       "description": "A writing policy for comments and docs that loads as Claude edits, and a skill that trims files to it, keeping every fact.",
       "author": {
         "name": "Aleksandr Zadykian",
@@ -47,7 +47,7 @@
       "name": "lint",
       "source": "./",
       "strict": false,
-      "version": "6.0.0",
+      "version": "6.1.0",
       "description": "Hooks that run the repository's own lint gates on each file Claude edits and on the branch when it stops, a skill that splits a file over the line cap, and one that keeps vague names and fillers out of new code and prose.",
       "author": {
         "name": "Aleksandr Zadykian",
@@ -97,6 +97,58 @@
                 "args": [],
                 "timeout": 900,
                 "statusMessage": "Linting the work tree"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "lean",
+      "source": "./",
+      "strict": false,
+      "version": "6.1.0",
+      "description": "Cuts the tokens and time of long sessions that fan out subagents and workflows: agents at a fixed model and effort, and a report of what a session costs, by tier, model and cause.",
+      "author": {
+        "name": "Aleksandr Zadykian",
+        "url": "https://github.com/zadykian"
+      },
+      "homepage": "https://github.com/zadykian/toolkit/blob/main/docs/lean.md",
+      "repository": "https://github.com/zadykian/toolkit",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": ["cost", "tokens", "subagents", "workflows"],
+      "skills": ["./skills/cost", "./skills/delegate", "./skills/fan-out", "./skills/context", "./skills/wait"],
+      "agents": [
+        "./lean/agents/scout.md",
+        "./lean/agents/runner.md",
+        "./lean/agents/checker.md",
+        "./lean/agents/implementer.md",
+        "./lean/agents/expert.md"
+      ],
+      "hooks": {
+        "PreToolUse": [
+          {
+            "matcher": "Workflow",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/hooks/lean-fanout.sh",
+                "args": [],
+                "timeout": 10,
+                "statusMessage": "Checking the workflow's agents"
+              }
+            ]
+          },
+          {
+            "matcher": "Bash",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "${CLAUDE_PLUGIN_ROOT}/hooks/lean-wait.sh",
+                "args": [],
+                "timeout": 10,
+                "statusMessage": "Checking the command for a poll"
               }
             ]
           }
