@@ -24,6 +24,7 @@ def size: .prompt | if . < 1e5 then 0 elif . < 2e5 then 1 elif . < 5e5 then 2 el
 ($calls | map(.units) | add // 0) as $total |
 (map(select(.k == "result")) | INDEX(.id)) as $results |
 (map(select(.k == "use")) | INDEX(.id)) as $uses |
+($uses | map(select(.poll) | .wait = (($results[.id].ts // .ts) - .ts))) as $polls |
 "Sessions: \($sessions). Responses: \($calls | length). Cost: \($total | mega) M units.",
 ($calls | by(.tier; {main: "main", subagent: "subagents", workflow: "workflow agents"})
   | table("By tier"; "calls"; $total)),
@@ -39,4 +40,8 @@ def size: .prompt | if . < 1e5 then 0 elif . < 2e5 then 1 elif . < 5e5 then 2 el
 "", "Largest tool results, in chars",
 ($results | map(.) | sort_by(-.chars) | .[:10][] | ($uses[.id] // {}) as $u |
   "\(.chars | right(9))  \($u.name // "?" | .[:12] | left(12))  \(.thread | left(40))  " +
-  "\($u.what // "")")
+  "\($u.what // "")"),
+"", "Foreground polls: \($polls | length), \($polls | map(select(.bounded | not)) | length) " +
+  "with no timeout of 240 s or less, \($polls | map(.wait) | add // 0 | . / 60 | round) min",
+($polls | sort_by(-.wait) | .[:5][] |
+  "\(.wait / 60 | round | right(6)) min  \(.thread | left(40))  \(.what)")

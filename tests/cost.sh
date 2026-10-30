@@ -61,10 +61,11 @@ shows 'Sessions: 1. Responses: 4. Cost: 4.2 M units' 'main 2 3.1 74%' 'subagents
     'workflow agents 1 0.1 2%' 'claude-sonnet-5-5 1 1.0 24%' '200k to 500k 1 1.0 24%' \
     '500k or more 3 3.2 76%'
 
-setup 'cost: cache writes by the idle gap, and tool results'
+setup 'cost: cache writes by the idle gap, tool results and polls'
 start
 report s
-shows '5 min to 1 h 1 2.0 48%' '5000 Read main /w/big'
+shows '5 min to 1 h 1 2.0 48%' '5000 Read main /w/big' \
+    'Foreground polls: 1, 1 with no timeout of 240 s or less, 5 min'
 
 setup 'cost: a session missing'
 report "$FAKE/gone.jsonl"
