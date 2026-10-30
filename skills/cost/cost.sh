@@ -2,7 +2,8 @@
 # Reports what Claude Code sessions cost, from their transcripts: cost.sh [SESSION...]
 #
 # A SESSION is a transcript, ~/.claude/projects/DIR/ID.jsonl, or its ID in the current directory's
-# project: the project's latest by default. Its agents' transcripts sit in ID/subagents/. A response spans records of one message id, so each
+# project: the project's latest by default. Its agents' transcripts sit in ID/subagents/, and its
+# workflow runs' summaries in ID/workflows/. A response spans records of one message id, so each
 # counts once. Its cost is in units of an Opus 5.5 input token: an output token weighs 5, a cache
 # write 1.25, or 2 on the 1-hour cache, and a cache read 0.05. Sonnet costs half, and Haiku 1/40,
 # or 1/8 in a request whose prompt passes 100k tokens. Any other model costs as Opus. It needs jq.
@@ -20,7 +21,8 @@ rows() {
     jq -c -R --arg tier "$2" --arg thread "$3" -f "$dir/rows.jq" "$1"
 }
 
-# session prints the rows of the transcript $1 and of its agents'.
+# session prints the rows of the transcript $1 and of its agents', and adds the summaries of its
+# workflow runs to $tmp/runs.
 session() {
     rows "$1" main main
     for file in "${1%.jsonl}"/subagents/*.jsonl; do
@@ -29,6 +31,9 @@ session() {
     for file in "${1%.jsonl}"/subagents/workflows/*/*.jsonl; do
         [ -f "$file" ] || continue
         rows "$file" workflow "$(basename "$(dirname "$file")")/$(basename "$file" .jsonl)"
+    done
+    for file in "${1%.jsonl}"/workflows/*.json; do
+        [ ! -f "$file" ] || jq -c '{runId, workflowName, totalTokens}' "$file" >>"$tmp/runs"
     done
 }
 
@@ -48,6 +53,7 @@ main() {
         [ -n "$latest" ] || die "no session in $project"
         set -- "$latest"
     fi
+    : >"$tmp/runs"
     for arg; do
         case $arg in
         *.jsonl) file=$arg ;;
@@ -56,7 +62,7 @@ main() {
         [ -f "$file" ] || die "no transcript $file"
         session "$file"
     done >"$tmp/rows"
-    jq -s -r --argjson sessions $# -f "$dir/report.jq" "$tmp/rows"
+    jq -s -r --slurpfile runs "$tmp/runs" --argjson sessions $# -f "$dir/report.jq" "$tmp/rows"
 }
 
 tmp=$(mktemp -d)

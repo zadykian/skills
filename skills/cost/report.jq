@@ -1,5 +1,5 @@
-# Prints the report of the rows that rows.jq read, of $sessions sessions. A cost is in millions
-# of units, M units, as cost.sh says.
+# Prints the report of the rows that rows.jq read, of $sessions sessions, whose workflow runs'
+# summaries are $runs. A cost is in millions of units, M units, as cost.sh says.
 
 def factor: if .model | test("haiku") then (if .prompt > 100000 then 1 / 8 else 1 / 40 end)
   elif .model | test("sonnet") then 0.5 else 1 end;
@@ -44,4 +44,10 @@ def size: .prompt | if . < 1e5 then 0 elif . < 2e5 then 1 elif . < 5e5 then 2 el
 "", "Foreground polls: \($polls | length), \($polls | map(select(.bounded | not)) | length) " +
   "with no timeout of 240 s or less, \($polls | map(.wait) | add // 0 | . / 60 | round) min",
 ($polls | sort_by(-.wait) | .[:5][] |
-  "\(.wait / 60 | round | right(6)) min  \(.thread | left(40))  \(.what)")
+  "\(.wait / 60 | round | right(6)) min  \(.thread | left(40))  \(.what)"),
+($runs | select(length > 0) | "", "Workflows: their totalTokens, and their agents' real tokens",
+  (["run", "agents", "M total", "M real", "M units"] | row)),
+($runs[] as $r | ($calls | map(select(.thread | startswith($r.runId + "/")))) as $c |
+  [$r.workflowName // $r.runId, ($c | map(.thread) | unique | length), ($r.totalTokens // 0
+  | mega), ($c | map(.prompt + .out) | add // 0 | mega), ($c | map(.units) | add // 0 | mega)]
+  | row)

@@ -38,6 +38,7 @@ start() {
         >"$p/s/subagents/agent-c.jsonl"
     call d 0 claude-haiku-5-5 '{"cache_read_input_tokens": 2000000, "output_tokens": 100000}' \
         >"$p/s/subagents/workflows/w/agent-d.jsonl"
+    echo '{"runId": "w", "workflowName": "review", "totalTokens": 100000}' >"$p/s/workflows/w.json"
 }
 
 # report runs cost.sh in /w/p with the arguments $@. shows checks that its output holds each
@@ -61,10 +62,10 @@ shows 'Sessions: 1. Responses: 4. Cost: 4.2 M units' 'main 2 3.1 74%' 'subagents
     'workflow agents 1 0.1 2%' 'claude-sonnet-5-5 1 1.0 24%' '200k to 500k 1 1.0 24%' \
     '500k or more 3 3.2 76%'
 
-setup 'cost: cache writes by the idle gap, tool results and polls'
+setup 'cost: cache writes by the idle gap, tool results, polls and workflows'
 start
 report s
-shows '5 min to 1 h 1 2.0 48%' '5000 Read main /w/big' \
+shows '5 min to 1 h 1 2.0 48%' '5000 Read main /w/big' 'review 1 0.1 2.1 0.1' \
     'Foreground polls: 1, 1 with no timeout of 240 s or less, 5 min'
 
 setup 'cost: a session missing'
