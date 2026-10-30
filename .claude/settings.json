@@ -38,5 +38,15 @@
     "docs@zadykian": true,
     "lint@zadykian": true,
     "lean@zadykian": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          { "type": "command", "command": "\"$CLAUDE_PROJECT_DIR\"/tools/install", "timeout": 180 }
+        ]
+      }
+    ]
   }
 }

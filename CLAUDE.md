@@ -40,6 +40,9 @@ how to install and pin them, and what a version's parts mean.
 - `tools/`, the release: `lastrelease` finds the last release's tag, `versioncheck` checks the
   bundles and the version against it, and `releasenotes` writes the notes of the commits since.
   `pin` moves a repository's marketplace ref and action hashes to one release.
+- `tools/install`, the hook: `.claude/settings.json` runs it as a session starts. It installs
+  each bundle that the settings enable, at project scope, where this clone or worktree lacks it,
+  as settings enable a plugin but do not install it.
 
 ## Commands
 
