@@ -27,15 +27,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      checks: read
       contents: read
       pull-requests: write
     steps:
       - uses: zadykian/toolkit/actions/banned-terms@SHA # vX.Y.Z
 ```
 
-The `edited` type checks the title and the description again once they change, and
-`pull-requests: write` lets the action keep its comment. [Versions](../../README.md#versions) says
-which hash to pin.
+The `edited` type checks the title and the description again once they change.
+`pull-requests: write` lets the action keep its comment, and `checks: read` lets it leave out the
+warnings that another run on the head shows. [Versions](../../README.md#versions) says which hash
+to pin.
 
 ## The terms
 

@@ -110,6 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      checks: read
       contents: read
       pull-requests: write
     steps:
@@ -121,7 +122,8 @@ jobs:
 [Pin a release](#pin-a-release) says which hash to pin. The `edited` type checks the title and the
 description again once they change, and `pull-requests: write` lets each check keep its comment.
 The `concurrency` group cancels a pull request's older run once a newer event starts one, as the
-two would race to create each comment.
+two would race to create each comment. Files changed shows the warnings of every run on the head,
+the cancelled ones too, so `checks: read` lets each check leave out those another run shows.
 
 The issue check takes a workflow of its own, on `issues`, as no event of a pull request names an
 issue. [Its README](actions/issue/README.md#usage) shows it.

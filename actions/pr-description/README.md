@@ -70,13 +70,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      checks: read
       pull-requests: write
     steps:
       - uses: zadykian/toolkit/actions/pr-description@SHA # vX.Y.Z
 ```
 
 The `edited` type checks the description again once it changes. `pull-requests: write` lets the
-action comment. It reads the pull request through GitHub's API alone, so the job checks out
+action comment, and `checks: read` lets it leave out the warnings that another run on the head
+shows. It reads the pull request through GitHub's API alone, so the job checks out
 nothing.
 
 [section]: ../../skills/atomic-commits/SKILL.md#6-stack-mechanics-git--238
