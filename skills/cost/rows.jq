@@ -14,8 +14,9 @@ if .type == "assistant" and .message.model != "<synthetic>" then
      cr: (.cache_read_input_tokens // 0), out: (.output_tokens // 0)}),
   ($m.content | arrays | .[] | select(.type == "tool_use") | (.input.command // "") as $c |
     {k: "use", $thread, $ts, id, name,
-     poll: (.name == "Bash" and .input.run_in_background != true and ($c | poll)),
-     bounded: ([$c | scan("\\btimeout\\s+([0-9]+)s?\\b")[0] | tonumber] | any(. <= 240)),
+     poll: (.name == "Bash" and .input.run_in_background != true and ($c | gsub("\n"; ";") | poll)),
+     bounded: (([$c | scan("\\btimeout\\s+([0-9]+)s?\\b")[0] | tonumber] | any(. <= 240))
+       or ((.input.timeout // 1e9) <= 240000)),
      what: (.input | .command // .file_path // .pattern // .url // .description // ""
        | tostring | gsub("\\s+"; " ") | .[:70])})
 elif .type == "user" then
