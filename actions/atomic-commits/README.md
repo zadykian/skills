@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      checks: read
       contents: read
       pull-requests: write
     steps:
@@ -33,9 +34,10 @@ jobs:
 ```
 
 Pin it by the full hash of a version tag's commit, as the repository's
-[README](../../README.md#versions) says. `pull-requests: write` lets it comment, and the `edited`
-type checks the title again once it changes. It reads the pull request through GitHub's API alone
-and checks out nothing, so it runs none of the pull request's code.
+[README](../../README.md#versions) says. `pull-requests: write` lets it comment, `checks: read` lets
+it leave out the warnings that another run on the head shows, and the `edited` type checks the
+title again once it changes. It reads the pull request through GitHub's API alone and checks out
+nothing, so it runs none of the pull request's code.
 
 ## What it checks
 

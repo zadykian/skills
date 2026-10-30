@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      checks: read
       contents: read
       pull-requests: write
     # zizmor asks for $/ over ./, but actionlint 1.7.12 refuses $/ as a uses ref. So the checkout

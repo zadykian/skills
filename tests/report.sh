@@ -37,6 +37,54 @@ warnings 10
 warns "::Finding 10.%0A$rule_a%0AThe job summary holds 2 more findings."
 ! grep -qF 'Finding 11.' "$FAKE/out" || fail "annotated the 11th finding"
 
+# runs answers the check runs on the head, of the workflow runs given, a check run each, whose id
+# is its workflow run's. shows answers the annotations of the check run $1, each argument after it
+# one of Rule A's, {m, path, line, level, after}: m its finding, and after what its message ends in.
+runs() {
+    answer "repos/o/r/commits/$HEAD_SHA/check-runs" "$(jq -nc '{check_runs: [$ARGS.positional[]
+        | {id: tonumber, details_url: "https://github.com/o/r/actions/runs/\(.)/job/1",
+            output: {annotations_count: 1}}]}' --args "$@")"
+}
+shows() {
+    answer "repos/o/r/check-runs/$1/annotations" "$(jq -nc --arg rule "$rule_a" '[
+        $ARGS.positional[] | fromjson | {annotation_level: (.level // "warning"),
+            path: (.path // ".github"), start_line: (.line // 1), title: "probe: Rule A",
+            message: "\(.m)\n\($rule)\(.after // "")"}]' --args "${@:2}")"
+}
+
+# A cancelled run, 5, warned on two findings, and a run of an edit, 6, on the third. A notice is
+# no warning, and this run's own check runs, 7, of its job and its earlier attempts, show none.
+setup leaves-out-the-warnings-another-run-shows
+runs 5 6 7
+shows 5 '{"m": "Found.", "path": "src/x.go", "line": 12}' '{"m": "Found."}'
+shows 6 '{"m": "Found.", "path": "README.md"}' '{"m": "Found.", "path": "a.go", "level": "notice"}'
+shows 7 '{"m": "Found.", "path": "b.go"}'
+probe <<'CHECK'
+for at in 'src/x.go 12' '' README.md 'src/x.go 13' a.go b.go; do finding a 'Found.' $at; done
+CHECK
+warns "::warning title=probe%3A Rule A,file=src/x.go,line=13::Found."
+warns "::warning title=probe%3A Rule A,file=a.go::Found."
+warns "::warning title=probe%3A Rule A,file=b.go::Found."
+warnings 3
+summarizes "- \`src/x.go:12\`: Found."
+
+setup counts-ten-of-those-left
+runs 5
+shows 5 '{"m": "Finding 1."}' \
+    '{"m": "Finding 2.", "after": "\nThe job summary holds 2 more findings."}'
+probe <<'CHECK'
+for i in $(seq 13); do finding a "Finding $i."; done
+CHECK
+warnings 10
+warns "::Finding 3.%0A$rule_a"
+warns "::Finding 12.%0A$rule_a%0AThe job summary holds 1 more finding."
+
+setup annotates-all-where-it-cannot-list-the-runs
+refuse GET "repos/o/r/commits/$HEAD_SHA/check-runs"
+probe <<<"finding a 'Found.'"
+warns "::warning title=probe%3A Rule A::Found."
+warnings 1
+
 setup summarizes
 probe <<'CHECK'
 finding a 'The title says 100% done.' src/x.go 12

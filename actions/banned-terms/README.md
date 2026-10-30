@@ -27,15 +27,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
+      checks: read
       contents: read
       pull-requests: write
     steps:
       - uses: zadykian/toolkit/actions/banned-terms@SHA # vX.Y.Z
 ```
 
-The `edited` type checks the title and the description again once they change, and
-`pull-requests: write` lets the action keep its comment. [Versions](../../README.md#versions) says
-which hash to pin.
+The `edited` type checks the title and the description again once they change.
+`pull-requests: write` lets the action keep its comment, and `checks: read` lets it leave out the
+warnings that another run on the head shows. [Versions](../../README.md#versions) says which hash
+to pin.
 
 ## The terms
 
@@ -48,8 +50,14 @@ A term matches a token. A text splits into tokens at each character other than a
 digit, then before each hump of camelCase and PascalCase, and each token is lowercased. So
 `HTTPHelper` gives `http` and `helper`, and `使用helper` gives `helper`.
 
+A path from the root names the system's files, so no token of it matches. It starts at a `/` with
+no ASCII letter or digit, `.`, `_`, `-`, `~` or `/` before it, and runs over the letters, digits,
+`.`, `_`, `-` and `/` after it.
+
 - `StringHelper`, `str_utils.py` and `MiscStuff` match.
 - `utilize`, `helpful`, `etcd` and `utils2` don't, as none of their tokens is a term.
+- `/etc/hosts`, `"/usr/share/misc"` and `PATH=/opt/misc` don't, as each is a path from the root.
+  `./etc`, `~/misc` and `https://example.com/utils` match.
 
 A line gives one finding a term, even where it holds the term twice.
 
