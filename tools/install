@@ -1,0 +1,66 @@
+#!/bin/sh
+# Installs each bundle of the marketplace zadykian that the user lacks:
+#
+#   tools/install
+#
+# The bundles load in each repository of the user's. A bundle installed at user scope stays as it
+# is.
+#
+# The bundles are those that the marketplace lists now: it updates Claude Code's copy of it first.
+# A failed install leaves the other bundles to go on, and exits 1 once they are done. Each bundle
+# it installs goes to stdout, a line each, and where it installs none, a note says so. It needs
+# claude, or the one CLAUDE names, and jq.
+#
+# Piped to sh, it needs no clone of the toolkit:
+#
+#   curl -fsSL https://raw.githubusercontent.com/zadykian/toolkit/main/tools/install | sh
+
+set -eu
+
+claude=${CLAUDE:-claude}
+name=zadykian
+repo=zadykian/toolkit
+
+# die prints a message of the script's and exits with status 1.
+die() {
+    printf 'tools/install: %s\n' "$*" >&2
+    exit 1
+}
+
+# place prints the directory of Claude Code's copy of the marketplace, or nothing where it lacks
+# the marketplace.
+place() {
+    list=$("$claude" plugin marketplace list --json) || die "claude plugin marketplace list failed"
+    printf '%s' "$list" | jq -r --arg name "$name" '.[] | select(.name == $name) | .installLocation'
+}
+
+[ $# = 0 ] || die "usage: tools/install"
+for tool in "$claude" jq; do
+    command -v "$tool" >/dev/null || die "no $tool"
+done
+
+dir=$(place)
+[ -n "$dir" ] || die "Claude Code lacks the marketplace: claude plugin marketplace add $repo"
+"$claude" plugin marketplace update "$name" >/dev/null || die "cannot update the marketplace"
+bundles=$(jq -r '.plugins[].name' "$dir/.claude-plugin/marketplace.json") ||
+    die "cannot read the bundles of $dir"
+
+list=$("$claude" plugin list --json) || die "claude plugin list failed"
+installed=$(printf '%s' "$list" | jq -r '.[] | select(.scope == "user") | .id')
+
+added=0 failed=0
+for bundle in $bundles; do
+    id=$bundle@$name
+    ! printf '%s\n' "$installed" | grep -qxF -- "$id" || continue
+    if result=$("$claude" plugin install "$id" --scope user --json 2>/dev/null); then
+        printf '%s\n' "$id"
+        added=$((added + 1))
+    else
+        reason=$(printf '%s\n' "$result" | tail -n 1 | jq -r '.message // empty' 2>/dev/null) || :
+        printf 'tools/install: %s is not installed: %s\n' "$id" "${reason:-no reason given}" >&2
+        failed=1
+    fi
+done
+[ "$added" != 0 ] || [ "$failed" != 0 ] ||
+    printf 'tools/install: each bundle of %s is installed at user scope already\n' "$name" >&2
+exit "$failed"
